@@ -42,13 +42,13 @@ jobs:
         with:
           # https://github.com/xmake-io/xmake/tags
           xmake-version: "3.0.7"
-          actions-cache-folder: "${{ matrix.os }}-xmake"
-          actions-cache-key: "${{ matrix.os }}-xmake"
-          package-cache: true
-          package-cache-key: "${{ matrix.os }}-packages"
-          build-cache: true
-          build-cache-path: "${{ matrix.os }}-build"
-          build-cache-key: "${{ matrix.os }}-build"
+          # actions-cache-folder: "${{ matrix.os }}-xmake"
+          # actions-cache-key: "${{ matrix.os }}-xmake"
+          # package-cache: true
+          # package-cache-key: "${{ matrix.os }}-packages"
+          # build-cache: true
+          # build-cache-path: "${{ matrix.os }}-build"
+          # build-cache-key: "${{ matrix.os }}-build"
 
       - name: install llvm tools
         uses: KyleMayes/install-llvm-action@ebc0426251bc40c7cd31162802432c68818ab8f0
@@ -63,10 +63,11 @@ jobs:
           echo "DYLD_LIBRARY_PATH=$LLVM_PATH/lib" >> $GITHUB_ENV
           echo "XMAKE_COLORTERM=color256" >> $GITHUB_ENV
           xmake g --theme=dark
-          xmake f -c -y -v -m debug --toolchain=${{ matrix.toolchain }} \
+          xmake f -c -y -v -m debug \
+            --toolchain="${{ matrix.toolchain }}" \
+            --stdlib="${{ matrix.stdlib }}" \
             --coverage=y \
-            --sanitizers=y \
-            --stdlib=${{ matrix.stdlib }}
+            --sanitizers=y
 
       - name: build alcy
         shell: bash
@@ -89,5 +90,5 @@ jobs:
           xmake check api
           xmake check clang
           xmake analyze
-          # xmake format
           xmake lint
+

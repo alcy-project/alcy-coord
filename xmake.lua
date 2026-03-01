@@ -63,19 +63,19 @@ else
   })
 end
 
-if is_plat("macosx") then
-  -- @see https://github.com/xmake-io/xmake/issues/1179
-  local xcode_dir = has_config("xcode") and get_config("xcode")
-  local xcode_sdkver  = has_config("xcode_sdkver") and get_config("xcode_sdkver")
-  local sdkroot = xcode_dir and path.join(xcode_dir, "Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs")
-                          or "/Library/Developer/CommandLineTools/SDKs"
-  local sdkdir = xcode_sdkver and path.join(sdkroot, "MacOSX" .. xcode_sdkver .. ".sdk")
-  if not sdkdir or not os.isdir(sdkdir) then
-    sdkdir = path.join(sdkroot, "MacOSX.sdk")
-    sdkdir = os.isdir(sdkdir) and sdkdir or nil
-  end
-  config_set("xcode_sysroot", sdkdir)
-end
+-- if is_plat("macosx") then
+--   -- @see https://github.com/xmake-io/xmake/issues/1179
+--   local xcode_dir = has_config("xcode") and get_config("xcode")
+--   local xcode_sdkver  = has_config("xcode_sdkver") and get_config("xcode_sdkver")
+--   local sdkroot = xcode_dir and path.join(xcode_dir, "Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs")
+--                           or "/Library/Developer/CommandLineTools/SDKs"
+--   local sdkdir = xcode_sdkver and path.join(sdkroot, "MacOSX" .. xcode_sdkver .. ".sdk")
+--   if not sdkdir or not os.isdir(sdkdir) then
+--     sdkdir = path.join(sdkroot, "MacOSX.sdk")
+--     sdkdir = os.isdir(sdkdir) and sdkdir or nil
+--   end
+--   config_set("xcode_sysroot", sdkdir)
+-- end
 
 -- tasks
 task("format")
