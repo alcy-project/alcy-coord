@@ -12,11 +12,18 @@ jobs:
       matrix:
         include:
           - os: ubuntu-24.04
+            plat: linux
+            arch: x64
             toolchain: clang
             stdlib: libc++
           - os: windows-2025-vs2026
+            plat: windows
+            arch: x64
             toolchain: clang
+            stdlib: msvc
           - os: macos-26
+            plat: macosx
+            arch: arm64
             toolchain: llvm
             stdlib: libc++
       fail-fast: false
@@ -42,13 +49,13 @@ jobs:
         with:
           # https://github.com/xmake-io/xmake/tags
           xmake-version: "3.0.7"
-          # actions-cache-folder: "${{ matrix.os }}-xmake"
-          # actions-cache-key: "${{ matrix.os }}-xmake"
-          # package-cache: true
-          # package-cache-key: "${{ matrix.os }}-packages"
-          # build-cache: true
-          # build-cache-path: "${{ matrix.os }}-build"
-          # build-cache-key: "${{ matrix.os }}-build"
+          actions-cache-folder: "${{ matrix.os }}-xmake"
+          actions-cache-key: "${{ matrix.os }}-xmake"
+          package-cache: true
+          package-cache-key: "${{ matrix.os }}-packages"
+          build-cache: true
+          build-cache-path: "${{ matrix.os }}-build"
+          build-cache-key: "${{ matrix.os }}-build"
 
       - name: install llvm tools
         uses: KyleMayes/install-llvm-action@ebc0426251bc40c7cd31162802432c68818ab8f0
@@ -63,7 +70,10 @@ jobs:
           echo "DYLD_LIBRARY_PATH=$LLVM_PATH/lib" >> $GITHUB_ENV
           echo "XMAKE_COLORTERM=color256" >> $GITHUB_ENV
           xmake g --theme=dark
-          xmake f -c -y -v -m debug \
+          xmake config -c -y -v \
+            -m debug \
+            -p ${{ matrix.plat }} \
+            -a ${{ matrix.arch }} \
             --toolchain="${{ matrix.toolchain }}" \
             --stdlib="${{ matrix.stdlib }}" \
             --coverage=y \

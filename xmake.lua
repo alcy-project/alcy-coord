@@ -35,33 +35,29 @@ local alcy_modules = {
 
 -- dependencies
 -- add_requires("zlib")
-if is_plat("linux") and has_config("stdlib") and get_config("stdlib") == "libc++" then
-  add_requires("catch2 3.x", {
-    system = false,
-    configs = {
-      cxxflags = "-stdlib=libc++",
-      ldflags = {"-stdlib=libc++", "-lc++", "-lc++abi"}
-    },
-  })
-  add_requires("llvm 21.1.x", {
-  	configs = {
-  		shared = false,
-  		assertions = is_mode("debug"),
-  		components = { "core", "irreader", "mc", "support", "native", "all-targets" },
-      cxxflags = "-stdlib=libc++",
-      ldflags = {"-stdlib=libc++", "-lc++", "-lc++abi"}
-  	},
-  })
-else
-  add_requires("catch2 3.x", { system = false })
-  add_requires("llvm 21.1.x", {
-  	configs = {
-  		shared = false,
-  		assertions = is_mode("debug"),
-  		components = { "core", "irreader", "mc", "support", "native", "all-targets" },
-  	},
-  })
+local catch2_configs = {}
+local llvm_configs = {}
+if is_plat("linux", "macosx") and has_config("stdlib") and get_config("stdlib") == "libc++" then
+  catch2_configs = {
+    cxxflags = "-stdlib=libc++",
+    ldflags = {"-stdlib=libc++", "-lc++", "-lc++abi"}
+  }
+  llvm_configs = {
+    shared = false,
+    assertions = is_mode("debug"),
+    components = { "core", "irreader", "mc", "support", "native", "all-targets" },
+    cxxflags = "-stdlib=libc++",
+    ldflags = {"-stdlib=libc++", "-lc++", "-lc++abi"}
+  }
 end
+add_requires("catch2 v3.12.0", {
+  system = false,
+  configs = catch2_configs,
+})
+add_requires("llvm 21.1.0", {
+  system = false,
+  configs = llvm_configs,
+})
 
 -- if is_plat("macosx") then
 --   -- @see https://github.com/xmake-io/xmake/issues/1179
