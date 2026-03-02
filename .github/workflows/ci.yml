@@ -46,13 +46,13 @@ jobs:
         with:
           # https://github.com/xmake-io/xmake/tags
           xmake-version: "3.0.7"
-          actions-cache-folder: "${{ matrix.os }}-xmake"
-          actions-cache-key: "${{ matrix.os }}-xmake"
-          package-cache: true
-          package-cache-key: "${{ matrix.os }}-packages"
-          build-cache: true
-          build-cache-path: "${{ matrix.os }}-build"
-          build-cache-key: "${{ matrix.os }}-build"
+          # actions-cache-folder: "${{ matrix.os }}-xmake"
+          # actions-cache-key: "${{ matrix.os }}-xmake"
+          # package-cache: true
+          # package-cache-key: "${{ matrix.os }}-packages"
+          # build-cache: true
+          # build-cache-path: "${{ matrix.os }}-build"
+          # build-cache-key: "${{ matrix.os }}-build"
 
       - name: install llvm tools
         uses: KyleMayes/install-llvm-action@ebc0426251bc40c7cd31162802432c68818ab8f0
