@@ -46,11 +46,11 @@ jobs:
         with:
           # https://github.com/xmake-io/xmake/tags
           xmake-version: "3.0.7"
-          actions-cache-folder: ${{ matrix.os }}_xmake
-          actions-cache-key: ${{ matrix.os }}_xmake
+          # actions-cache-folder: ${{ matrix.os }}_xmake
+          # actions-cache-key: ${{ matrix.os }}_xmake
           package-cache: true
           package-cache-key: ${{ matrix.os }}_packages
-          build-cache: false
+          build-cache: true
           build-cache-path: ${{ matrix.os }}_build
           build-cache-key: ${{ matrix.os }}_build
 
