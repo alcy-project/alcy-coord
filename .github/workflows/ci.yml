@@ -54,17 +54,17 @@ jobs:
           # build-cache-path: "${{ matrix.os }}-build"
           # build-cache-key: "${{ matrix.os }}-build"
 
-      - name: install llvm tools
-        uses: KyleMayes/install-llvm-action@ebc0426251bc40c7cd31162802432c68818ab8f0
-        with:
-          # https://github.com/KyleMayes/install-llvm-action/blob/master/assets.json
-          version: "21.1.8"
+      # - name: install llvm tools
+      #   uses: KyleMayes/install-llvm-action@ebc0426251bc40c7cd31162802432c68818ab8f0
+      #   with:
+      #     # https://github.com/KyleMayes/install-llvm-action/blob/master/assets.json
+      #     version: "21.1.8"
 
       - name: configure
         shell: bash
         run: |
-          echo "LD_LIBRARY_PATH=$LLVM_PATH/lib:$LLVM_PATH/lib/x86_64-unknown-linux-gnu" >> $GITHUB_ENV
-          echo "DYLD_LIBRARY_PATH=$LLVM_PATH/lib" >> $GITHUB_ENV
+          # echo "LD_LIBRARY_PATH=$LLVM_PATH/lib:$LLVM_PATH/lib/x86_64-unknown-linux-gnu" >> $GITHUB_ENV
+          # echo "DYLD_LIBRARY_PATH=$LLVM_PATH/lib" >> $GITHUB_ENV
           echo "XMAKE_COLORTERM=color256" >> $GITHUB_ENV
           xmake g --theme=dark
           xmake config -c -y -v \
