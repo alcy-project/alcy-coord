@@ -3,7 +3,7 @@ name: ci
 on:
   push:
     branches: [ main ]
-    paths:
+    paths: &ci_paths
       - src/**
       - tests/**
       - third_party/**
@@ -14,15 +14,8 @@ on:
       - .clang-tidy
   pull_request:
     branches: [ main ]
-    paths:
-      - src/**
-      - tests/**
-      - third_party/**
-      - .github/workflows/**
-      - xmake.lua
-      - CPPLINT.cfg
-      - uv.lock
-      - .clang-tidy
+    paths: *ci_paths
+  workflow_dispatch:
 
 jobs:
   build:
@@ -74,8 +67,8 @@ jobs:
         with:
           # https://github.com/xmake-io/xmake/tags
           xmake-version: "3.0.7"
-          # actions-cache-folder: .xmake_cache
-          # actions-cache-key: ${{ matrix.os }}-xmake
+          actions-cache-folder: .xmake_cache
+          actions-cache-key: ${{ matrix.os }}-xmake
           # package-cache: true
           # package-cache-key: ${{ matrix.os }}-packages
           # build-cache: true
