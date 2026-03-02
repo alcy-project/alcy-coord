@@ -35,28 +35,24 @@ jobs:
             stdlib: libc++
             cc: clang
             cxx: clang++
-            ld: ld.lld
           - os: windows-2025-vs2026
             plat: windows
             arch: x64
             stdlib: msvc
             cc: clang
             cxx: clang++
-            ld: lld_link
           - os: macos-26
             plat: macosx
             arch: arm64
             stdlib: libc++
             cc: clang
             cxx: clang++
-            ld: lld
       fail-fast: false
     runs-on: ${{ matrix.os }}
     name: build and test (${{ matrix.os }})
     env:
       CC: ${{ matrix.cc }}
       CXX: ${{ matrix.cxx }}
-      LD: ${{ matrix.ld }}
       XMAKE_COLORTERM: color256
     steps:
       - name: checkout repository
@@ -100,7 +96,6 @@ jobs:
             # echo "LD_LIBRARY_PATH=$LLVM_PATH/lib:$LLVM_PATH/lib/x86_64-unknown-linux-gnu" >> $GITHUB_ENV
             sudo update-alternatives --install /usr/bin/cc cc /usr/bin/clang 100
             sudo update-alternatives --install /usr/bin/c++ c++ /usr/bin/clang++ 100
-            sudo update-alternatives --install /usr/bin/ld ld /usr/bin/ld.lld 100
           # elif [[ "${{ matrix.plat }}" == "macosx" ]]; then
           #   echo "DYLD_LIBRARY_PATH=$LLVM_PATH/lib" >> $GITHUB_ENV
           fi
