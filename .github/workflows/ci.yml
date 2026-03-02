@@ -24,7 +24,7 @@ jobs:
         include:
           - os: ubuntu-24.04
             plat: linux
-            arch: x64
+            arch: x86_64
             stdlib: libc++
             cc: clang
             cxx: clang++
@@ -85,7 +85,6 @@ jobs:
       - name: configure
         shell: bash
         run: |
-          # set llvm toolchain as default
           if [[ "${{ matrix.plat }}" == "linux" ]]; then
             # echo "LD_LIBRARY_PATH=$LLVM_PATH/lib:$LLVM_PATH/lib/x86_64-unknown-linux-gnu" >> $GITHUB_ENV
             sudo update-alternatives --install /usr/bin/cc cc /usr/bin/clang 100
@@ -98,6 +97,7 @@ jobs:
             -m debug \
             --coverage=y \
             --sanitizers=y \
+            --toolchain=llvm \
             -p "${{ matrix.plat }}" \
             -a "${{ matrix.arch }}" \
             --stdlib="${{ matrix.stdlib }}"

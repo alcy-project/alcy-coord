@@ -11,7 +11,7 @@ option("sanitizers", {default = false, description = "enable address/undefined b
 option("timetrace", {default = false, description = "generate timetrace json that can be see with perfetto ui"})
 option("native", {default = false, description = "native architecture optimization"})
 option("unitybuild", {default = false, description = "enalbe unity build to shorten build time"})
-option("stdlib", {default = "libc++", description = "which stl to use"})
+option("stdlib", {default = "libstdc++", description = "stl to use"})
 
 add_rules("mode.debug", "mode.release", "mode.releasedbg")
 add_rules("plugin.compile_commands.autoupdate", {outputdir = "out"})
@@ -20,39 +20,38 @@ set_languages("c++20")
 set_targetdir("out/$(plat)-$(arch)-$(mode)")
 set_encodings("source:utf-8")
 set_encodings("utf-8") -- target
-set_toolchains("llvm@llvm-21")
 
--- dependencies
+local is_libcxx = has_config("stdlib") and get_config("stdlib") == "libc++" and is_config("cxx", "clang", "clang++") and is_plat("linux", "macosx")
 -- add_requires("zlib")
 local catch2_configs = {}
-local llvm_configs = {
-  shared = false,
-  clang = true,
-  lld = true,
-  libunwind = true,
-  libcxx = true,
-  libcxxabi = true,
-  assertions = is_mode("debug"),
-  components = { "core", "irreader", "mc", "support", "native", "all-targets" },
-}
-if is_plat("linux", "macosx") and has_config("stdlib") and get_config("stdlib") == "libc++" then
-  catch2_configs = {
+-- local llvm_configs = {
+--   shared = false,
+--   clang = true,
+--   lld = true,
+--   libunwind = true,
+--   libcxx = true,
+--   libcxxabi = true,
+--   assertions = is_mode("debug"),
+--   components = { "core", "irreader", "mc", "support", "native", "all-targets" },
+-- }
+if is_libcxx then
+  table.join2(catch2_configs, {
     cxxflags = "-stdlib=libc++",
     ldflags = {"-stdlib=libc++", "-lc++", "-lc++abi"}
-  }
-  llvm_configs = {
-    cxxflags = "-stdlib=libc++",
-    ldflags = {"-stdlib=libc++", "-lc++", "-lc++abi"}
-  }
+  })
+  -- table.join2(llvm_configs, {
+  --   cxxflags = "-stdlib=libc++",
+  --   ldflags = {"-stdlib=libc++", "-lc++", "-lc++abi"}
+  -- })
 end
 add_requires("catch2 v3.12.0", {
   system = false,
   configs = catch2_configs,
 })
-add_requires("llvm 21.1.0", {
-  system = false,
-  configs = llvm_configs,
-})
+-- add_requires("llvm 21.1.0", {
+--   system = false,
+--   configs = llvm_configs,
+-- })
 
 local alcy_modules = {
   "alcy.analyzer",
@@ -231,7 +230,7 @@ target("alcy.root_config")
       add_cxxflags("-march=native", {public = true})
     end
   end
-  if is_plat("linux") and has_config("stdlib") and get_config("stdlib") == "libc++" then
+  if is_libcxx then
     add_cxxflags("-stdlib=libc++", {public = true})
     add_ldflags("-stdlib=libc++", "-lc++", "-lc++abi", {public = true})
   end
@@ -256,7 +255,7 @@ target("alcy.codegen")
   set_kind("object")
   set_pcxxheader("src/codegen/llvm/pch.h")
   add_files("src/codegen/**.cc")
-  add_packages("llvm")
+  -- add_packages("llvm")
   set_default(false)
 target_end()
 
