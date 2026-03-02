@@ -18,34 +18,28 @@ add_rules("plugin.compile_commands.autoupdate", {outputdir = "out"})
 
 set_languages("c++20")
 set_targetdir("out/$(plat)-$(arch)-$(mode)")
-set_toolchains("clang")
 set_encodings("source:utf-8")
 set_encodings("utf-8") -- target
-
-local alcy_modules = {
-  "alcy.analyzer",
-  "alcy.base",
-  "alcy.codegen",
-  "alcy.core",
-  "alcy.ir",
-  "alcy.lexer",
-  "alcy.parser",
-  "alcy.pipeline"
-}
 
 -- dependencies
 -- add_requires("zlib")
 local catch2_configs = {}
-local llvm_configs = {}
+local llvm_configs = {
+  shared = false,
+  clang = true,
+  lld = true,
+  libunwind = true,
+  libcxx = true,
+  libcxxabi = true,
+  assertions = is_mode("debug"),
+  components = { "core", "irreader", "mc", "support", "native", "all-targets" },
+}
 if is_plat("linux", "macosx") and has_config("stdlib") and get_config("stdlib") == "libc++" then
   catch2_configs = {
     cxxflags = "-stdlib=libc++",
     ldflags = {"-stdlib=libc++", "-lc++", "-lc++abi"}
   }
   llvm_configs = {
-    shared = false,
-    assertions = is_mode("debug"),
-    components = { "core", "irreader", "mc", "support", "native", "all-targets" },
     cxxflags = "-stdlib=libc++",
     ldflags = {"-stdlib=libc++", "-lc++", "-lc++abi"}
   }
@@ -58,6 +52,9 @@ add_requires("llvm 21.1.0", {
   system = false,
   configs = llvm_configs,
 })
+
+-- toolchain
+set_toolchains("llvm@llvm-21")
 
 -- if is_plat("macosx") then
 --   -- @see https://github.com/xmake-io/xmake/issues/1179
@@ -72,6 +69,17 @@ add_requires("llvm 21.1.0", {
 --   end
 --   config_set("xcode_sysroot", sdkdir)
 -- end
+
+local alcy_modules = {
+  "alcy.analyzer",
+  "alcy.base",
+  "alcy.codegen",
+  "alcy.core",
+  "alcy.ir",
+  "alcy.lexer",
+  "alcy.parser",
+  "alcy.pipeline"
+}
 
 -- tasks
 task("format")

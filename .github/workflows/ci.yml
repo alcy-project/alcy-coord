@@ -14,17 +14,14 @@ jobs:
           - os: ubuntu-24.04
             plat: linux
             arch: x64
-            toolchain: clang
             stdlib: libc++
           - os: windows-2025-vs2026
             plat: windows
             arch: x64
-            toolchain: clang
             stdlib: msvc
           - os: macos-26
             plat: macosx
             arch: arm64
-            toolchain: llvm
             stdlib: libc++
       fail-fast: false
     runs-on: ${{ matrix.os }}
@@ -72,9 +69,8 @@ jobs:
           xmake g --theme=dark
           xmake config -c -y -v \
             -m debug \
-            -p ${{ matrix.plat }} \
-            -a ${{ matrix.arch }} \
-            --toolchain="${{ matrix.toolchain }}" \
+            -p "${{ matrix.plat }}" \
+            -a "${{ matrix.arch }}" \
             --stdlib="${{ matrix.stdlib }}" \
             --coverage=y \
             --sanitizers=y
