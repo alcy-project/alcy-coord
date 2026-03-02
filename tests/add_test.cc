@@ -3,6 +3,6 @@
 
 #include <catch2/catch_all.hpp>
 
-TEST_CASE("peano axiom") {
+TEST_CASE("simple addition") {
   REQUIRE(add(1, 1) == 2);
 }
