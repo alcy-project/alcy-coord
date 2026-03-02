@@ -15,17 +15,31 @@ jobs:
             plat: linux
             arch: x64
             stdlib: libc++
+            cc: clang
+            cxx: clang++
+            ld: ld.lld
           - os: windows-2025-vs2026
             plat: windows
             arch: x64
             stdlib: msvc
+            cc: clang
+            cxx: clang++
+            ld: lld_link
           - os: macos-26
             plat: macosx
             arch: arm64
             stdlib: libc++
+            cc: clang
+            cxx: clang++
+            ld: lld
       fail-fast: false
     runs-on: ${{ matrix.os }}
     name: build and test (${{ matrix.os }})
+    env:
+      CC: ${{ matrix.cc }}
+      CXX: ${{ matrix.cxx }}
+      LD: ${{ matrix.ld }}
+      XMAKE_COLORTERM: color256
     steps:
       - name: checkout repository
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
@@ -46,13 +60,13 @@ jobs:
         with:
           # https://github.com/xmake-io/xmake/tags
           xmake-version: "3.0.7"
-          # actions-cache-folder: ${{ matrix.os }}_xmake
-          # actions-cache-key: ${{ matrix.os }}_xmake
-          # package-cache: true
-          # package-cache-key: ${{ matrix.os }}_packages
-          # build-cache: true
-          # build-cache-path: ${{ matrix.os }}_build
-          # build-cache-key: ${{ matrix.os }}_build
+          actions-cache-folder: .xmake_cache
+          actions-cache-key: ${{ matrix.os }}-xmake
+          package-cache: true
+          package-cache-key: ${{ matrix.os }}-packages
+          build-cache: true
+          build-cache-path: .xmake_build_cache
+          build-cache-key: ${{ matrix.os }}-build
 
       # - name: install llvm tools
       #   uses: KyleMayes/install-llvm-action@ebc0426251bc40c7cd31162802432c68818ab8f0
@@ -63,25 +77,18 @@ jobs:
       - name: configure
         shell: bash
         run: |
+          # set llvm toolchain as default
           if [[ "${{ matrix.plat }}" == "linux" ]]; then
             # echo "LD_LIBRARY_PATH=$LLVM_PATH/lib:$LLVM_PATH/lib/x86_64-unknown-linux-gnu" >> $GITHUB_ENV
             sudo update-alternatives --install /usr/bin/cc cc /usr/bin/clang 100
             sudo update-alternatives --install /usr/bin/c++ c++ /usr/bin/clang++ 100
             sudo update-alternatives --install /usr/bin/ld ld /usr/bin/ld.lld 100
-            echo "CC=clang" >> $GITHUB_ENV
-            echo "CXX=clang" >> $GITHUB_ENV
-            echo "LD=ld.lld" >> $GITHUB_ENV
-          elif [[ "${{ matrix.plat }}" == "macosx" ]]; then
-            # echo "DYLD_LIBRARY_PATH=$LLVM_PATH/lib" >> $GITHUB_ENV
+          # elif [[ "${{ matrix.plat }}" == "macosx" ]]; then
+          #   echo "DYLD_LIBRARY_PATH=$LLVM_PATH/lib" >> $GITHUB_ENV
           fi
 
-          echo "XMAKE_COLORTERM=color256" >> $GITHUB_ENV
-          xmake g --theme=dark
           xmake config -c -y -v \
             -m debug \
-            --cc=clang \
-            --cxx=clang++ \
-            --ld=clang++ \
             --coverage=y \
             --sanitizers=y \
             -p "${{ matrix.plat }}" \
