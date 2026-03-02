@@ -69,11 +69,14 @@ jobs:
           xmake g --theme=dark
           xmake config -c -y -v \
             -m debug \
+            --cc=clang \
+            --cxx=clang++ \
+            --ld=clang++ \
+            --coverage=y \
+            --sanitizers=y \
             -p "${{ matrix.plat }}" \
             -a "${{ matrix.arch }}" \
-            --stdlib="${{ matrix.stdlib }}" \
-            --coverage=y \
-            --sanitizers=y
+            --stdlib="${{ matrix.stdlib }}"
 
       - name: build alcy
         shell: bash
