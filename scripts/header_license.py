@@ -9,10 +9,13 @@ import os
 header_license = """// Copyright 2026 pugur
 // This source code is licensed under the Apache License, Version 2.0 with LLVM
 // Exceptions which can be found in the LICENSE file.
-
 """
 
 source_extensions = (".c", ".cc", ".h")
+
+script_dir = os.path.dirname(os.path.abspath(__file__))
+src_dir = os.path.join(script_dir, "..", "src")
+tests_dir = os.path.join(script_dir, "..", "tests")
 
 
 def write_license_header_if_needed(file_path: str):
@@ -26,7 +29,11 @@ def write_license_header_if_needed(file_path: str):
         if not content.startswith(header_license):
             print(f"applying license to: {file_path}")
             with open(file_path, "w", encoding="utf-8") as w:
-                w.write(header_license + content)
+                if content.strip() != "":
+                    s = header_license + "\n" + content
+                else:
+                    s = header_license
+                w.write(s)
     except Exception as e:
         print(f"error processing {file_path}: {e}")
 
@@ -43,11 +50,7 @@ def apply_directory(dir: str):
 
 
 def main():
-    script_dir = os.path.dirname(os.path.abspath(__file__))
-    src_dir = os.path.join(script_dir, "..", "src")
     apply_directory(src_dir)
-
-    tests_dir = os.path.join(script_dir, "..", "tests")
     apply_directory(tests_dir)
 
 
