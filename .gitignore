@@ -1,4 +1,5 @@
 build/
+install/
 out/
 .xmake/
 .vscode/
@@ -51,6 +52,7 @@ compile_commands.json
 *.pdb
 *.profraw
 *.profdata
+*perf.data*
 
 # Kernel Module Compile Results
 *.mod*

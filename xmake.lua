@@ -1,5 +1,6 @@
 set_project("alcy_lang")
-set_version("0.1.0")
+local project_version = "0.1.0"
+set_version(project_version)
 
 set_policy("build.ccache", true)
 set_policy("check.auto_ignore_flags", false)
@@ -16,10 +17,20 @@ option("stdlib", {default = "libstdc++", description = "stl to use"})
 add_rules("mode.debug", "mode.release", "mode.releasedbg")
 add_rules("plugin.compile_commands.autoupdate", {outputdir = "out"})
 
-set_languages("c++20")
+set_languages("c++23")
 set_targetdir("out/$(plat)-$(arch)-$(mode)")
 set_encodings("source:utf-8")
 set_encodings("utf-8") -- target
+local alcy_modules = {
+  "alcy.analyzer",
+  "alcy.base",
+  "alcy.codegen",
+  "alcy.core",
+  "alcy.ir",
+  "alcy.lexer",
+  "alcy.parser",
+  "alcy.pipeline"
+}
 
 local is_libcxx = has_config("stdlib") and get_config("stdlib") == "libc++" and is_config("cxx", "clang", "clang++") and is_plat("linux", "macosx")
 -- add_requires("zlib")
@@ -36,8 +47,8 @@ local catch2_configs = {}
 -- }
 if is_libcxx then
   table.join2(catch2_configs, {
-    cxxflags = "-stdlib=libc++",
-    ldflags = {"-stdlib=libc++", "-lc++", "-lc++abi"}
+    cxxflags = "-stdlib=" .. stdlib,
+    ldflags = {"-stdlib=" .. stdlib, "-lc++", "-lc++abi"}
   })
   -- table.join2(llvm_configs, {
   --   cxxflags = "-stdlib=libc++",
@@ -53,16 +64,6 @@ add_requires("catch2 v3.12.0", {
 --   configs = llvm_configs,
 -- })
 
-local alcy_modules = {
-  "alcy.analyzer",
-  "alcy.base",
-  "alcy.codegen",
-  "alcy.core",
-  "alcy.ir",
-  "alcy.lexer",
-  "alcy.parser",
-  "alcy.pipeline"
-}
 
 -- tasks
 task("format")
@@ -72,10 +73,10 @@ task("format")
     description = "format source code using clang-format"
   })
   on_run(function()
-    local files = os.files("src/**.cc")
-    table.join2(files, os.files("src/**.h"))
-    table.join2(files, os.files("tests/**.cc"))
-    table.join2(files, os.files("tests/**.h"))
+    local files = os.files("src/**/*.cc")
+    table.join2(files, os.files("src/**/*.h"))
+    table.join2(files, os.files("tests/**/*.cc"))
+    table.join2(files, os.files("tests/**/*.h"))
 
     if #files > 0 then
       os.runv("clang-format", table.join({
@@ -97,6 +98,21 @@ task("lint")
   on_run(function()
     os.run("uv sync")
     os.run("uv run cpplint --recursive src tests")
+
+    local files = os.files("src/**/*.cc")
+    table.join2(files, os.files("src/**/*.h"))
+    table.join2(files, os.files("tests/**/*.cc"))
+    table.join2(files, os.files("tests/**/*.h"))
+
+    if #files > 0 then
+      os.runv("clang-format", table.join({
+        "--dry-run",
+        "--fail-on-incomplete-format",
+        "--ferror-limit=1",
+        "--sort-includes",
+        "-i"
+      }, files))
+    end
   end)
 task_end()
 
@@ -148,13 +164,13 @@ after_build(function(target)
 end)
 
 before_run(function(target)
-  if has_config("coverage") and get_config("coverage") and target:name() == "tests" then
+  if has_config("coverage") and get_config("coverage") and target:name() == "tests" and not is_plat("windows") then
     os.setenv("LLVM_PROFILE_FILE", "default.profraw")
   end
 end)
 
 after_run(function(target)
-  if has_config("coverage") and get_config("coverage") and target:name() == "tests" then
+  if has_config("coverage") and get_config("coverage") and target:name() == "tests" and not is_plat("windows") then
     local profraw = path.join(target:targetdir(), "default.profraw")
     local profdata = path.join(target:targetdir(), "default.profdata")
     local coverage_dir = "out/coverage"
@@ -183,21 +199,26 @@ target("alcy.root_config")
   add_cxxflags("-fno-exceptions", "-fno-rtti", {public = true})
   add_cxxflags("-fstack-protector-strong", {public = true})
   add_defines("__STDC_CONSTANT_MACROS", "__STDC_FORMAT_MACROS", {public = true})
+  add_defines("PROJECT_VERSION=\"" .. project_version .. "\"",  {public = true})
   add_includedirs("src", "third_party", {public = true})
 
   if is_plat("linux") then
     add_cxxflags("-fcf-protection=full", "-fPIE", {public = true})
     add_ldflags("-pie", {public = true})
     add_rpathdirs("$LD_LIBRARY_PATH", {public = true})
+    add_defines("IS_PLAT_LINUX", {public = true})
   elseif is_plat("macosx") then
     add_cxxflags("-fPIE", {public = true})
+    add_defines("IS_PLAT_MACOS", {public = true})
+  elseif is_plat("windows") then
+    add_defines("IS_PLAT_WINDOWS", {public = true})
   end
 
   if has_config("xray") and get_config("xray") and is_mode("debug") then
     add_cxxflags("-fxray-instrument", "-fxray-instruction-threshold=200", {public = true})
     add_ldflags("-fxray-instrument", {public = true})
   end
-  if has_config("coverage") and get_config("coverage") then
+  if has_config("coverage") and get_config("coverage") and not is_plat("windows") then
     add_cxxflags("-fprofile-instr-generate", "-fcoverage-mapping", {public = true})
     add_ldflags("-fprofile-instr-generate", "-fcoverage-mapping", {public = true})
   end
@@ -214,8 +235,8 @@ target("alcy.root_config")
   if is_mode("debug") then
     set_symbols("debug", {public = true})
     set_optimize("none", {public = true})
-    add_defines("LLVM_ENABLE_STATS", "LLVM_ENABLE_DUMP", {public = true})
-    if has_config("sanitizers") and get_config("sanitizers") then
+    add_defines("DEBUG", "LLVM_ENABLE_STATS", "LLVM_ENABLE_DUMP", {public = true})
+    if has_config("sanitizers") and get_config("sanitizers") and not is_plat("windows") then
       set_policy("build.sanitizer.address", true)
       set_policy("build.sanitizer.undefined", true)
       set_policy("build.sanitizer.leak", true)
@@ -226,10 +247,12 @@ target("alcy.root_config")
     set_symbols("hidden", {public = true})
     set_optimize("fastest", {public = true})
     set_strip("all", {public = true})
+    add_defines("NDEBUG", {public = true})
     if has_config("native") and get_config("native") and not is_cross() then
       add_cxxflags("-march=native", {public = true})
     end
   end
+
   if is_libcxx then
     add_cxxflags("-stdlib=libc++", {public = true})
     add_ldflags("-stdlib=libc++", "-lc++", "-lc++abi", {public = true})
