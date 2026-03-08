@@ -101,7 +101,8 @@ task("lint")
   })
   on_run(function()
     os.run("uv sync")
-    os.run("uv run cpplint --recursive src tests")
+    local result = os.iorun("uv run cpplint --recursive src tests")
+    print(result)
 
     local files = os.files("src/**/*.cc")
     table.join2(files, os.files("src/**/*.h"))
@@ -109,13 +110,14 @@ task("lint")
     table.join2(files, os.files("tests/**/*.h"))
 
     if #files > 0 then
-      os.runv("clang-format", table.join({
+      result = os.iorunv("clang-format", table.join({
         "--dry-run",
         "--fail-on-incomplete-format",
         "--ferror-limit=1",
         "--sort-includes",
         "-i"
       }, files))
+      print(result)
     end
   end)
 task_end()
@@ -127,7 +129,8 @@ task("analyze")
     description = "analyze source code using scan-build"
   })
   on_run(function()
-    os.runv("scan-build", { "xmake", "build" })
+    local result = os.iorunv("scan-build", { "xmake", "build" })
+    print(result)
   end)
 task_end()
 
@@ -138,9 +141,10 @@ task("checks")
     description = "run format, lint, analyze tasks"
   })
   on_run(function()
-    os.run("xmake format")
-    os.run("xmake lint")
-    os.run("xmake analyze")
+    local result = os.iorun("xmake lint")
+    print(result)
+    result = os.iorun("xmake analyze")
+    print(result)
   end)
 task_end()
 
