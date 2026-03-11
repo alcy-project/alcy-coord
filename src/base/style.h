@@ -6,14 +6,14 @@
 
 #include <array>
 #include <cstddef>
-#include <cstdint>
 
-#include "base/check.h"
+#include "base/debug.h"
+#include "base/numeric.h"
 
 namespace base {
 
-// base styles
-enum class Style : uint8_t {
+// Base styles
+enum class Style : u8 {
   Reset = 0,
   Bold = 1 << 0,       // 1
   Dim = 1 << 1,        // 2
@@ -24,7 +24,7 @@ enum class Style : uint8_t {
   Hidden = 1 << 6,     // 64
   Strike = 1 << 7,     // 128
 
-  // alias
+  // Alias
   BoldUnderline = Bold | Underline,
   BoldItalic = Bold | Italic,
 
@@ -45,8 +45,8 @@ inline constexpr std::array<const char*, 8> kStyleCodes = {
     kBold, kDim, kItalic, kUnderline, kBlink, kReverse, kHidden, kStrike,
 };
 
-// foreground colors
-enum class Color : uint8_t {
+// Foreground colors
+enum class Color : u8 {
   Black = 0,
   Red = 1,
   Green = 2,
@@ -91,8 +91,8 @@ inline constexpr std::array<const char*, 16> kColorCodes = {
     kBrightBlue, kBrightMagenta, kBrightCyan,  kBrightWhite,
 };
 
-// background colors
-enum class BgColor : uint8_t {
+// Background colors
+enum class BgColor : u8 {
   Black = 0,
   Red = 1,
   Green = 2,
@@ -142,30 +142,30 @@ constexpr const char* kBgRgbPrefix = "\033[48;2;";
 constexpr const char kRgbSuffix = 'm';
 constexpr const char kSemicolon = ';';
 
-constexpr const std::size_t kStyleCodeLength = 4;
-constexpr const std::size_t kResetCodeLength = kStyleCodeLength;
-constexpr const std::size_t kRgbCodeLength = 20;
+constexpr const usize kStyleCodeLength = 4;
+constexpr const usize kResetCodeLength = kStyleCodeLength;
+constexpr const usize kRgbCodeLength = 20;
 
 inline constexpr const char* style_str(Style style) {
-  dcheck(static_cast<uint8_t>(style) <= static_cast<uint8_t>(Style::Strike));
+  dcheck(static_cast<u8>(style) <= static_cast<u8>(Style::Strike));
   if (style == Style::Reset) {
     return kReset;
   }
-  return kStyleCodes[static_cast<uint8_t>(style)];
+  return kStyleCodes[static_cast<u8>(style)];
 }
 
 inline constexpr const char* color_str(Color color) {
   if (color == Color::Default) {
     return kReset;
   }
-  return kColorCodes[static_cast<uint8_t>(color)];
+  return kColorCodes[static_cast<u8>(color)];
 }
 
 inline constexpr const char* color_str(BgColor bg_color) {
   if (bg_color == BgColor::Default) {
     return kReset;
   }
-  return kBgColorCodes[static_cast<uint8_t>(bg_color)];
+  return kBgColorCodes[static_cast<u8>(bg_color)];
 }
 
 }  // namespace base

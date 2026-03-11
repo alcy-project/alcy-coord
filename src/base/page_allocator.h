@@ -8,13 +8,12 @@
 
 namespace base {
 
-enum class Stream : u8 {
-  Stdout,
-  Stderr,
-};
+void* reserve_pages(usize size);
+bool commit_pages(void* ptr, usize size);
+void decommit_pages(void* ptr, usize size);
 
-bool can_use_ansi_escape_sequence(Stream stream);
-
-void register_console();
+void* allocate_pages(usize size);
+void* allocate_huge_pages(usize size);
+void free_pages(void* ptr, usize size);
 
 }  // namespace base

@@ -4,9 +4,9 @@
 
 #include "base/console.h"
 
-#include "base/check.h"
+#include "base/debug.h"
 
-#ifdef IS_PLAT_WINDOWS
+#if IS_PLAT_WINDOWS
 #include <io.h>
 #include <windows.h>
 #else
@@ -18,8 +18,8 @@ namespace base {
 namespace {
 
 bool check_ansi_sequence_available(Stream stream) {
-#ifdef IS_PLAT_WINDOWS
-  // check if GetStdHandle() returns terminal handle
+#if IS_PLAT_WINDOWS
+  // Check if GetStdHandle() returns terminal handle
   DWORD handle = 0;
   if (stream == Stream::Stdout) {
     handle = STD_OUTPUT_HANDLE;
@@ -36,10 +36,10 @@ bool check_ansi_sequence_available(Stream stream) {
     return false;
   }
 
-  // enable virtual terminal processing
+  // Enable virtual terminal processing
   dw_mode |= ENABLE_VIRTUAL_TERMINAL_PROCESSING;
   if (!SetConsoleMode(h_out, dw_mode)) {
-    // cannot use ansi sequence if fail to enable virtual terminal
+    // Cannot use ansi sequence if fail to enable virtual terminal
     return false;
   }
   return true;
@@ -67,12 +67,12 @@ bool can_use_ansi_escape_sequence(Stream stream) {
 }
 
 void register_console() {
-  // set console mode to utf8
-#ifdef IS_PLAT_WINDOWS
+  // Set console mode to utf8
+#if IS_PLAT_WINDOWS
   SetConsoleCP(CP_UTF8);
   SetConsoleOutputCP(CP_UTF8);
 #endif
-  // call these once to initialize the static variable
+  // Call these once to initialize the static variable
   can_use_ansi_escape_sequence(Stream::Stdout);
   can_use_ansi_escape_sequence(Stream::Stderr);
 }

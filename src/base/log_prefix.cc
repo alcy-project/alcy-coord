@@ -15,21 +15,21 @@ namespace base {
 namespace {
 
 constexpr std::string_view kPlainPrefixes[] = {
-    "debug: ",  // debug
-    " info: ",  // info
-    " warn: ",  // warn
-    "error: ",  // error
-    "fatal: ",  // fatal
+    "debug: ",  // Debug
+    " info: ",  // Info
+    " warn: ",  // Warn
+    "error: ",  // Error
+    "fatal: ",  // Fatal
 };
 
 struct PrefixStorage {
   // 32 bytes is enough for any ansi prefix; verified at compile time below
-  static constexpr size_t kCapacity = 32;
+  static constexpr usize kCapacity = 32;
   char buf[kCapacity]{};
   std::string_view view;
 };
 
-// build into a pre-allocated prefixstorage
+// Build into a pre-allocated prefixstorage
 constexpr void build_ansi_prefix(PrefixStorage* out,
                                  std::string_view bold,
                                  std::string_view color,
@@ -47,12 +47,11 @@ constexpr void build_ansi_prefix(PrefixStorage* out,
   append(label);
   append(reset);
   append(suffix);
-  out->view =
-      std::string_view{out->buf, static_cast<std::size_t>(p - out->buf)};
+  out->view = std::string_view{out->buf, static_cast<usize>(p - out->buf)};
 }
 
 struct PrefixTable {
-  PrefixStorage ansi[static_cast<std::size_t>(LogLevel::MaxValue) + 1];
+  PrefixStorage ansi[static_cast<usize>(LogLevel::MaxValue) + 1];
   bool use_ansi{false};
 
   void init() {
@@ -81,7 +80,7 @@ const PrefixTable& table() {
 }  // namespace
 
 std::string_view log_prefix(LogLevel level) {
-  const auto idx = static_cast<std::size_t>(level);
+  const auto idx = static_cast<usize>(level);
   const PrefixTable& t = table();
   return t.use_ansi ? t.ansi[idx].view : kPlainPrefixes[idx];
 }

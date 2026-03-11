@@ -6,7 +6,7 @@
 
 #include <string_view>
 
-#include "base/int.h"
+#include "base/numeric.h"
 
 namespace base {
 
