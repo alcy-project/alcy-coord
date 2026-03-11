@@ -9,17 +9,17 @@ set_version(project_version)
 set_policy("build.ccache", true)
 set_policy("check.auto_ignore_flags", false)
 
-option("coverage", {default = false, description = "use llvm-cov for analyzing test coverage"})
-option("xray", {default = false, description = "use llvm-xray for determining performance bottleneck"})
-option("optreport", {default = false, description = "report optimization result"})
-option("sanitizers", {default = false, description = "enable address/undefined behaviour/leak sanitizer"})
-option("timetrace", {default = false, description = "generate timetrace json that can be see with perfetto ui"})
-option("native", {default = false, description = "native architecture optimization"})
-option("unitybuild", {default = false, description = "enalbe unity build to shorten build time"})
-option("stdlib", {default = "libstdc++", description = "stl to use"})
+option("coverage", { default = false, description = "use llvm-cov for analyzing test coverage" })
+option("xray", { default = false, description = "use llvm-xray for determining performance bottleneck" })
+option("optreport", { default = false, description = "report optimization result" })
+option("sanitizers", { default = false, description = "enable address/undefined behaviour/leak sanitizer" })
+option("timetrace", { default = false, description = "generate timetrace json that can be see with perfetto ui" })
+option("native", { default = false, description = "native architecture optimization" })
+option("unitybuild", { default = false, description = "enalbe unity build to shorten build time" })
+option("stdlib", { default = "libstdc++", description = "stl to use" })
 
 add_rules("mode.debug", "mode.release", "mode.releasedbg")
-add_rules("plugin.compile_commands.autoupdate", {outputdir = "out"})
+add_rules("plugin.compile_commands.autoupdate", { outputdir = "out" })
 
 set_languages("c++23")
 set_targetdir("out/$(plat)-$(arch)-$(mode)")
@@ -38,7 +38,7 @@ local alcy_modules = {
 
 local is_libcxx = has_config("stdlib") and get_config("stdlib") == "libc++" and is_config("cxx", "clang", "clang++") and is_plat("linux", "macosx")
 -- add_requires("zlib")
-local catch2_configs = {}
+local catch2_configs = { }
 -- local llvm_configs = {
 --   shared = false,
 --   clang = true,
@@ -52,7 +52,7 @@ local catch2_configs = {}
 if is_libcxx then
   table.join2(catch2_configs, {
     cxxflags = "-stdlib=" .. stdlib,
-    ldflags = {"-stdlib=" .. stdlib, "-lc++", "-lc++abi"}
+    ldflags = { "-stdlib=" .. stdlib, "-lc++", "-lc++abi" }
   })
   -- table.join2(llvm_configs, {
   --   cxxflags = "-stdlib=libc++",
@@ -76,7 +76,7 @@ task("format")
     usage = "xmake format",
     description = "format source code using clang-format"
   })
-  on_run(function()
+  on_run( function ()
     local files = os.files("src/**.cc")
     table.join2(files, os.files("src/**.h"))
     table.join2(files, os.files("tests/**.cc"))
@@ -90,6 +90,10 @@ task("format")
         "-i"
       }, files))
     end
+
+    os.run("uv sync")
+    local result = os.iorun("uv run scripts/header_license.py"):trim()
+    print(result)
   end)
 task_end()
 
@@ -99,7 +103,7 @@ task("lint")
     usage = "xmake lint",
     description = "lint source code using cpplint"
   })
-  on_run(function()
+  on_run( function ()
     os.run("uv sync")
     local result = os.iorun("uv run cpplint --recursive src tests"):trim()
     print(result)
@@ -128,7 +132,7 @@ task("analyze")
     usage = "xmake analyze",
     description = "analyze source code using scan-build"
   })
-  on_run(function()
+  on_run( function ()
     local result = os.iorunv("scan-build", { "xmake", "build" }):trim()
     print(result)
   end)
@@ -140,7 +144,7 @@ task("checks")
     usage = "xmake checks",
     description = "run format, lint, analyze tasks"
   })
-  on_run(function()
+  on_run( function ()
     local result = os.iorun("xmake lint"):trim()
     print(result)
     result = os.iorun("xmake analyze"):trim()
@@ -149,7 +153,7 @@ task("checks")
 task_end()
 
 -- events
-after_build(function(target)
+after_build( function (target)
   if has_config("timetrace") and get_config("timetrace") then
     local trace_dir = path.join(os.projectdir(), "out/timetrace")
     os.mkdir(trace_dir)
@@ -171,13 +175,13 @@ after_build(function(target)
   end
 end)
 
-before_run(function(target)
+before_run( function (target)
   if has_config("coverage") and get_config("coverage") and target:name() == "tests" and not is_plat("windows") then
     os.setenv("LLVM_PROFILE_FILE", "default.profraw")
   end
 end)
 
-after_run(function(target)
+after_run( function (target)
   if has_config("coverage") and get_config("coverage") and target:name() == "tests" and not is_plat("windows") then
     local profraw = path.join(target:targetdir(), "default.profraw")
     local profdata = path.join(target:targetdir(), "default.profdata")
@@ -200,87 +204,98 @@ end)
 
 -- rules
 rule("deps.llvm")
-  on_config(function (target)
+  on_config( function (target)
     import("lib.detect.find_tool")
     local llvm_config = find_tool("llvm-config")
     if llvm_config then
-      local includedir = os.iorunv(llvm_config.program, {"--includedir"}):trim()
+      local includedir = os.iorunv(llvm_config.program, { "--includedir" }):trim()
       target:add("includedirs", includedir)
-      local ldflags = os.iorunv(llvm_config.program, {"--libs"}):trim()
+      local ldflags = os.iorunv(llvm_config.program, { "--libs", "core", "support" }):trim()
       target:add("ldflags", ldflags)
     end
   end)
 
   if is_plat("windows") then
-    add_includedirs("$(env LLVM_PATH)/include")
-    add_linkdirs("$(env LLVM_PATH)/lib")
-    add_links("LLVMCore", "LLVMSupport")
+    local llvm_root = os.getenv("LLVM_PATH") or find_path("include/llvm/Config/llvm-config.h", {
+      "C:/Program Files/LLVM",
+      "D:/LLVM",
+      "$(env PATH)"
+    })
+
+    if llvm_root then
+      target:add("includedirs", path.join(llvm_root, "include"))
+      target:add("linkdirs", path.join(llvm_root, "lib"))
+      target:add("ldflags", "-lLLVMCore -lLLVMRemarks -lLLVMBitstreamReader -lLLVMBinaryFormat -lLLVMTargetParser -lLLVMSupport -lLLVMDemangle")
+    else
+      raise("LLVM not found. Please set LLVM_PATH environment variable.")
+    end
   end
 rule_end()
 
 -- targets
 target("alcy.root_config")
-  set_kind("phony", {public = true})
-  set_warnings("all", "extra", "error", "pedantic", {public = true})
-  add_cxxflags("-Wshadow", "-Wconversion", "-Wsign-conversion", "-Wnull-dereference", "-Wformat=2", {public = true})
-  set_exceptions("none", {public = true})
-  add_cxxflags("-fno-exceptions", "-fno-rtti", {public = true})
-  add_cxxflags("-fstack-protector-strong", {public = true})
-  add_defines("__STDC_CONSTANT_MACROS", "__STDC_FORMAT_MACROS", {public = true})
-  add_defines("PROJECT_VERSION=\"" .. project_version .. "\"",  {public = true})
-  add_includedirs("src", "third_party", {public = true})
+  set_kind("phony", { public = true })
+  set_warnings("all", "extra", "error", "pedantic", { public = true })
+  add_cxxflags("-Wshadow", "-Wconversion", "-Wsign-conversion", "-Wnull-dereference", "-Wformat=2", { public = true })
+  set_exceptions("none", { public = true })
+  add_cxxflags("-fno-exceptions", "-fno-rtti", { public = true })
+  add_cxxflags("-fstack-protector-strong", { public = true })
+  add_defines("__STDC_CONSTANT_MACROS", "__STDC_FORMAT_MACROS", { public = true })
+  add_defines("PROJECT_VERSION=\"" .. project_version .. "\"", { public = true })
+  add_includedirs("src", "third_party", { public = true })
+  set_pcxxheader("src/codegen/llvm/pch.h")
 
   if is_plat("linux") then
-    add_cxxflags("-fcf-protection=full", "-fPIE", {public = true})
-    add_ldflags("-pie", {public = true})
-    add_rpathdirs("$LD_LIBRARY_PATH", {public = true})
-    add_defines("IS_PLAT_LINUX=1", "IS_PLAT_MACOS=0", "IS_PLAT_WINDOWS=0", {public = true})
+    add_cxxflags("-fcf-protection=full", "-fPIE", { public = true })
+    add_ldflags("-pie", { public = true })
+    add_rpathdirs("$LD_LIBRARY_PATH", { public = true })
+    add_defines("IS_PLAT_LINUX=1", "IS_PLAT_MACOS=0", "IS_PLAT_WINDOWS=0", { public = true })
   elseif is_plat("macosx") then
-    add_cxxflags("-fPIE", {public = true})
-    add_defines("IS_PLAT_LINUX=0", "IS_PLAT_MACOS=1", "IS_PLAT_WINDOWS=0", {public = true})
+    add_cxxflags("-fPIE", { public = true })
+    add_defines("IS_PLAT_LINUX=0", "IS_PLAT_MACOS=1", "IS_PLAT_WINDOWS=0", { public = true })
   elseif is_plat("windows") then
-    add_defines("IS_PLAT_LINUX=0", "IS_PLAT_MACOS=0", "IS_PLAT_WINDOWS=1", {public = true})
+    add_defines("IS_PLAT_LINUX=0", "IS_PLAT_MACOS=0", "IS_PLAT_WINDOWS=1", { public = true })
   end
 
   if is_mode("debug") then
-    set_symbols("debug", {public = true})
-    set_optimize("none", {public = true})
-    add_defines("DEBUG", "LLVM_ENABLE_STATS", "LLVM_ENABLE_DUMP", {public = true})
+    set_symbols("debug", { public = true })
+    set_optimize("none", { public = true })
+    add_defines("DEBUG", "LLVM_ENABLE_STATS", "LLVM_ENABLE_DUMP", { public = true })
     if has_config("sanitizers") and get_config("sanitizers") and not is_plat("windows") then
       set_policy("build.sanitizer.address", true)
       set_policy("build.sanitizer.undefined", true)
       set_policy("build.sanitizer.leak", true)
-      add_cxxflags("-fsanitize=address,undefined,leak", "-fno-omit-frame-pointer", "-fno-sanitize-recover=all", {public = true})
-      add_ldflags("-fsanitize=address,undefined,leak", {public = true})
+      add_cxxflags("-fsanitize=address,undefined,leak", "-fno-omit-frame-pointer", "-fno-sanitize-recover=all", { public = true })
+      add_ldflags("-fsanitize=address,undefined,leak", { public = true })
     end
   elseif is_mode("release") then
-    set_symbols("hidden", {public = true})
-    set_optimize("fastest", {public = true})
-    set_strip("all", {public = true})
-    add_defines("NDEBUG", {public = true})
+    set_symbols("hidden", { public = true })
+    set_optimize("fastest", { public = true })
+    set_strip("all", { public = true })
+    add_defines("NDEBUG", { public = true })
     if has_config("native") and get_config("native") and not is_cross() then
-      add_cxxflags("-march=native", {public = true})
+      add_cxxflags("-march=native", { public = true })
     end
   end
 
   if is_libcxx then
-    add_cxxflags("-stdlib=libc++", {public = true})
-    add_ldflags("-stdlib=libc++", "-lc++", "-lc++abi", {public = true})
+    add_cxxflags("-stdlib=libc++", { public = true })
+    add_ldflags("-stdlib=libc++", "-lc++", "-lc++abi", { public = true })
   end
 
   if has_config("xray") and get_config("xray") and is_mode("debug") then
-    add_cxxflags("-fxray-instrument", "-fxray-instruction-threshold=200", {public = true})
-    add_ldflags("-fxray-instrument", {public = true})
+    add_cxxflags("-fxray-instrument", "-fxray-instruction-threshold=200", { public = true })
+    add_ldflags("-fxray-instrument", { public = true })
   end
   if has_config("coverage") and get_config("coverage") and not is_plat("windows") then
-    add_cxxflags("-fprofile-instr-generate", "-fcoverage-mapping", {public = true})
-    add_ldflags("-fprofile-instr-generate", "-fcoverage-mapping", {public = true})
+    add_cxxflags("-fprofile-instr-generate", "-fcoverage-mapping", { public = true })
+    add_ldflags("-fprofile-instr-generate", "-fcoverage-mapping", { public = true })
   end
   if has_config("optreport") and get_config("optreport") and is_mode("release") then
-    add_cxxflags("-fsave-optimization-record", {public = true})
+    add_cxxflags("-fsave-optimization-record", { public = true })
   end
   if has_config("timetrace") and get_config("timetrace") then
-    add_cxxflags("-ftime-trace", {public = true})
+    add_cxxflags("-ftime-trace", { public = true })
   end
   if has_config("unitybuild") and get_config("unitybuild") then
     add_rules("c++.unity_build", { batchsize = 12 })
@@ -304,7 +319,6 @@ target_end()
 target("alcy.codegen")
   add_deps("alcy.root_config")
   set_kind("object")
-  set_pcxxheader("src/codegen/llvm/pch.h")
   add_files("src/codegen/**.cc")
   add_rules("deps.llvm")
   -- add_packages("llvm")
