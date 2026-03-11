@@ -4,7 +4,9 @@
 
 #include <print>
 
-int main() {
+#include "base/numeric.h"
+
+i32 main() {
   std::println("Hello World");
   return 0;
 }
