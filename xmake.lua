@@ -77,10 +77,10 @@ task("format")
     description = "format source code using clang-format"
   })
   on_run(function()
-    local files = os.files("src/**/*.cc")
-    table.join2(files, os.files("src/**/*.h"))
-    table.join2(files, os.files("tests/**/*.cc"))
-    table.join2(files, os.files("tests/**/*.h"))
+    local files = os.files("src/**.cc")
+    table.join2(files, os.files("src/**.h"))
+    table.join2(files, os.files("tests/**.cc"))
+    table.join2(files, os.files("tests/**.h"))
 
     if #files > 0 then
       os.runv("clang-format", table.join({
@@ -101,13 +101,13 @@ task("lint")
   })
   on_run(function()
     os.run("uv sync")
-    local result = os.iorun("uv run cpplint --recursive src tests")
+    local result = os.iorun("uv run cpplint --recursive src tests"):trim()
     print(result)
 
-    local files = os.files("src/**/*.cc")
-    table.join2(files, os.files("src/**/*.h"))
-    table.join2(files, os.files("tests/**/*.cc"))
-    table.join2(files, os.files("tests/**/*.h"))
+    local files = os.files("src/**.cc")
+    table.join2(files, os.files("src/**.h"))
+    table.join2(files, os.files("tests/**.cc"))
+    table.join2(files, os.files("tests/**.h"))
 
     if #files > 0 then
       result = os.iorunv("clang-format", table.join({
@@ -116,7 +116,7 @@ task("lint")
         "--ferror-limit=1",
         "--sort-includes",
         "-i"
-      }, files))
+      }, files)):trim()
       print(result)
     end
   end)
@@ -129,7 +129,7 @@ task("analyze")
     description = "analyze source code using scan-build"
   })
   on_run(function()
-    local result = os.iorunv("scan-build", { "xmake", "build" })
+    local result = os.iorunv("scan-build", { "xmake", "build" }):trim()
     print(result)
   end)
 task_end()
@@ -141,9 +141,9 @@ task("checks")
     description = "run format, lint, analyze tasks"
   })
   on_run(function()
-    local result = os.iorun("xmake lint")
+    local result = os.iorun("xmake lint"):trim()
     print(result)
-    result = os.iorun("xmake analyze")
+    result = os.iorun("xmake analyze"):trim()
     print(result)
   end)
 task_end()
@@ -198,6 +198,26 @@ after_run(function(target)
   end
 end)
 
+-- rules
+rule("deps.llvm")
+  on_config(function (target)
+    import("lib.detect.find_tool")
+    local llvm_config = find_tool("llvm-config")
+    if llvm_config then
+      local includedir = os.iorunv(llvm_config.program, {"--includedir"}):trim()
+      target:add("includedirs", includedir)
+      local ldflags = os.iorunv(llvm_config.program, {"--libs"}):trim()
+      target:add("ldflags", ldflags)
+    end
+  end)
+
+  if is_plat("windows") then
+    add_includedirs("$(env LLVM_PATH)/include")
+    add_linkdirs("$(env LLVM_PATH)/lib")
+    add_links("LLVMCore", "LLVMSupport")
+  end
+rule_end()
+
 -- targets
 target("alcy.root_config")
   set_kind("phony", {public = true})
@@ -214,30 +234,12 @@ target("alcy.root_config")
     add_cxxflags("-fcf-protection=full", "-fPIE", {public = true})
     add_ldflags("-pie", {public = true})
     add_rpathdirs("$LD_LIBRARY_PATH", {public = true})
-    add_defines("IS_PLAT_LINUX", {public = true})
+    add_defines("IS_PLAT_LINUX=1", "IS_PLAT_MACOS=0", "IS_PLAT_WINDOWS=0", {public = true})
   elseif is_plat("macosx") then
     add_cxxflags("-fPIE", {public = true})
-    add_defines("IS_PLAT_MACOS", {public = true})
+    add_defines("IS_PLAT_LINUX=0", "IS_PLAT_MACOS=1", "IS_PLAT_WINDOWS=0", {public = true})
   elseif is_plat("windows") then
-    add_defines("IS_PLAT_WINDOWS", {public = true})
-  end
-
-  if has_config("xray") and get_config("xray") and is_mode("debug") then
-    add_cxxflags("-fxray-instrument", "-fxray-instruction-threshold=200", {public = true})
-    add_ldflags("-fxray-instrument", {public = true})
-  end
-  if has_config("coverage") and get_config("coverage") and not is_plat("windows") then
-    add_cxxflags("-fprofile-instr-generate", "-fcoverage-mapping", {public = true})
-    add_ldflags("-fprofile-instr-generate", "-fcoverage-mapping", {public = true})
-  end
-  if has_config("optreport") and get_config("optreport") and is_mode("release") then
-    add_cxxflags("-fsave-optimization-record", {public = true})
-  end
-  if has_config("timetrace") and get_config("timetrace") then
-    add_cxxflags("-ftime-trace", {public = true})
-  end
-  if has_config("unitybuild") and get_config("unitybuild") then
-    add_rules("c++.unity_build", { batchsize = 12 })
+    add_defines("IS_PLAT_LINUX=0", "IS_PLAT_MACOS=0", "IS_PLAT_WINDOWS=1", {public = true})
   end
 
   if is_mode("debug") then
@@ -265,6 +267,24 @@ target("alcy.root_config")
     add_cxxflags("-stdlib=libc++", {public = true})
     add_ldflags("-stdlib=libc++", "-lc++", "-lc++abi", {public = true})
   end
+
+  if has_config("xray") and get_config("xray") and is_mode("debug") then
+    add_cxxflags("-fxray-instrument", "-fxray-instruction-threshold=200", {public = true})
+    add_ldflags("-fxray-instrument", {public = true})
+  end
+  if has_config("coverage") and get_config("coverage") and not is_plat("windows") then
+    add_cxxflags("-fprofile-instr-generate", "-fcoverage-mapping", {public = true})
+    add_ldflags("-fprofile-instr-generate", "-fcoverage-mapping", {public = true})
+  end
+  if has_config("optreport") and get_config("optreport") and is_mode("release") then
+    add_cxxflags("-fsave-optimization-record", {public = true})
+  end
+  if has_config("timetrace") and get_config("timetrace") then
+    add_cxxflags("-ftime-trace", {public = true})
+  end
+  if has_config("unitybuild") and get_config("unitybuild") then
+    add_rules("c++.unity_build", { batchsize = 12 })
+  end
 target_end()
 
 target("alcy.analyzer")
@@ -286,6 +306,7 @@ target("alcy.codegen")
   set_kind("object")
   set_pcxxheader("src/codegen/llvm/pch.h")
   add_files("src/codegen/**.cc")
+  add_rules("deps.llvm")
   -- add_packages("llvm")
   set_default(false)
 target_end()
