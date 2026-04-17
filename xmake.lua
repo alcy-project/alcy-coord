@@ -22,9 +22,10 @@ add_rules("mode.debug", "mode.release", "mode.releasedbg")
 add_rules("plugin.compile_commands.autoupdate", { outputdir = "out" })
 
 set_languages("c++23")
-set_targetdir("out/$(plat)-$(arch)-$(mode)")
+-- set_targetdir("out/$(plat)-$(arch)-$(mode)")
 set_encodings("source:utf-8")
 set_encodings("utf-8") -- target
+
 local alcy_modules = {
   "alcy.analyzer",
   "alcy.base",
@@ -36,6 +37,7 @@ local alcy_modules = {
   "alcy.pipeline"
 }
 
+add_requires("fpag")
 local is_libcxx = has_config("stdlib") and get_config("stdlib") == "libc++" and is_config("cxx", "clang", "clang++") and is_plat("linux", "macosx")
 -- add_requires("zlib")
 local catch2_configs = { }
@@ -365,6 +367,7 @@ target("alcy")
   set_kind("binary")
   add_files("src/app/**.cc")
   add_deps(alcy_modules)
+  add_packages("fpag")
   set_default(true)
 target_end()
 
