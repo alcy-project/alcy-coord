@@ -1,12 +1,15 @@
 name: release
 
+env:
+  basename: "alcy"
+
 permissions:
   contents: write
 
 on:
   push:
     tags:
-      - 'v*'
+      - "v*"
   workflow_dispatch:
 
 jobs:
@@ -42,6 +45,17 @@ jobs:
 
       - name: setup xmake
         uses: xmake-io/github-action-setup-xmake@cc0f56c35b75d0975ed5d9e29005fae707721cd5
+        with:
+          # https://github.com/xmake-io/xmake/tags
+          xmake-version: "3.0.7"
+          actions-cache-folder: ".xmake-cache"
+          actions-cache-key: "${{ matrix.os }}-xmake"
+          package-cache: true
+          package-cache-key: "${{ matrix.os }}-packages"
+          build-cache: true
+          build-cache-path: "build/.build_cache"
+          build-cache-key: "${{ matrix.os }}-build"
+          project-path: "."
 
       - name: install llvm tools
         uses: KyleMayes/install-llvm-action@ebc0426251bc40c7cd31162802432c68818ab8f0
@@ -74,34 +88,26 @@ jobs:
             -a "${{ matrix.arch }}" \
             --stdlib="${{ matrix.stdlib }}"
 
-      - name: build alcy
+      - name: build
         shell: bash
-        run: xmake build alcy
+        run: xmake build
 
       - name: package artifact
         shell: bash
         run: |
-          # mkdir -p dist
-          # cp LICENSE README.md dist/ 2>/dev/null || true
-          # if [[ "${{ matrix.plat }}" == "windows" ]]; then
-          #   cp out/*/alcy.exe dist/
-          #   cd dist && 7z a ../alcy-${{ matrix.suffix }}.zip *
-          # else
-          #   cp out/*/alcy dist/
-          #   cd dist && tar -czvf ../alcy-${{ matrix.suffix }}.tar.gz *
-          # fi
+          mkdir -p dist
+          cp LICENSE README.md dist/
+          cp out/*/${{ env.basename }}* dist/
           if [[ "${{ matrix.plat }}" == "windows" ]]; then
-            cp out/*/alcy.exe ./alcy-${{matrix.suffix}}.exe
+            cd dist && 7z a ../${{ env.basename }}-${{ matrix.suffix }}.zip *
           else
-            cp out/*/alcy ./alcy-${{ matrix.suffix }}
-            chmod +x ./alcy-${{ matrix.suffix }}
+            cd dist && tar -czvf ../${{ env.basename }}-${{ matrix.suffix }}.tar.gz *
           fi
 
       - name: upload artifact to release
         uses: softprops/action-gh-release@a06a81a03ee405af7f2048a818ed3f03bbf83c7b
         with:
-          # files: alcy-${{ matrix.suffix }}.${{ matrix.archive }}
-          files: alcy-${{ matrix.suffix }}*
+          files: ${{ env.basename }}-${{ matrix.suffix }}.${{ matrix.archive }}
           draft: true
           generate_release_notes: false
         env:
