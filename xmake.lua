@@ -6,25 +6,200 @@ set_project("alcy_lang")
 local project_version = "0.1.0"
 set_version(project_version)
 
+option("coverage")
+set_default(false)
+set_showmenu(true)
+set_description("use llvm-cov for analyzing test coverage")
+option_end()
+
+option("xray")
+set_default(false)
+set_showmenu(true)
+set_description("use llvm-xray for determining performance bottleneck")
+option_end()
+
+option("optreport")
+set_default(false)
+set_showmenu(true)
+set_description("report optimization result")
+option_end()
+
+option("sanitizers")
+set_default(false)
+set_showmenu(true)
+set_description("enable address/undefined behaviour/leak sanitizer")
+option_end()
+
+option("timetrace")
+set_default(false)
+set_showmenu(true)
+set_description("generate timetrace json that can be see with perfetto ui")
+option_end()
+
+option("native")
+set_default(false)
+set_showmenu(true)
+set_description("native architecture optimization")
+option_end()
+
+option("libunwind")
+set_default(false)
+set_showmenu(true)
+set_description("use libunwind for stack tracing (for fpag)")
+option_end()
+
+option("fmtlib")
+set_default(true)
+set_showmenu(true)
+set_description(
+  "use fmtlib for formatting (use std::format if false) (for fpag)"
+)
+option_end()
+
+option("unitybuild")
+set_default(false)
+set_showmenu(true)
+set_description("enable unity build to shorten build time")
+option_end()
+
+option("lto")
+set_default(false)
+set_showmenu(true)
+set_description("do link time optimization on release builds")
+option_end()
+
+option("tests")
+set_default(false)
+set_showmenu(true)
+set_description("build unit tests")
+option_end()
+
+option("benchmarks")
+set_default(false)
+set_showmenu(true)
+set_description("build micro benchmarks")
+option_end()
+
+option("stdlib")
+set_default("libstdc++")
+set_showmenu(true)
+set_description("specify stl to use")
+option_end()
+
 set_policy("build.ccache", true)
 set_policy("check.auto_ignore_flags", false)
-
-option("coverage", { default = false, description = "use llvm-cov for analyzing test coverage" })
-option("xray", { default = false, description = "use llvm-xray for determining performance bottleneck" })
-option("optreport", { default = false, description = "report optimization result" })
-option("sanitizers", { default = false, description = "enable address/undefined behaviour/leak sanitizer" })
-option("timetrace", { default = false, description = "generate timetrace json that can be see with perfetto ui" })
-option("native", { default = false, description = "native architecture optimization" })
-option("unitybuild", { default = false, description = "enalbe unity build to shorten build time" })
-option("stdlib", { default = "libstdc++", description = "stl to use" })
+set_policy("build.optimization.lto", has_config("lto"))
+set_policy("build.c++.msvc.runtime", "MD")
 
 add_rules("mode.debug", "mode.release", "mode.releasedbg")
-add_rules("plugin.compile_commands.autoupdate", { outputdir = "out" })
+add_rules("plugin.compile_commands.autoupdate", { outputdir = "build/" })
 
-set_languages("c++23")
--- set_targetdir("out/$(plat)-$(arch)-$(mode)")
-set_encodings("source:utf-8")
-set_encodings("utf-8") -- target
+-- Helper functions
+local function coverage(target)
+  return has_config("coverage")
+    and target:name() == "tests"
+    and not is_plat("windows")
+end
+
+local function optreport()
+  return has_config("optreport") and not is_mode("debug")
+end
+
+local function sanitizers()
+  return has_config("sanitizers")
+    and is_mode("debug")
+    and not is_plat("windows")
+end
+
+local function xray()
+  return has_config("xray") and not is_mode("release")
+end
+
+local function is_clang()
+  return is_config("toolchain", "clang", "llvm")
+    or (
+      not is_config("toolchain", "gcc")
+      and (is_plat("macosx", "iphoneos") or is_host("macosx"))
+    )
+end
+
+local function is_gcc()
+  return is_config("toolchain", "gcc")
+    or (not is_config("toolchain", "clang", "llvm") and is_plat("linux"))
+end
+
+local function stdlib_config()
+  if is_clang() and not is_plat("windows") and has_config("stdlib") then
+    local std = get_config("stdlib")
+    return { cxxflags = "-stdlib=" .. std, ldflags = "-stdlib=" .. std }
+  end
+  return {}
+end
+
+local subdirs = "src tests benchmarks"
+
+local function source_files()
+  local files = os.files("src/**.cc")
+  table.join2(files, os.files("src/**.h"))
+
+  if has_config("tests") then
+    table.join2(files, os.files("tests/**.cc"))
+    table.join2(files, os.files("tests/**.h"))
+  end
+
+  if has_config("benchmarks") then
+    table.join2(files, os.files("benchmarks/**.cc"))
+    table.join2(files, os.files("benchmarks/**.h"))
+  end
+  return files
+end
+
+if has_config("tests") then
+  add_requires("catch2 v3.13.0", { system = false, configs = stdlib_config() })
+end
+
+if has_config("benchmarks") then
+  add_requires("benchmark v1.9.5", {
+    system = false,
+    configs = table.join(stdlib_config(), {
+      exceptions = false,
+      cxflags = "-DBENCHMARK_USE_LIBCXX="
+        .. (
+          stdlib_config()
+            and (has_config("stdlib") and get_config("stdlib") == "libc++")
+            and "ON"
+          or "OFF"
+        ),
+    }),
+  })
+end
+
+add_requires(
+  "fpag",
+  {
+    configs = {
+      stdlib = get_config("stdlib"),
+      fmtlib = get_config("fmtlib"),
+      libunwind = get_config("libunwind"),
+    },
+  }
+)
+
+local llvm_configs = {
+  shared = false,
+  clang = true,
+  lld = true,
+  libunwind = true,
+  libcxx = true,
+  libcxxabi = true,
+  assertions = is_mode("debug"),
+  components = { "core", "irreader", "mc", "support", "native", "all-targets" },
+}
+table.join2(llvm_configs, stdlib_config())
+add_requires("llvm 21.1.0", {
+  system = false,
+  configs = llvm_configs,
+})
 
 local alcy_modules = {
   "alcy.analyzer",
@@ -34,349 +209,351 @@ local alcy_modules = {
   "alcy.ir",
   "alcy.lexer",
   "alcy.parser",
-  "alcy.pipeline"
+  "alcy.pipeline",
 }
 
-add_requires("fpag")
-local is_libcxx = has_config("stdlib") and get_config("stdlib") == "libc++" and is_config("cxx", "clang", "clang++") and is_plat("linux", "macosx")
--- add_requires("zlib")
-local catch2_configs = { }
--- local llvm_configs = {
---   shared = false,
---   clang = true,
---   lld = true,
---   libunwind = true,
---   libcxx = true,
---   libcxxabi = true,
---   assertions = is_mode("debug"),
---   components = { "core", "irreader", "mc", "support", "native", "all-targets" },
--- }
-if is_libcxx then
-  table.join2(catch2_configs, {
-    cxxflags = "-stdlib=" .. stdlib,
-    ldflags = { "-stdlib=" .. stdlib, "-lc++", "-lc++abi" }
-  })
-  -- table.join2(llvm_configs, {
-  --   cxxflags = "-stdlib=libc++",
-  --   ldflags = {"-stdlib=libc++", "-lc++", "-lc++abi"}
-  -- })
-end
-add_requires("catch2 v3.12.0", {
-  system = false,
-  configs = catch2_configs,
-})
--- add_requires("llvm 21.1.0", {
---   system = false,
---   configs = llvm_configs,
--- })
-
-
--- tasks
+-- Tasks
 task("format")
-  set_category(task_category)
-  set_menu({
-    usage = "xmake format",
-    description = "format source code using clang-format"
-  })
-  on_run( function ()
-    local files = os.files("src/**.cc")
-    table.join2(files, os.files("src/**.h"))
-    table.join2(files, os.files("tests/**.cc"))
-    table.join2(files, os.files("tests/**.h"))
-
-    if #files > 0 then
-      os.runv("clang-format", table.join({
+set_menu({ usage = "xmake format", description = "format source code" })
+on_run(function()
+  local files = source_files()
+  if #files > 0 then
+    os.runv(
+      "clang-format",
+      table.join({
         "--fail-on-incomplete-format",
         "--ferror-limit=1",
         "--sort-includes",
-        "-i"
-      }, files))
-    end
+        "-i",
+      }, files)
+    )
+  end
+  os.run("uv sync")
+  print(os.iorun("uv run scripts/header_license.py"):trim())
+end)
+task_end()
 
-    os.run("uv sync")
-    local result = os.iorun("uv run scripts/header_license.py"):trim()
-    print(result)
-  end)
+task("tidy")
+set_menu({ usage = "xmake tidy", description = "Run clang-tidy --fix" })
+on_run(function()
+  local files = source_files()
+  if #files > 0 then
+    os.runv(
+      "clang-tidy",
+      table.join(
+        { "--use-color", "--fix", "--config-file=./.clang-tidy" },
+        files
+      )
+    )
+  end
+end)
 task_end()
 
 task("lint")
-  set_category(task_category)
-  set_menu({
-    usage = "xmake lint",
-    description = "lint source code using cpplint"
-  })
-  on_run( function ()
-    os.run("uv sync")
-    local result = os.iorun("uv run cpplint --recursive src tests"):trim()
-    print(result)
-
-    local files = os.files("src/**.cc")
-    table.join2(files, os.files("src/**.h"))
-    table.join2(files, os.files("tests/**.cc"))
-    table.join2(files, os.files("tests/**.h"))
-
-    if #files > 0 then
-      result = os.iorunv("clang-format", table.join({
-        "--dry-run",
-        "--fail-on-incomplete-format",
-        "--ferror-limit=1",
-        "--sort-includes",
-        "-i"
-      }, files)):trim()
-      print(result)
-    end
-  end)
+set_menu({
+  usage = "xmake lint",
+  description = "lint using cpplint & clang-format",
+})
+on_run(function()
+  os.run("uv sync")
+  print(os.iorun("uv run cpplint --recursive " .. subdirs):trim())
+  local files = source_files()
+  if #files > 0 then
+    os.runv(
+      "clang-format",
+      table.join({ "--dry-run", "--fail-on-incomplete-format", "-i" }, files)
+    )
+  end
+end)
 task_end()
 
-task("analyze")
-  set_category(task_category)
-  set_menu({
-    usage = "xmake analyze",
-    description = "analyze source code using scan-build"
-  })
-  on_run( function ()
-    local result = os.iorunv("scan-build", { "xmake", "build" }):trim()
-    print(result)
-  end)
-task_end()
-
-task("checks")
-  set_category(task_category)
-  set_menu({
-    usage = "xmake checks",
-    description = "run format, lint, analyze tasks"
-  })
-  on_run( function ()
-    local result = os.iorun("xmake lint"):trim()
-    print(result)
-    result = os.iorun("xmake analyze"):trim()
-    print(result)
-  end)
-task_end()
-
--- events
-after_build( function (target)
-  if has_config("timetrace") and get_config("timetrace") then
-    local trace_dir = path.join(os.projectdir(), "out/timetrace")
+-- Events
+after_build(function(target)
+  if has_config("timetrace") then
+    local trace_dir = path.join(os.projectdir(), "build/timetrace")
     os.mkdir(trace_dir)
     for _, objfile in ipairs(target:objectfiles()) do
-      local base = path.directory(objfile) .. "/" .. path.basename(objfile)
-      local json = base .. ".json"
+      local json = objfile .. ".json"
       if os.exists(json) then
-        os.cp(json, path.join(trace_dir, path.basename(json) .. ".json"))
+        os.cp(json, path.join(trace_dir, path.basename(json)))
       end
     end
   end
 
-  if has_config("optreport") and get_config("optreport") and is_mode("release") then
-    local remark_dir = "out/remarks"
+  if optreport() then
+    local remark_dir = "build/remarks"
     os.mkdir(remark_dir)
-    for _, yaml in ipairs(os.files(path.join(target:targetdir(), "**.opt.yaml"))) do
+    for _, yaml in
+      ipairs(os.files(path.join(target:targetdir(), "**.opt.yaml")))
+    do
       os.cp(yaml, remark_dir)
     end
   end
 end)
 
-before_run( function (target)
-  if has_config("coverage") and get_config("coverage") and target:name() == "tests" and not is_plat("windows") then
-    os.setenv("LLVM_PROFILE_FILE", "default.profraw")
-  end
-end)
-
-after_run( function (target)
-  if has_config("coverage") and get_config("coverage") and target:name() == "tests" and not is_plat("windows") then
+after_run(function(target)
+  if coverage(target) then
     local profraw = path.join(target:targetdir(), "default.profraw")
     local profdata = path.join(target:targetdir(), "default.profdata")
-    local coverage_dir = "out/coverage"
+    local coverage_dir = "build/coverage"
 
     os.runv("llvm-profdata", { "merge", "-sparse", profraw, "-o", profdata })
-    os.runv(
-      "llvm-cov", {
-        "show",
-        target:targetfile(),
-        "-instr-profile=" .. profdata,
-        "-format=html",
-        "-output-dir=" .. coverage_dir,
-      }
-    )
+    os.runv("llvm-cov", {
+      "show",
+      target:targetfile(),
+      "-instr-profile=" .. profdata,
+      "-format=html",
+      "-output-dir=" .. coverage_dir,
+    })
 
-    cprint("${green}coverage report generated at: " .. path.join(coverage_dir, "index.html"))
+    cprint(
+      "${green}coverage report generated at: "
+        .. path.join(coverage_dir, "index.html")
+    )
   end
 end)
 
--- rules
-rule("deps.llvm")
-  on_config( function (target)
-    import("lib.detect.find_tool")
-    local llvm_config = find_tool("llvm-config")
-    if llvm_config then
-      local includedir = os.iorunv(llvm_config.program, { "--includedir" }):trim()
-      target:add("includedirs", includedir)
-      local ldflags = os.iorunv(llvm_config.program, { "--libs", "core", "support" }):trim()
-      target:add("ldflags", ldflags)
-    end
-  end)
+-- Rules
+rule("alcy.common_config")
+on_load(function(target)
+  target:set("languages", "c++23", { public = true })
+  target:set(
+    "warnings",
+    { "all", "extra", "error", "pedantic" },
+    { public = true }
+  )
+  target:set("encodings", "source:utf-8", "utf-8")
 
-  if is_plat("windows") then
-    local llvm_root = os.getenv("LLVM_PATH") or find_path("include/llvm/Config/llvm-config.h", {
-      "C:/Program Files/LLVM",
-      "D:/LLVM",
-      "$(env PATH)"
-    })
+  target:add("includedirs", "src", "third_party", { public = true })
+  target:add(
+    "defines",
+    'ALCY_PROJECT_VERSION="' .. project_version .. '"',
+    { public = true }
+  )
+  target:add(
+    "defines",
+    { "__STDC_CONSTANT_MACROS", "__STDC_FORMAT_MACROS" },
+    { public = true }
+  )
 
-    if llvm_root then
-      target:add("includedirs", path.join(llvm_root, "include"))
-      target:add("linkdirs", path.join(llvm_root, "lib"))
-      target:add("ldflags", "-lLLVMCore -lLLVMRemarks -lLLVMBitstreamReader -lLLVMBinaryFormat -lLLVMTargetParser -lLLVMSupport -lLLVMDemangle")
-    else
-      raise("LLVM not found. Please set LLVM_PATH environment variable.")
+  target:set("exceptions", "none", { public = true })
+  target:add("cxxflags", { "-fno-exceptions", "-fno-rtti" }, { public = true })
+
+  if is_clang() or is_gcc() then
+    target:add("cxxflags", {
+      "-Wconversion",
+      "-Wsign-conversion",
+      "-Wnull-dereference",
+      "-Wformat=2",
+      "-Wundef",
+    }, { public = true })
+    target:add("cxxflags", "-fstack-protector-strong", { public = true })
+
+    if is_mode("debug") and not is_plat("windows") then
+      target:add("cxxflags", "-rdynamic", { public = true })
+      target:add("ldflags", "-rdynamic", { public = true })
     end
   end
-rule_end()
-
--- targets
-target("alcy.root_config")
-  set_kind("phony", { public = true })
-  set_warnings("all", "extra", "error", "pedantic", { public = true })
-  add_cxxflags("-Wshadow", "-Wconversion", "-Wsign-conversion", "-Wnull-dereference", "-Wformat=2", { public = true })
-  set_exceptions("none", { public = true })
-  add_cxxflags("-fno-exceptions", "-fno-rtti", { public = true })
-  add_cxxflags("-fstack-protector-strong", { public = true })
-  add_defines("__STDC_CONSTANT_MACROS", "__STDC_FORMAT_MACROS", { public = true })
-  add_defines("PROJECT_VERSION=\"" .. project_version .. "\"", { public = true })
-  add_includedirs("src", "third_party", { public = true })
-  set_pcxxheader("src/codegen/llvm/pch.h")
 
   if is_plat("linux") then
-    add_cxxflags("-fcf-protection=full", "-fPIE", { public = true })
-    add_ldflags("-pie", { public = true })
-    add_rpathdirs("$LD_LIBRARY_PATH", { public = true })
-    add_defines("IS_PLAT_LINUX=1", "IS_PLAT_MACOS=0", "IS_PLAT_WINDOWS=0", { public = true })
-  elseif is_plat("macosx") then
-    add_cxxflags("-fPIE", { public = true })
-    add_defines("IS_PLAT_LINUX=0", "IS_PLAT_MACOS=1", "IS_PLAT_WINDOWS=0", { public = true })
-  elseif is_plat("windows") then
-    add_defines("IS_PLAT_LINUX=0", "IS_PLAT_MACOS=0", "IS_PLAT_WINDOWS=1", { public = true })
+    if is_mode("debug") then
+      target:add("ldflags", "-Wl,--build-id", { public = true })
+    end
   end
 
   if is_mode("debug") then
-    set_symbols("debug", { public = true })
-    set_optimize("none", { public = true })
-    add_defines("DEBUG", "LLVM_ENABLE_STATS", "LLVM_ENABLE_DUMP", { public = true })
-    if has_config("sanitizers") and get_config("sanitizers") and not is_plat("windows") then
-      set_policy("build.sanitizer.address", true)
-      set_policy("build.sanitizer.undefined", true)
-      set_policy("build.sanitizer.leak", true)
-      add_cxxflags("-fsanitize=address,undefined,leak", "-fno-omit-frame-pointer", "-fno-sanitize-recover=all", { public = true })
-      add_ldflags("-fsanitize=address,undefined,leak", { public = true })
-    end
+    target:set("symbols", "debug", { public = true })
+    target:set("optimize", "none", { public = true })
+    target:add("cxxflags", "-fno-omit-frame-pointer", "-g3", { public = true })
+    target:add(
+      "defines",
+      { "LLVM_ENABLE_STATS", "LLVM_ENABLE_DUMP" },
+      { public = true }
+    )
   elseif is_mode("release") then
-    set_symbols("hidden", { public = true })
-    set_optimize("fastest", { public = true })
-    set_strip("all", { public = true })
-    add_defines("NDEBUG", { public = true })
-    if has_config("native") and get_config("native") and not is_cross() then
-      add_cxxflags("-march=native", { public = true })
-    end
+    target:set("symbols", "hidden", { public = true })
+    target:set("optimize", "fastest", { public = true })
+    target:set("strip", "all", { public = true })
   end
 
-  if is_libcxx then
-    add_cxxflags("-stdlib=libc++", { public = true })
-    add_ldflags("-stdlib=libc++", "-lc++", "-lc++abi", { public = true })
+  if stdlib_config() then
+    local sl = get_config("stdlib")
+    target:add("cxxflags", "-stdlib=" .. sl, { public = true })
+    target:add("ldflags", "-stdlib=" .. sl, { public = true })
   end
 
-  if has_config("xray") and get_config("xray") and is_mode("debug") then
-    add_cxxflags("-fxray-instrument", "-fxray-instruction-threshold=200", { public = true })
-    add_ldflags("-fxray-instrument", { public = true })
+  if sanitizers() then
+    target:set("policy", "build.sanitizer.address", true)
+    target:set("policy", "build.sanitizer.undefined", true)
+    target:set("policy", "build.sanitizer.leak", true)
   end
-  if has_config("coverage") and get_config("coverage") and not is_plat("windows") then
-    add_cxxflags("-fprofile-instr-generate", "-fcoverage-mapping", { public = true })
-    add_ldflags("-fprofile-instr-generate", "-fcoverage-mapping", { public = true })
+
+  if xray() then
+    target:add(
+      "cxxflags",
+      { "-fxray-instrument", "-fxray-instruction-threshold=200" },
+      { public = true }
+    )
+    target:add("ldflags", "-fxray-instrument", { public = true })
   end
-  if has_config("optreport") and get_config("optreport") and is_mode("release") then
-    add_cxxflags("-fsave-optimization-record", { public = true })
+
+  if coverage(target) then
+    target:add(
+      "cxxflags",
+      { "-fprofile-instr-generate", "-fcoverage-mapping" },
+      { public = true }
+    )
+    target:add(
+      "ldflags",
+      { "-fprofile-instr-generate", "-fcoverage-mapping" },
+      { public = true }
+    )
   end
-  if has_config("timetrace") and get_config("timetrace") then
-    add_cxxflags("-ftime-trace", { public = true })
+
+  if optreport() then
+    target:add("cxxflags", "-fsave-optimization-record", { public = true })
   end
-  if has_config("unitybuild") and get_config("unitybuild") then
-    add_rules("c++.unity_build", { batchsize = 12 })
+
+  if has_config("timetrace") then
+    target:add("cxxflags", "-ftime-trace", { public = true })
   end
-target_end()
+
+  if
+    has_config("native")
+    and not target:is_cross()
+    and not is_mode("debug")
+  then
+    target:add("cxxflags", "-march=native", { public = true })
+  end
+
+  if has_config("unitybuild") then
+    target:add("rules", "c++.unity_build", { batchsize = 12 })
+  end
+end)
+
+rule("deps.llvm")
+on_config(function(target)
+  import("lib.detect.find_tool")
+  local llvm_config = find_tool("llvm-config")
+  if llvm_config then
+    local includedir = os.iorunv(llvm_config.program, { "--includedir" }):trim()
+    target:add("includedirs", includedir)
+    local ldflags =
+      os.iorunv(llvm_config.program, { "--libs", "core", "support" }):trim()
+    target:add("ldflags", ldflags)
+  end
+end)
+
+if is_plat("windows") then
+  local llvm_root = os.getenv("LLVM_PATH")
+    or find_path("include/llvm/Config/llvm-config.h", {
+      "C:/Program Files/LLVM",
+      "D:/LLVM",
+      "$(env PATH)",
+    })
+
+  if llvm_root then
+    target:add("includedirs", path.join(llvm_root, "include"))
+    target:add("linkdirs", path.join(llvm_root, "lib"))
+    target:add(
+      "ldflags",
+      "-lLLVMCore -lLLVMRemarks -lLLVMBitstreamReader -lLLVMBinaryFormat -lLLVMTargetParser -lLLVMSupport -lLLVMDemangle"
+    )
+  else
+    raise("LLVM not found. Please set LLVM_PATH environment variable.")
+  end
+end
+rule_end()
 
 target("alcy.analyzer")
-  add_deps("alcy.root_config")
-  set_kind("object")
-  add_files("src/analyzer/**.cc")
-  set_default(false)
+add_rules("alcy.common_config")
+set_kind("object")
+add_files("src/analyzer/**.cc")
+set_default(false)
 target_end()
 
 target("alcy.base")
-  add_deps("alcy.root_config")
-  set_kind("object")
-  add_files("src/base/**.cc")
-  set_default(false)
+add_rules("alcy.common_config")
+set_kind("object")
+add_files("src/base/**.cc")
+set_default(false)
 target_end()
 
 target("alcy.codegen")
-  add_deps("alcy.root_config")
-  set_kind("object")
-  add_files("src/codegen/**.cc")
-  add_rules("deps.llvm")
-  -- add_packages("llvm")
-  set_default(false)
+add_rules("alcy.common_config")
+set_kind("object")
+add_files("src/codegen/**.cc")
+add_rules("deps.llvm")
+-- add_packages("llvm")
+set_default(false)
 target_end()
 
 target("alcy.core")
-  add_deps("alcy.root_config")
-  set_kind("object")
-  add_files("src/core/**.cc")
-  set_default(false)
+add_rules("alcy.common_config")
+set_kind("object")
+add_files("src/core/**.cc")
+set_default(false)
 target_end()
 
 target("alcy.ir")
-  add_deps("alcy.root_config")
-  set_kind("object")
-  add_files("src/ir/**.cc")
-  set_default(false)
+add_rules("alcy.common_config")
+set_kind("object")
+add_files("src/ir/**.cc")
+set_default(false)
 target_end()
 
 target("alcy.lexer")
-  add_deps("alcy.root_config")
-  set_kind("object")
-  add_files("src/lexer/**.cc")
-  set_default(false)
+add_rules("alcy.common_config")
+set_kind("object")
+add_files("src/lexer/**.cc")
+set_default(false)
 target_end()
 
 target("alcy.parser")
-  add_deps("alcy.root_config")
-  set_kind("object")
-  add_files("src/parser/**.cc")
-  set_default(false)
+add_rules("alcy.common_config")
+set_kind("object")
+add_files("src/parser/**.cc")
+set_default(false)
 target_end()
 
 target("alcy.pipeline")
-  add_deps("alcy.root_config")
-  set_kind("object")
-  add_files("src/pipeline/**.cc")
-  set_default(false)
+add_rules("alcy.common_config")
+set_kind("object")
+add_files("src/pipeline/**.cc")
+set_default(false)
 target_end()
 
 target("alcy")
-  add_deps("alcy.root_config")
-  set_kind("binary")
-  add_files("src/app/**.cc")
-  add_deps(alcy_modules)
-  add_packages("fpag")
-  set_default(true)
+add_rules("alcy.common_config")
+set_kind("binary")
+add_files("src/app/**.cc")
+add_deps(alcy_modules)
+add_packages("fpag")
+set_default(true)
 target_end()
 
 target("tests")
-  add_deps("alcy.root_config")
-  set_kind("binary")
-  add_files("tests/**.cc")
-  add_deps(alcy_modules)
-  add_packages("catch2")
-  set_group("test")
-  set_default(false)
+set_enabled(has_config("tests"))
+add_rules("alcy.common_config", { public = false })
+add_deps(alcy_modules)
+set_kind("binary")
+add_files("tests/**.cc")
+add_packages("catch2")
+add_includedirs("tests", { public = true })
+-- catch2 uses c2y extension in their macro
+if is_clang() then
+  add_cxxflags("-Wno-c2y-extensions")
+end
+set_default(false)
+target_end()
+
+target("benchmarks")
+set_enabled(has_config("benchmarks"))
+add_rules("alcy.common_config", { public = false })
+add_deps(alcy_modules)
+set_kind("binary")
+add_files("benchmarks/**.cc")
+add_packages("benchmark")
+add_includedirs("benchmarks", { public = true })
+set_default(false)
 target_end()
