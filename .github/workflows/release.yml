@@ -44,7 +44,7 @@ jobs:
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
 
       - name: setup xmake
-        uses: xmake-io/github-action-setup-xmake@cc0f56c35b75d0975ed5d9e29005fae707721cd5
+        uses: xmake-io/github-action-setup-xmake@3a1a5dddfc7fa625d9a698738334bf55655a861a
         with:
           # https://github.com/xmake-io/xmake/tags
           xmake-version: "3.0.7"
@@ -105,7 +105,7 @@ jobs:
           fi
 
       - name: upload artifact to release
-        uses: softprops/action-gh-release@a06a81a03ee405af7f2048a818ed3f03bbf83c7b
+        uses: softprops/action-gh-release@b4309332981a82ec1c5618f44dd2e27cc8bfbfda
         with:
           files: ${{ env.basename }}-${{ matrix.suffix }}.${{ matrix.archive }}
           draft: true
