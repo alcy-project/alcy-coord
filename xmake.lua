@@ -174,16 +174,13 @@ if has_config("benchmarks") then
   })
 end
 
-add_requires(
-  "fpag",
-  {
-    configs = {
-      stdlib = get_config("stdlib"),
-      fmtlib = get_config("fmtlib"),
-      libunwind = get_config("libunwind"),
-    },
-  }
-)
+add_requires("fpag", {
+  configs = {
+    stdlib = get_config("stdlib"),
+    fmtlib = get_config("fmtlib"),
+    libunwind = get_config("libunwind"),
+  },
+})
 
 local llvm_configs = {
   shared = false,
