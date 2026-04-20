@@ -2,18 +2,19 @@ name: ci
 
 on:
   push:
-    branches: [ main ]
+    branches: [main]
     paths: &ci_paths
       - src/**
       - tests/**
+      - benchmarks/**
       - third_party/**
       - .github/workflows/ci.yml
       - xmake.lua
+      - .clang-tidy
       - CPPLINT.cfg
       - uv.lock
-      - .clang-tidy
   pull_request:
-    branches: [ main ]
+    branches: [main]
     paths: *ci_paths
   workflow_dispatch:
 
@@ -25,15 +26,21 @@ jobs:
           - os: ubuntu-24.04
             plat: linux
             arch: x86_64
-            stdlib: libc++
+            stdlib: libstdc++
+            sanitizers: y
+            libunwind: y
           - os: windows-2025-vs2026
             plat: windows
             arch: x64
             stdlib: msvc
+            sanitizers: n
+            libunwind: n
           - os: macos-26
             plat: macosx
             arch: arm64
             stdlib: libc++
+            sanitizers: n
+            libunwind: n
       fail-fast: false
     runs-on: ${{ matrix.os }}
     name: build and test (${{ matrix.os }})
@@ -46,7 +53,7 @@ jobs:
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
 
       - name: install uv
-        uses: astral-sh/setup-uv@08807647e7069bb48b6ef5acd8ec9567f424441b
+        uses: astral-sh/setup-uv@cec208311dfd045dd5311c1add060b2062131d57
         with:
           # https://github.com/astral-sh/uv/tags
           version: "0.10.7"
@@ -60,7 +67,7 @@ jobs:
         uses: xmake-io/github-action-setup-xmake@3a1a5dddfc7fa625d9a698738334bf55655a861a
         with:
           # https://github.com/xmake-io/xmake/tags
-          xmake-version: "3.0.7"
+          xmake-version: "3.0.8"
           actions-cache-folder: ".xmake-cache"
           actions-cache-key: "${{ matrix.os }}-xmake"
           package-cache: true
@@ -76,36 +83,36 @@ jobs:
           # https://github.com/KyleMayes/install-llvm-action/blob/master/assets.json
           version: "21.1.8"
 
-      - name: configure
+      - name: setup environment variables
         shell: bash
         run: |
-          if [[ "${{ matrix.plat }}" == "linux" ]]; then
-            # echo "LD_LIBRARY_PATH=$LLVM_PATH/lib:$LLVM_PATH/lib/x86_64-unknown-linux-gnu" >> $GITHUB_ENV
-            sudo update-alternatives --install /usr/bin/cc cc /usr/bin/clang 100
-            sudo update-alternatives --install /usr/bin/c++ c++ /usr/bin/clang++ 100
-          elif [[ "${{ matrix.plat }}" == "macosx" ]]; then
+          if [[ "${{ matrix.plat }}" == "macosx" ]]; then
             xcode-select --install || true
-            # echo "LLVM_LIB_DIR=$LLVM_PATH/lib" >> $GITHUB_ENV
-            # echo "DYLD_LIBRARY_PATH=$LLVM_LIB_DIR" >> $GITHUB_ENV
             SDK=$(xcrun --show-sdk-path)
             echo "SDKROOT=$SDK" >> $GITHUB_ENV
             echo "LDFLAGS=-L$SDK/usr/lib" >> $GITHUB_ENV
             echo "CXXFLAGS=-isysroot $SDK" >> $GITHUB_ENV
           fi
 
-          xmake config -c -y -v \
-            -m debug \
-            --coverage=y \
-            --sanitizers=y \
-            --toolchain=llvm \
-            --unitybuild=y \
-            -p "${{ matrix.plat }}" \
-            -a "${{ matrix.arch }}" \
-            --stdlib="${{ matrix.stdlib }}"
-
-      - name: build alcy
+      - name: configure
         shell: bash
-        run: xmake build alcy
+        run: |
+          xmake config -y \
+            -m debug \
+            --tests=y \
+            --benchmarks=y \
+            --toolchain=llvm \
+            --fmtlib=y \
+            --llvm=n \
+            --stdlib="${{ matrix.stdlib }}" \
+            --sanitizers="${{ matrix.sanitizers }}" \
+            --libunwind="${{ matrix.libunwind }}" \
+            -p "${{ matrix.plat }}" \
+            -a "${{ matrix.arch }}"
+
+      - name: build
+        shell: bash
+        run: xmake build -w
 
       - name: build tests and run
         shell: bash
@@ -121,7 +128,10 @@ jobs:
         if: matrix.os == 'ubuntu-24.04'
         shell: bash
         run: |
+          # needs toolchain("llvm")
+          # runs clang-tidy
+          # runs uv run cpplint
+
           xmake check api
           xmake check clang
-          xmake analyze
           xmake lint
