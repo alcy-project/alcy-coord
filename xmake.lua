@@ -99,6 +99,7 @@ set_policy("build.c++.msvc.runtime", "MD")
 
 add_rules("mode.debug", "mode.release", "mode.releasedbg")
 add_rules("plugin.compile_commands.autoupdate", { outputdir = "build/" })
+-- add_rules("plugin.compile_commands.autoupdate")
 
 -- Helper functions
 local function coverage(target)
@@ -160,8 +161,21 @@ local function source_files()
   return files
 end
 
+add_requires("fpag", {
+  system = false,
+  configs = {
+    stdlib = get_config("stdlib"),
+    fmtlib = get_config("fmtlib"),
+    libunwind = get_config("libunwind"),
+  },
+})
+
 if has_config("tests") then
   add_requires("catch2 v3.13.0", { system = false, configs = stdlib_config() })
+end
+
+if has_config("fmtlib") then
+  add_requires("fmt 12.1.0", { system = false, configs = stdlib_config() })
 end
 
 if has_config("benchmarks") then
@@ -179,14 +193,6 @@ if has_config("benchmarks") then
     }),
   })
 end
-
-add_requires("fpag", {
-  configs = {
-    stdlib = get_config("stdlib"),
-    fmtlib = get_config("fmtlib"),
-    libunwind = get_config("libunwind"),
-  },
-})
 
 local llvm_configs = {
   shared = false,
@@ -208,14 +214,15 @@ if has_config("llvm") then
 end
 
 local alcy_modules = {
-  "alcy.analyzer",
-  "alcy.base",
-  "alcy.codegen",
-  "alcy.core",
-  "alcy.ir",
-  "alcy.lexer",
-  "alcy.parser",
-  "alcy.pipeline",
+  ["alcy.analyzer"] = true,
+  ["alcy.base"] = true,
+  ["alcy.codegen"] = true,
+  ["alcy.codegen_llvm"] = has_config("llvm"),
+  ["alcy.core"] = true,
+  ["alcy.ir"] = true,
+  ["alcy.lexer"] = true,
+  ["alcy.parser"] = true,
+  ["alcy.pipeline"] = true,
 }
 
 -- Tasks
@@ -247,7 +254,7 @@ on_run(function()
     os.runv(
       "clang-tidy",
       table.join(
-        { "--use-color", "--fix", "--config-file=./.clang-tidy" },
+        { "--use-color", "--fix", "--config-file=./.clang-tidy", "-p=./build/" },
         files
       )
     )
@@ -322,28 +329,18 @@ end)
 -- Rules
 rule("alcy.common_config")
 on_load(function(target)
-  target:set("languages", "c++23", { public = true })
-  target:set(
-    "warnings",
-    { "all", "extra", "error", "pedantic" },
-    { public = true }
-  )
+  target:set("languages", "c++23")
+  target:set("warnings", { "all", "extra", "error", "pedantic" })
   target:set("encodings", "source:utf-8", "utf-8")
 
-  target:add("includedirs", "src", "third_party", { public = true })
-  target:add(
-    "defines",
-    'ALCY_PROJECT_VERSION="' .. project_version .. '"',
-    { public = true }
-  )
-  target:add(
-    "defines",
-    { "__STDC_CONSTANT_MACROS", "__STDC_FORMAT_MACROS" },
-    { public = true }
-  )
+  target:add("includedirs", "src", "third_party")
+  target:add("defines", 'ALCY_PROJECT_VERSION="' .. project_version .. '"')
+  target:add("defines", { "__STDC_CONSTANT_MACROS", "__STDC_FORMAT_MACROS" })
 
-  target:set("exceptions", "none", { public = true })
-  target:add("cxxflags", { "-fno-exceptions", "-fno-rtti" }, { public = true })
+  target:add("packages", "fpag")
+
+  target:set("exceptions", "none")
+  target:add("cxxflags", { "-fno-exceptions", "-fno-rtti" })
 
   if is_clang() or is_gcc() then
     target:add("cxxflags", {
@@ -352,45 +349,41 @@ on_load(function(target)
       "-Wnull-dereference",
       "-Wformat=2",
       "-Wundef",
-    }, { public = true })
-    target:add("cxxflags", "-fstack-protector-strong", { public = true })
+    })
+    target:add("cxxflags", "-fstack-protector-strong")
 
     if is_mode("debug") and not is_plat("windows") then
-      target:add("cxxflags", "-rdynamic", { public = true })
-      target:add("ldflags", "-rdynamic", { public = true })
+      target:add("cxxflags", "-rdynamic")
+      target:add("ldflags", "-rdynamic")
     end
   end
 
   -- some libraries use c2y extension in their macro
   if is_clang() then
-    target:add("cxxflags", "-Wno-c2y-extensions", { public = true })
+    target:add("cxxflags", "-Wno-c2y-extensions")
   end
 
   if is_plat("linux") then
     if is_mode("debug") then
-      target:add("ldflags", "-Wl,--build-id", { public = true })
+      target:add("ldflags", "-Wl,--build-id")
     end
   end
 
   if is_mode("debug") then
-    target:set("symbols", "debug", { public = true })
-    target:set("optimize", "none", { public = true })
-    target:add("cxxflags", "-fno-omit-frame-pointer", "-g3", { public = true })
-    target:add(
-      "defines",
-      { "LLVM_ENABLE_STATS", "LLVM_ENABLE_DUMP" },
-      { public = true }
-    )
+    target:set("symbols", "debug")
+    target:set("optimize", "none")
+    target:add("cxxflags", "-fno-omit-frame-pointer", "-g3")
+    target:add("defines", { "LLVM_ENABLE_STATS", "LLVM_ENABLE_DUMP" })
   elseif is_mode("release") then
-    target:set("symbols", "hidden", { public = true })
-    target:set("optimize", "fastest", { public = true })
-    target:set("strip", "all", { public = true })
+    target:set("symbols", "hidden")
+    target:set("optimize", "fastest")
+    target:set("strip", "all")
   end
 
-  if stdlib_config() then
+  if is_clang() and has_config("stdlib") then
     local sl = get_config("stdlib")
-    target:add("cxxflags", "-stdlib=" .. sl, { public = true })
-    target:add("ldflags", "-stdlib=" .. sl, { public = true })
+    target:add("cxxflags", "-stdlib=" .. sl)
+    target:add("ldflags", "-stdlib=" .. sl)
   end
 
   if sanitizers() then
@@ -402,31 +395,22 @@ on_load(function(target)
   if xray() then
     target:add(
       "cxxflags",
-      { "-fxray-instrument", "-fxray-instruction-threshold=200" },
-      { public = true }
+      { "-fxray-instrument", "-fxray-instruction-threshold=200" }
     )
-    target:add("ldflags", "-fxray-instrument", { public = true })
+    target:add("ldflags", "-fxray-instrument")
   end
 
   if coverage(target) then
-    target:add(
-      "cxxflags",
-      { "-fprofile-instr-generate", "-fcoverage-mapping" },
-      { public = true }
-    )
-    target:add(
-      "ldflags",
-      { "-fprofile-instr-generate", "-fcoverage-mapping" },
-      { public = true }
-    )
+    target:add("cxxflags", { "-fprofile-instr-generate", "-fcoverage-mapping" })
+    target:add("ldflags", { "-fprofile-instr-generate", "-fcoverage-mapping" })
   end
 
   if optreport() then
-    target:add("cxxflags", "-fsave-optimization-record", { public = true })
+    target:add("cxxflags", "-fsave-optimization-record")
   end
 
   if has_config("timetrace") then
-    target:add("cxxflags", "-ftime-trace", { public = true })
+    target:add("cxxflags", "-ftime-trace")
   end
 
   if
@@ -434,7 +418,7 @@ on_load(function(target)
     and not target:is_cross()
     and not is_mode("debug")
   then
-    target:add("cxxflags", "-march=native", { public = true })
+    target:add("cxxflags", "-march=native")
   end
 
   if has_config("unitybuild") then
@@ -477,6 +461,7 @@ end
 rule_end()
 
 target("alcy.analyzer")
+set_enabled(alcy_modules["alcy.analyzer"])
 add_rules("alcy.common_config")
 set_kind("object")
 add_files("src/analyzer/**.cc")
@@ -484,6 +469,7 @@ set_default(false)
 target_end()
 
 target("alcy.base")
+set_enabled(alcy_modules["alcy.base"])
 add_rules("alcy.common_config")
 set_kind("object")
 add_files("src/base/**.cc")
@@ -491,16 +477,24 @@ set_default(false)
 target_end()
 
 target("alcy.codegen")
+set_enabled(alcy_modules["alcy.codegen"])
 add_rules("alcy.common_config")
 set_kind("object")
 add_files("src/codegen/**.cc")
-if has_config("llvm") then
-  add_rules("deps.llvm")
-end
+set_default(false)
+target_end()
+
+target("alcy.codegen_llvm")
+set_enabled(alcy_modules["alcy.codegen_llvm"])
+add_rules("alcy.common_config")
+set_kind("object")
+add_rules("deps.llvm")
+add_files("src/codegen_llvm/**.cc")
 set_default(false)
 target_end()
 
 target("alcy.core")
+set_enabled(alcy_modules["alcy.core"])
 add_rules("alcy.common_config")
 set_kind("object")
 add_files("src/core/**.cc")
@@ -508,6 +502,7 @@ set_default(false)
 target_end()
 
 target("alcy.ir")
+set_enabled(alcy_modules["alcy.ir"])
 add_rules("alcy.common_config")
 set_kind("object")
 add_files("src/ir/**.cc")
@@ -515,6 +510,7 @@ set_default(false)
 target_end()
 
 target("alcy.lexer")
+set_enabled(alcy_modules["alcy.lexer"])
 add_rules("alcy.common_config")
 set_kind("object")
 add_files("src/lexer/**.cc")
@@ -522,6 +518,7 @@ set_default(false)
 target_end()
 
 target("alcy.parser")
+set_enabled(alcy_modules["alcy.parser"])
 add_rules("alcy.common_config")
 set_kind("object")
 add_files("src/parser/**.cc")
@@ -529,6 +526,7 @@ set_default(false)
 target_end()
 
 target("alcy.pipeline")
+set_enabled(alcy_modules["alcy.pipeline"])
 add_rules("alcy.common_config")
 set_kind("object")
 add_files("src/pipeline/**.cc")
@@ -539,15 +537,23 @@ target("alcy")
 add_rules("alcy.common_config")
 set_kind("binary")
 add_files("src/app/**.cc")
-add_deps(alcy_modules)
-add_packages("fpag")
+add_packages("fmt")
+for m, e in pairs(alcy_modules) do
+  if e then
+    add_deps(m)
+  end
+end
 set_default(true)
 target_end()
 
 target("tests")
 set_enabled(has_config("tests"))
 add_rules("alcy.common_config", { public = false })
-add_deps(alcy_modules)
+for m, e in pairs(alcy_modules) do
+  if e then
+    add_deps(m)
+  end
+end
 set_kind("binary")
 add_files("tests/**.cc")
 add_packages("catch2")
@@ -558,7 +564,11 @@ target_end()
 target("benchmarks")
 set_enabled(has_config("benchmarks"))
 add_rules("alcy.common_config", { public = false })
-add_deps(alcy_modules)
+for m, e in pairs(alcy_modules) do
+  if e then
+    add_deps(m)
+  end
+end
 set_kind("binary")
 add_files("benchmarks/**.cc")
 add_packages("benchmark")
