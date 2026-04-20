@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 # Copyright 2026 pugur
-# This source code is licensed under the Apache License, Version 2.0
+# This source code is licensed under the
 # which can be found in the LICENSE file.
 
 import re
@@ -10,8 +10,8 @@ from pathlib import Path
 
 HOLDER = "pugur"
 LICENSE_TEXT = f"""// Copyright {datetime.now().year} {HOLDER}
-// This source code is licensed under the Apache License, Version 2.0
-// which can be found in the LICENSE file.
+// This source code is licensed under the Apache License, Version 2.0 with LLVM
+// Exceptions which can be found in the LICENSE file.
 """
 
 SOURCE_EXTENSIONS = {".c", ".cc", ".h"}
