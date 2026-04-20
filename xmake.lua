@@ -549,6 +549,7 @@ target_end()
 target("tests")
 set_enabled(has_config("tests"))
 add_rules("alcy.common_config", { public = false })
+add_packages("fmt")
 for m, e in pairs(alcy_modules) do
   if e then
     add_deps(m)
@@ -567,6 +568,7 @@ target_end()
 target("benchmarks")
 set_enabled(has_config("benchmarks"))
 add_rules("alcy.common_config", { public = false })
+add_packages("fmt")
 for m, e in pairs(alcy_modules) do
   if e then
     add_deps(m)
