@@ -146,8 +146,13 @@ end
 local subdirs = "src tests benchmarks"
 
 local function source_files()
-  local files = os.files("src/**.cc")
-  table.join2(files, os.files("src/**.h"))
+  local files = os.files("src/**.cc|codegen_llvm/**")
+  table.join2(files, os.files("src/**.h|codegen_llvm/**"))
+
+  if has_config("llvm") then
+    table.join2(files, os.files("src/codegen_llvm/**.cc"))
+    table.join2(files, os.files("src/codegen_llvm/**.h"))
+  end
 
   if has_config("tests") then
     table.join2(files, os.files("tests/**.cc"))
