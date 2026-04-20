@@ -555,7 +555,10 @@ for m, e in pairs(alcy_modules) do
   end
 end
 set_kind("binary")
-add_files("tests/**.cc")
+add_files("tests/*.cc")
+if has_config("llvm") then
+  add_files("tests/llvm/**.cc")
+end
 add_packages("catch2")
 add_includedirs("tests", { public = true })
 set_default(false)
