@@ -56,6 +56,12 @@ set_description(
 )
 option_end()
 
+option("llvm")
+set_default(true)
+set_showmenu(true)
+set_description("use LLVM for backend codegen")
+option_end()
+
 option("unitybuild")
 set_default(false)
 set_showmenu(true)
@@ -193,10 +199,13 @@ local llvm_configs = {
   components = { "core", "irreader", "mc", "support", "native", "all-targets" },
 }
 table.join2(llvm_configs, stdlib_config())
-add_requires("llvm 21.1.0", {
-  system = false,
-  configs = llvm_configs,
-})
+
+if has_config("llvm") then
+  add_requires("llvm 22.1.3", {
+    system = false,
+    configs = llvm_configs,
+  })
+end
 
 local alcy_modules = {
   "alcy.analyzer",
@@ -352,6 +361,11 @@ on_load(function(target)
     end
   end
 
+  -- some libraries use c2y extension in their macro
+  if is_clang() then
+    target:add("cxxflags", "-Wno-c2y-extensions", { public = true })
+  end
+
   if is_plat("linux") then
     if is_mode("debug") then
       target:add("ldflags", "-Wl,--build-id", { public = true })
@@ -480,8 +494,9 @@ target("alcy.codegen")
 add_rules("alcy.common_config")
 set_kind("object")
 add_files("src/codegen/**.cc")
-add_rules("deps.llvm")
--- add_packages("llvm")
+if has_config("llvm") then
+  add_rules("deps.llvm")
+end
 set_default(false)
 target_end()
 
@@ -537,10 +552,6 @@ set_kind("binary")
 add_files("tests/**.cc")
 add_packages("catch2")
 add_includedirs("tests", { public = true })
--- catch2 uses c2y extension in their macro
-if is_clang() then
-  add_cxxflags("-Wno-c2y-extensions")
-end
 set_default(false)
 target_end()
 
