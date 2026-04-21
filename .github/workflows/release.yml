@@ -94,7 +94,7 @@ jobs:
         run: |
           mkdir -p dist
           cp LICENSE README.md dist/
-          cp out/*/${{ env.basename }}* dist/
+          cp build/${{ matrix.plat }}/${{ matrix.arch }}/**/${{ env.basename }}* dist/
           if [[ "${{ matrix.plat }}" == "windows" ]]; then
             cd dist && 7z a ../${{ env.basename }}-${{ matrix.suffix }}.zip *
           else
