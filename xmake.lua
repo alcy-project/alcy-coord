@@ -6,6 +6,8 @@ set_project("alcy_lang")
 local project_version = "0.1.0"
 set_version(project_version)
 
+add_repositories("pug523_repo git@github.com:pug523/pug_xmake_repo.git main")
+
 option("coverage")
 set_default(false)
 set_showmenu(true)
@@ -96,10 +98,13 @@ set_policy("build.ccache", true)
 set_policy("check.auto_ignore_flags", false)
 set_policy("build.optimization.lto", has_config("lto"))
 set_policy("build.c++.msvc.runtime", "MD")
+set_policy("package.include_external_headers", true)
+set_policy("package.inherit_external_configs", true)
+-- set_policy("diagnosis.check_build_deps", true)
 
 add_rules("mode.debug", "mode.release", "mode.releasedbg")
-add_rules("plugin.compile_commands.autoupdate", { outputdir = "build/" })
--- add_rules("plugin.compile_commands.autoupdate")
+-- add_rules("plugin.compile_commands.autoupdate", { outputdir = "build/" })
+add_rules("plugin.compile_commands.autoupdate")
 
 -- Helper functions
 local function coverage(target)
@@ -138,12 +143,22 @@ end
 local function stdlib_config()
   if is_clang() and not is_plat("windows") and has_config("stdlib") then
     local std = get_config("stdlib")
-    return { cxxflags = "-stdlib=" .. std, ldflags = "-stdlib=" .. std }
+    return {
+      cxxflags = "-stdlib=" .. std,
+      ldflags = "-stdlib=" .. std,
+      -- for releasedbg
+      debug = not is_mode("release"),
+    }
   end
   return {}
 end
 
-local subdirs = "src tests benchmarks"
+local function is_libcxx()
+  return is_clang()
+    and not is_plat("windows")
+    and has_config("stdlib")
+    and get_config("stdlib") == "libc++"
+end
 
 local function source_files()
   local files = os.files("src/**.cc|codegen_llvm/**")
@@ -166,8 +181,17 @@ local function source_files()
   return files
 end
 
+local subdirs = "src tests benchmarks"
+local llvm_components = { "core", "irreader", "mc", "support" }
+
+local alcy_component_kind = "object"
+-- local alcy_component_kind = "static"
+-- local alcy_component_kind = "shared"
+
+-- Dependencies
 add_requires("fpag", {
   system = false,
+  external = true,
   configs = {
     stdlib = get_config("stdlib"),
     fmtlib = get_config("fmtlib"),
@@ -176,58 +200,80 @@ add_requires("fpag", {
 })
 
 if has_config("tests") then
-  add_requires("catch2 v3.13.0", { system = false, configs = stdlib_config() })
+  add_requires("catch2 v3.13.0", {
+    system = false,
+    external = true,
+    configs = stdlib_config(),
+  })
 end
 
 if has_config("fmtlib") then
-  add_requires("fmt 12.1.0", { system = false, configs = stdlib_config() })
+  add_requires("fmt 12.1.0", {
+    system = false,
+    external = false,
+    configs = stdlib_config(),
+  })
 end
 
 if has_config("benchmarks") then
   add_requires("benchmark v1.9.5", {
     system = false,
+    external = true,
     configs = table.join(stdlib_config(), {
       exceptions = false,
-      cxflags = "-DBENCHMARK_USE_LIBCXX="
-        .. (
-          stdlib_config()
-            and (has_config("stdlib") and get_config("stdlib") == "libc++")
-            and "ON"
-          or "OFF"
-        ),
+      cxflags = "-DBENCHMARK_USE_LIBCXX=" .. (is_libcxx() and "ON" or "OFF"),
     }),
   })
 end
 
 local llvm_configs = {
+  pic = true,
+  lto = has_config("lto"),
+  lld = false,
+  libunwind = false,
+  libclc = false,
+  clang_tools_extra = false,
+  openmp = false,
+  flang = false,
+  libcxxabi = false,
+  libc = false,
   shared = false,
-  clang = true,
-  lld = true,
-  libunwind = true,
-  libcxx = true,
-  libcxxabi = true,
-  assertions = is_mode("debug"),
-  components = { "core", "irreader", "mc", "support", "native", "all-targets" },
+  debug = not is_mode("release"),
+  rtti = false,
+  llvm_libgcc = false,
+  exception = false,
+  mlir = false,
+  polly = false,
+  flang_rt = false,
+  ms_dia = false,
+  pstl = false,
+  clang = false,
+  lldb = false,
+  httplib = false,
+  compiler_rt = false,
+  offload = false,
+  libcxx = false,
+  libffi = false,
 }
-table.join2(llvm_configs, stdlib_config())
 
 if has_config("llvm") then
-  add_requires("llvm 22.1.3", {
+  add_requires("libllvm 22.1.4", {
     system = false,
-    configs = llvm_configs,
+    external = true,
+    configs = table.join(llvm_configs, stdlib_config()),
   })
 end
 
 local alcy_modules = {
-  ["alcy.analyzer"] = true,
-  ["alcy.base"] = true,
-  ["alcy.codegen"] = true,
-  ["alcy.codegen_llvm"] = has_config("llvm"),
-  ["alcy.core"] = true,
-  ["alcy.ir"] = true,
-  ["alcy.lexer"] = true,
-  ["alcy.parser"] = true,
-  ["alcy.pipeline"] = true,
+  ["alcy_analyzer"] = true,
+  ["alcy_base"] = true,
+  ["alcy_codegen"] = true,
+  ["alcy_codegen_llvm"] = has_config("llvm"),
+  ["alcy_core"] = true,
+  ["alcy_ir"] = true,
+  ["alcy_lexer"] = true,
+  ["alcy_parser"] = true,
+  ["alcy_pipeline"] = true,
 }
 
 -- Tasks
@@ -332,7 +378,7 @@ after_run(function(target)
 end)
 
 -- Rules
-rule("alcy.common_config")
+rule("alcy_common_config")
 on_load(function(target)
   target:set("languages", "c++23")
   target:set("warnings", { "all", "extra", "error", "pedantic" })
@@ -374,12 +420,12 @@ on_load(function(target)
     end
   end
 
-  if is_mode("debug") then
+  if not is_mode("release") then
     target:set("symbols", "debug")
     target:set("optimize", "none")
-    target:add("cxxflags", "-fno-omit-frame-pointer", "-g3")
+    target:add("cxxflags", { "-fno-omit-frame-pointer", "-g3" })
     target:add("defines", { "LLVM_ENABLE_STATS", "LLVM_ENABLE_DUMP" })
-  elseif is_mode("release") then
+  else
     target:set("symbols", "hidden")
     target:set("optimize", "fastest")
     target:set("strip", "all")
@@ -431,115 +477,81 @@ on_load(function(target)
   end
 end)
 
-rule("deps.llvm")
-on_config(function(target)
-  import("lib.detect.find_tool")
-  local llvm_config = find_tool("llvm-config")
-  if llvm_config then
-    local includedir = os.iorunv(llvm_config.program, { "--includedir" }):trim()
-    target:add("includedirs", includedir)
-    local ldflags =
-      os.iorunv(llvm_config.program, { "--libs", "core", "support" }):trim()
-    target:add("ldflags", ldflags)
-  end
-end)
-
-if is_plat("windows") then
-  local llvm_root = os.getenv("LLVM_PATH")
-    or find_path("include/llvm/Config/llvm-config.h", {
-      "C:/Program Files/LLVM",
-      "D:/LLVM",
-      "$(env PATH)",
-    })
-
-  if llvm_root then
-    target:add("includedirs", path.join(llvm_root, "include"))
-    target:add("linkdirs", path.join(llvm_root, "lib"))
-    target:add(
-      "ldflags",
-      "-lLLVMCore -lLLVMRemarks -lLLVMBitstreamReader -lLLVMBinaryFormat -lLLVMTargetParser -lLLVMSupport -lLLVMDemangle"
-    )
-  else
-    raise("LLVM not found. Please set LLVM_PATH environment variable.")
-  end
-end
-rule_end()
-
-target("alcy.analyzer")
-set_enabled(alcy_modules["alcy.analyzer"])
-add_rules("alcy.common_config")
-set_kind("object")
+target("alcy_analyzer")
+set_enabled(alcy_modules["alcy_analyzer"])
+add_rules("alcy_common_config")
+set_kind(alcy_component_kind)
 add_files("src/analyzer/**.cc")
 set_default(false)
 target_end()
 
-target("alcy.base")
-set_enabled(alcy_modules["alcy.base"])
-add_rules("alcy.common_config")
-set_kind("object")
+target("alcy_base")
+set_enabled(alcy_modules["alcy_base"])
+add_rules("alcy_common_config")
+set_kind(alcy_component_kind)
 add_files("src/base/**.cc")
 set_default(false)
 target_end()
 
-target("alcy.codegen")
-set_enabled(alcy_modules["alcy.codegen"])
-add_rules("alcy.common_config")
-set_kind("object")
+target("alcy_codegen")
+set_enabled(alcy_modules["alcy_codegen"])
+add_rules("alcy_common_config")
+set_kind(alcy_component_kind)
 add_files("src/codegen/**.cc")
 set_default(false)
 target_end()
 
-target("alcy.codegen_llvm")
-set_enabled(alcy_modules["alcy.codegen_llvm"])
-add_rules("alcy.common_config")
-set_kind("object")
-add_rules("deps.llvm")
+target("alcy_codegen_llvm")
+set_enabled(alcy_modules["alcy_codegen_llvm"])
+add_rules("alcy_common_config")
+set_kind(alcy_component_kind)
+add_packages("libllvm")
 add_files("src/codegen_llvm/**.cc")
 set_default(false)
 target_end()
 
-target("alcy.core")
-set_enabled(alcy_modules["alcy.core"])
-add_rules("alcy.common_config")
-set_kind("object")
+target("alcy_core")
+set_enabled(alcy_modules["alcy_core"])
+add_rules("alcy_common_config")
+set_kind(alcy_component_kind)
 add_files("src/core/**.cc")
 set_default(false)
 target_end()
 
-target("alcy.ir")
-set_enabled(alcy_modules["alcy.ir"])
-add_rules("alcy.common_config")
-set_kind("object")
+target("alcy_ir")
+set_enabled(alcy_modules["alcy_ir"])
+add_rules("alcy_common_config")
+set_kind(alcy_component_kind)
 add_files("src/ir/**.cc")
 set_default(false)
 target_end()
 
-target("alcy.lexer")
-set_enabled(alcy_modules["alcy.lexer"])
-add_rules("alcy.common_config")
-set_kind("object")
+target("alcy_lexer")
+set_enabled(alcy_modules["alcy_lexer"])
+add_rules("alcy_common_config")
+set_kind(alcy_component_kind)
 add_files("src/lexer/**.cc")
 set_default(false)
 target_end()
 
-target("alcy.parser")
-set_enabled(alcy_modules["alcy.parser"])
-add_rules("alcy.common_config")
-set_kind("object")
+target("alcy_parser")
+set_enabled(alcy_modules["alcy_parser"])
+add_rules("alcy_common_config")
+set_kind(alcy_component_kind)
 add_files("src/parser/**.cc")
 set_default(false)
 target_end()
 
-target("alcy.pipeline")
-set_enabled(alcy_modules["alcy.pipeline"])
-add_rules("alcy.common_config")
-set_kind("object")
+target("alcy_pipeline")
+set_enabled(alcy_modules["alcy_pipeline"])
+add_rules("alcy_common_config")
+set_kind(alcy_component_kind)
 add_files("src/pipeline/**.cc")
 set_default(false)
 target_end()
 
 target("alcy")
-add_rules("alcy.common_config")
+add_rules("alcy_common_config")
 set_kind("binary")
 add_files("src/app/**.cc")
 add_packages("fmt")
@@ -553,18 +565,19 @@ target_end()
 
 target("tests")
 set_enabled(has_config("tests"))
-add_rules("alcy.common_config", { public = false })
+add_rules("alcy_common_config")
 add_packages("fmt")
+if has_config("llvm") then
+  add_packages("libllvm")
+  add_files("tests/llvm/**.cc")
+end
 for m, e in pairs(alcy_modules) do
   if e then
     add_deps(m)
   end
 end
 set_kind("binary")
-add_files("tests/*.cc")
-if has_config("llvm") then
-  add_files("tests/llvm/**.cc")
-end
+add_files("tests/**.cc|llvm/**")
 add_packages("catch2")
 add_includedirs("tests", { public = true })
 set_default(false)
@@ -572,8 +585,11 @@ target_end()
 
 target("benchmarks")
 set_enabled(has_config("benchmarks"))
-add_rules("alcy.common_config", { public = false })
+add_rules("alcy_common_config")
 add_packages("fmt")
+if has_config("llvm") then
+  add_packages("libllvm")
+end
 for m, e in pairs(alcy_modules) do
   if e then
     add_deps(m)
