@@ -2,19 +2,24 @@
 // This source code is licensed under the Apache License, Version 2.0 with LLVM
 // Exceptions which can be found in the LICENSE file.
 
-#include "codegen/llvm_ir_emitter.h"
+#include "codegen_llvm/llvm_ir_emitter.h"
 
 #include <memory>
 #include <string>
 #include <utility>
 #include <vector>
 
-#include "base/debug.h"
-#include "catch2/catch_all.hpp"
+#include "fpag/mem/concurrent_arena.h"
 #include "ir/builder.h"
 #include "ir/instruction.h"
 #include "ir/opcode.h"
 #include "ir/register.h"
+
+#ifdef CHECK
+#undef CHECK
+#endif
+
+#include "catch2/catch_all.hpp"
 
 namespace codegen {
 
@@ -33,9 +38,11 @@ TEST_CASE("LlvmIrEmitter: simple addition and execution", "[codegen][llvm]") {
   // mock_ir.add_instruction({ir::OpCode::IAdd, {}, 2, 0, 1});
   // mock_ir.add_instruction({ir::OpCode::Ret, {}, 0, 2, 0});
 
-  base::Arena arena;
+  mem::ConcurrentArena arena;
+  arena.reserve(4 * 1024 * 1024);  // 4 MiB
   ir::Builder b;
-  b.init(&arena, {.fn_name_id = 0, .return_type = ir::Type::I32});
+  b.init(&arena, {.fn_name_id = {.offset = 0, .length = 0},
+                  .return_type = ir::Type::I32});
 
   b.inst(ir::OpCode::ConstInt, 0, b.imm_i_operand(10, ir::Type::I32),
          b.invalid());
