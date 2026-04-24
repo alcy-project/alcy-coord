@@ -1,11 +1,19 @@
+# Build artifacts
 /build/
 /install/
 /out/
-.xmake/
-.vscode/
-.cache/
-.venv/
 compile_commands.json
+
+# Virtual Environments
+.venv/
+
+# Editors
+.vscode/
+
+# Caches
+.cache/
+__pycache__/
+.xmake/
 
 # Prerequisites
 *.d
