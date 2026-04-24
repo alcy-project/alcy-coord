@@ -64,6 +64,20 @@ set_showmenu(true)
 set_description("use LLVM for backend codegen")
 option_end()
 
+option("cache-llvm")
+set_default(true)
+set_showmenu(true)
+set_description(
+  "use preinstalled LLVM in third_party/llvm-project/.alcy/install"
+)
+option_end()
+
+option("download-llvm")
+set_default(true)
+set_showmenu(true)
+set_description("download prebuilt LLVM from GitHub releases if available")
+option_end()
+
 option("unitybuild")
 set_default(false)
 set_showmenu(true)
@@ -100,6 +114,7 @@ set_policy("build.optimization.lto", has_config("lto"))
 set_policy("build.c++.msvc.runtime", "MD")
 set_policy("package.include_external_headers", true)
 set_policy("package.inherit_external_configs", true)
+set_policy("package.install_only", true)
 -- set_policy("diagnosis.check_build_deps", true)
 
 add_rules("mode.debug", "mode.release", "mode.releasedbg")
@@ -182,14 +197,52 @@ local function source_files()
 end
 
 local subdirs = "src tests benchmarks"
-local llvm_components = { "core", "irreader", "mc", "support" }
 
 local alcy_component_kind = "object"
 -- local alcy_component_kind = "static"
 -- local alcy_component_kind = "shared"
 
+-- from `llvm-config --libs --ignore-libllvm codegen`
+local llvm_components = {
+  "LLVMCodeGen",
+  "LLVMTarget",
+  "LLVMScalarOpts",
+  "LLVMInstCombine",
+  "LLVMAggressiveInstCombine",
+  "LLVMObjCARCOpts",
+  "LLVMTransformUtils",
+  "LLVMCodeGenTypes",
+  "LLVMCGData",
+  "LLVMBitWriter",
+  "LLVMAnalysis",
+  "LLVMProfileData",
+  "LLVMSymbolize",
+  "LLVMDebugInfoBTF",
+  "LLVMDebugInfoPDB",
+  "LLVMDebugInfoMSF",
+  "LLVMDebugInfoCodeView",
+  "LLVMDebugInfoGSYM",
+  "LLVMDebugInfoDWARF",
+  "LLVMObject",
+  "LLVMTextAPI",
+  "LLVMMCParser",
+  "LLVMIRReader",
+  "LLVMAsmParser",
+  "LLVMMC",
+  "LLVMDebugInfoDWARFLowLevel",
+  "LLVMBitReader",
+  "LLVMFrontendHLSL",
+  "LLVMCore",
+  "LLVMRemarks",
+  "LLVMBitstreamReader",
+  "LLVMBinaryFormat",
+  "LLVMTargetParser",
+  "LLVMSupport",
+  "LLVMDemangle",
+}
+
 -- Dependencies
-add_requires("fpag", {
+add_requires("fpag v0.0.7", {
   system = false,
   external = true,
   configs = {
@@ -223,44 +276,6 @@ if has_config("benchmarks") then
       exceptions = false,
       cxflags = "-DBENCHMARK_USE_LIBCXX=" .. (is_libcxx() and "ON" or "OFF"),
     }),
-  })
-end
-
-local llvm_configs = {
-  pic = true,
-  lto = has_config("lto"),
-  lld = false,
-  libunwind = false,
-  libclc = false,
-  clang_tools_extra = false,
-  openmp = false,
-  flang = false,
-  libcxxabi = false,
-  libc = false,
-  shared = false,
-  debug = not is_mode("release"),
-  rtti = false,
-  llvm_libgcc = false,
-  exception = false,
-  mlir = false,
-  polly = false,
-  flang_rt = false,
-  ms_dia = false,
-  pstl = false,
-  clang = false,
-  lldb = false,
-  httplib = false,
-  compiler_rt = false,
-  offload = false,
-  libcxx = false,
-  libffi = false,
-}
-
-if has_config("llvm") then
-  add_requires("libllvm 22.1.4", {
-    system = false,
-    external = true,
-    configs = table.join(llvm_configs, stdlib_config()),
   })
 end
 
@@ -386,7 +401,17 @@ on_load(function(target)
 
   target:add("includedirs", "src", "third_party")
   target:add("defines", 'ALCY_PROJECT_VERSION="' .. project_version .. '"')
-  target:add("defines", { "__STDC_CONSTANT_MACROS", "__STDC_FORMAT_MACROS" })
+  target:add(
+    "defines",
+    { "__STDC_CONSTANT_MACROS", "__STDC_FORMAT_MACROS", "__STDC_LIMIT_MACROS" }
+  )
+  target:add("defines", {
+    "LLVM_ENABLE_ABI_BREAKING_CHECKS=" .. (is_mode("debug") and "1" or "0"),
+    "LLVM_DISABLE_ABI_BREAKING_CHECKS="
+      .. (not is_mode("debug") and "1" or "0"),
+    "LLVM_ENABLE_ASSERTIONS=" .. (is_mode("debug") and "1" or "0"),
+    "LLVM_DISABLE_ASSERTIONS=" .. (not is_mode("debug") and "1" or "0"),
+  }, { force = true })
 
   target:add("packages", "fpag")
 
@@ -424,7 +449,10 @@ on_load(function(target)
     target:set("symbols", "debug")
     target:set("optimize", "none")
     target:add("cxxflags", { "-fno-omit-frame-pointer", "-g3" })
-    target:add("defines", { "LLVM_ENABLE_STATS", "LLVM_ENABLE_DUMP" })
+    target:add("defines", {
+      "LLVM_ENABLE_STATS",
+      "LLVM_ENABLE_DUMP",
+    })
   else
     target:set("symbols", "hidden")
     target:set("optimize", "fastest")
@@ -476,6 +504,27 @@ on_load(function(target)
     target:add("rules", "c++.unity_build", { batchsize = 12 })
   end
 end)
+rule_end()
+
+rule("alcy_setup_llvm")
+on_load(function(target)
+  if not has_config("llvm") then
+    return
+  end
+
+  os.run("uv sync")
+  os.runv("uv", {
+    "run",
+    "./scripts/setup_llvm.py",
+    "--download-llvm=" .. (has_config("download-llvm") and "true" or "false"),
+    "--cache-llvm=" .. (has_config("cache-llvm") and "true" or "false"),
+  })
+
+  target:add("sysincludedirs", "third_party/llvm-project/.alcy/install/include")
+  target:add("linkdirs", "third_party/llvm-project/.alcy/install/lib")
+  target:add("links", llvm_components)
+end)
+rule_end()
 
 target("alcy_analyzer")
 set_enabled(alcy_modules["alcy_analyzer"])
@@ -504,8 +553,8 @@ target_end()
 target("alcy_codegen_llvm")
 set_enabled(alcy_modules["alcy_codegen_llvm"])
 add_rules("alcy_common_config")
+add_rules("alcy_setup_llvm")
 set_kind(alcy_component_kind)
-add_packages("libllvm")
 add_files("src/codegen_llvm/**.cc")
 set_default(false)
 target_end()
@@ -568,7 +617,6 @@ set_enabled(has_config("tests"))
 add_rules("alcy_common_config")
 add_packages("fmt")
 if has_config("llvm") then
-  add_packages("libllvm")
   add_files("tests/llvm/**.cc")
 end
 for m, e in pairs(alcy_modules) do
@@ -587,9 +635,6 @@ target("benchmarks")
 set_enabled(has_config("benchmarks"))
 add_rules("alcy_common_config")
 add_packages("fmt")
-if has_config("llvm") then
-  add_packages("libllvm")
-end
 for m, e in pairs(alcy_modules) do
   if e then
     add_deps(m)
