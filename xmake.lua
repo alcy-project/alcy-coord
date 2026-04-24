@@ -320,7 +320,7 @@ on_run(function()
     os.runv(
       "clang-tidy",
       table.join(
-        { "--use-color", "--fix", "--config-file=./.clang-tidy", "-p=./build/" },
+        { "--use-color", "--fix", "--config-file=./.clang-tidy" },
         files
       )
     )
