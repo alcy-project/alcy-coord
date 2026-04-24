@@ -7,6 +7,7 @@
 import re
 from datetime import datetime
 from pathlib import Path
+import sys
 
 HOLDER = "pugur"
 LICENSE_TEXT = f"""// Copyright {datetime.now().year} {HOLDER}
@@ -47,7 +48,8 @@ def main():
         for file_path in target.rglob("*"):
             if file_path.suffix in SOURCE_EXTENSIONS:
                 apply_license(file_path)
+    return 0
 
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())
