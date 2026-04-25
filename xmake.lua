@@ -176,12 +176,31 @@ local function is_libcxx()
 end
 
 local subdirs = { "src", "tests", "benchmarks" }
-
 local function source_files()
   local files = {}
-  for _, subdir in ipairs(subdirs) do
-    table.join2(files, os.files(subdir .. "/**.cc"))
-    table.join2(files, os.files(subdir .. "/**.h"))
+  table.join2(files, os.files("src/**.cc|codegen_llvm/**"))
+  table.join2(files, os.files("src/**.h|codegen_llvm/**"))
+  if has_config("llvm") then
+    table.join2(files, os.files("src/codegen_llvm/**.cc"))
+    table.join2(files, os.files("src/codegen_llvm/**.h"))
+  end
+
+  if has_config("tests") then
+    table.join2(files, os.files("tests/**.cc|llvm/**"))
+    table.join2(files, os.files("tests/**.h|llvm/**"))
+    if has_config("llvm") then
+      table.join2(files, os.files("tests/llvm/**.cc"))
+      table.join2(files, os.files("tests/llvm/**.h"))
+    end
+  end
+
+  if has_config("benchmarks") then
+    table.join2(files, os.files("benchmarks/**.cc|llvm/**"))
+    table.join2(files, os.files("benchmarks/**.h|llvm/**"))
+    if has_config("llvm") then
+      table.join2(files, os.files("benchmarks/llvm/**.cc"))
+      table.join2(files, os.files("benchmarks/llvm/**.h"))
+    end
   end
   return files
 end
@@ -494,23 +513,33 @@ on_load(function(target)
 end)
 rule_end()
 
+local llvm_initialized = false
 rule("alcy_setup_llvm")
 on_load(function(target)
-  if not has_config("llvm") then
-    return
+  if has_config("llvm") then
+    local function setup_llvm()
+      if llvm_initialized then
+        return
+      end
+      os.exec("uv sync")
+      os.execv("uv", {
+        "run",
+        "./scripts/setup_llvm.py",
+        "--download-llvm="
+          .. (has_config("download-llvm") and "true" or "false"),
+        "--cache-llvm=" .. (has_config("cache-llvm") and "true" or "false"),
+      })
+      llvm_initialized = true
+    end
+
+    setup_llvm()
+    target:add(
+      "sysincludedirs",
+      "third_party/llvm-project/.alcy/install/include"
+    )
+    target:add("linkdirs", "third_party/llvm-project/.alcy/install/lib")
+    target:add("links", llvm_components)
   end
-
-  os.exec("uv sync")
-  os.execv("uv", {
-    "run",
-    "./scripts/setup_llvm.py",
-    "--download-llvm=" .. (has_config("download-llvm") and "true" or "false"),
-    "--cache-llvm=" .. (has_config("cache-llvm") and "true" or "false"),
-  })
-
-  target:add("sysincludedirs", "third_party/llvm-project/.alcy/install/include")
-  target:add("linkdirs", "third_party/llvm-project/.alcy/install/lib")
-  target:add("links", llvm_components)
 end)
 rule_end()
 
@@ -607,7 +636,7 @@ target("tests")
 set_enabled(has_config("tests"))
 add_rules("alcy_common_config")
 add_packages("fmt")
-add_files("tests/**.cc|tests/llvm/**.cc")
+add_files("tests/**.cc|llvm/**.cc")
 if has_config("llvm") then
   add_rules("alcy_setup_llvm")
   add_files("tests/llvm/**.cc")
