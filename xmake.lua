@@ -249,7 +249,7 @@ local llvm_components = {
 }
 
 -- Dependencies
-add_requires("fpag v0.0.7", {
+add_requires("fpag v0.0.8", {
   system = false,
   external = true,
   configs = {
