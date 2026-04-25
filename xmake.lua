@@ -6,7 +6,7 @@ set_project("alcy_lang")
 local project_version = "0.1.0"
 set_version(project_version)
 
-add_repositories("pug523_repo git@github.com:pug523/pug_xmake_repo.git main")
+includes("src/build/fpag.lua")
 
 option("coverage")
 set_default(false)
@@ -175,28 +175,16 @@ local function is_libcxx()
     and get_config("stdlib") == "libc++"
 end
 
+local subdirs = { "src", "tests", "benchmarks" }
+
 local function source_files()
-  local files = os.files("src/**.cc|codegen_llvm/**")
-  table.join2(files, os.files("src/**.h|codegen_llvm/**"))
-
-  if has_config("llvm") then
-    table.join2(files, os.files("src/codegen_llvm/**.cc"))
-    table.join2(files, os.files("src/codegen_llvm/**.h"))
-  end
-
-  if has_config("tests") then
-    table.join2(files, os.files("tests/**.cc"))
-    table.join2(files, os.files("tests/**.h"))
-  end
-
-  if has_config("benchmarks") then
-    table.join2(files, os.files("benchmarks/**.cc"))
-    table.join2(files, os.files("benchmarks/**.h"))
+  local files = {}
+  for _, subdir in ipairs(subdirs) do
+    table.join2(files, os.files(subdir .. "/**.cc"))
+    table.join2(files, os.files(subdir .. "/**.h"))
   end
   return files
 end
-
-local subdirs = "src tests benchmarks"
 
 local alcy_component_kind = "object"
 -- local alcy_component_kind = "static"
@@ -297,7 +285,7 @@ set_menu({ usage = "xmake format", description = "format source code" })
 on_run(function()
   local files = source_files()
   if #files > 0 then
-    os.runv(
+    os.execv(
       "clang-format",
       table.join({
         "--fail-on-incomplete-format",
@@ -307,8 +295,8 @@ on_run(function()
       }, files)
     )
   end
-  os.run("uv sync")
-  print(os.iorun("uv run scripts/header_license.py"):trim())
+  os.exec("uv sync")
+  os.exec("uv run scripts/header_license.py")
 end)
 task_end()
 
@@ -317,7 +305,7 @@ set_menu({ usage = "xmake tidy", description = "Run clang-tidy --fix" })
 on_run(function()
   local files = source_files()
   if #files > 0 then
-    os.runv(
+    os.execv(
       "clang-tidy",
       table.join(
         { "--use-color", "--fix", "--config-file=./.clang-tidy" },
@@ -334,11 +322,11 @@ set_menu({
   description = "lint using cpplint & clang-format",
 })
 on_run(function()
-  os.run("uv sync")
-  print(os.iorun("uv run cpplint --recursive " .. subdirs):trim())
+  os.exec("uv sync")
+  os.execv("uv", table.join({ "run", "cpplint", "--recursive" }, subdirs))
   local files = source_files()
   if #files > 0 then
-    os.runv(
+    os.execv(
       "clang-format",
       table.join({ "--dry-run", "--fail-on-incomplete-format", "-i" }, files)
     )
@@ -376,8 +364,8 @@ after_run(function(target)
     local profdata = path.join(target:targetdir(), "default.profdata")
     local coverage_dir = "build/coverage"
 
-    os.runv("llvm-profdata", { "merge", "-sparse", profraw, "-o", profdata })
-    os.runv("llvm-cov", {
+    os.execv("llvm-profdata", { "merge", "-sparse", profraw, "-o", profdata })
+    os.execv("llvm-cov", {
       "show",
       target:targetfile(),
       "-instr-profile=" .. profdata,
@@ -512,8 +500,8 @@ on_load(function(target)
     return
   end
 
-  os.run("uv sync")
-  os.runv("uv", {
+  os.exec("uv sync")
+  os.execv("uv", {
     "run",
     "./scripts/setup_llvm.py",
     "--download-llvm=" .. (has_config("download-llvm") and "true" or "false"),
