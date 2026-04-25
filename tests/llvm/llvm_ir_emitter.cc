@@ -11,9 +11,10 @@
 
 #include "fpag/mem/concurrent_arena.h"
 #include "ir/builder.h"
-#include "ir/instruction.h"
 #include "ir/opcode.h"
 #include "ir/register.h"
+#include "ir/type.h"
+#include "llvm/IR/Module.h"
 
 #ifdef CHECK
 #undef CHECK
