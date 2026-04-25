@@ -186,17 +186,17 @@ local function source_files()
   end
 
   if has_config("tests") then
-    table.join2(files, os.files("tests/**.cc|llvm/**"))
-    table.join2(files, os.files("tests/**.h|llvm/**"))
+    table.join2(files, os.files("tests/**.cc|codegen_llvm/**"))
+    table.join2(files, os.files("tests/**.h|codegen_llvm/**"))
     if has_config("llvm") then
-      table.join2(files, os.files("tests/llvm/**.cc"))
-      table.join2(files, os.files("tests/llvm/**.h"))
+      table.join2(files, os.files("tests/codegen_llvm/**.cc"))
+      table.join2(files, os.files("tests/codegen_llvm/**.h"))
     end
   end
 
   if has_config("benchmarks") then
-    table.join2(files, os.files("benchmarks/**.cc|llvm/**"))
-    table.join2(files, os.files("benchmarks/**.h|llvm/**"))
+    table.join2(files, os.files("benchmarks/**.cc|codegen_llvm/**"))
+    table.join2(files, os.files("benchmarks/**.h|codegen_llvm/**"))
     if has_config("llvm") then
       table.join2(files, os.files("benchmarks/llvm/**.cc"))
       table.join2(files, os.files("benchmarks/llvm/**.h"))
@@ -379,18 +379,22 @@ end)
 
 after_run(function(target)
   if coverage(target) then
+    local coverage_dir = path.join("build", "coverage", target:name())
+
     local profraw = path.join(target:targetdir(), "default.profraw")
     local profdata = path.join(target:targetdir(), "default.profdata")
-    local coverage_dir = "build/coverage"
 
     os.execv("llvm-profdata", { "merge", "-sparse", profraw, "-o", profdata })
-    os.execv("llvm-cov", {
-      "show",
-      target:targetfile(),
-      "-instr-profile=" .. profdata,
-      "-format=html",
-      "-output-dir=" .. coverage_dir,
-    })
+    os.execv(
+      "llvm-cov",
+      table.join({
+        "show",
+        target:targetfile(),
+        "-instr-profile=" .. profdata,
+        "-format=html",
+        "-output-dir=" .. coverage_dir,
+      }, subdirs)
+    )
 
     cprint(
       "${green}coverage report generated at: "
@@ -636,10 +640,10 @@ target("tests")
 set_enabled(has_config("tests"))
 add_rules("alcy_common_config")
 add_packages("fmt")
-add_files("tests/**.cc|llvm/**.cc")
+add_files("tests/**.cc|codegen_llvm/**.cc")
 if has_config("llvm") then
   add_rules("alcy_setup_llvm")
-  add_files("tests/llvm/**.cc")
+  add_files("tests/codegen_llvm/**.cc")
 end
 for m, e in pairs(alcy_modules) do
   if e then
