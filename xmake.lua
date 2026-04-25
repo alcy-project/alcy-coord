@@ -115,9 +115,9 @@ set_policy("build.c++.msvc.runtime", "MD")
 set_policy("package.include_external_headers", true)
 set_policy("package.inherit_external_configs", true)
 set_policy("package.install_only", true)
--- set_policy("diagnosis.check_build_deps", true)
+set_policy("diagnosis.check_build_deps", true)
 
-add_rules("mode.debug", "mode.release", "mode.releasedbg")
+-- add_rules("mode.debug", "mode.release", "mode.releasedbg")
 -- add_rules("plugin.compile_commands.autoupdate", { outputdir = "build/" })
 add_rules("plugin.compile_commands.autoupdate")
 
@@ -592,6 +592,9 @@ add_rules("alcy_common_config")
 set_kind("binary")
 add_files("src/app/**.cc")
 add_packages("fmt")
+if has_config("llvm") then
+  add_rules("alcy_setup_llvm")
+end
 for m, e in pairs(alcy_modules) do
   if e then
     add_deps(m)
@@ -604,7 +607,9 @@ target("tests")
 set_enabled(has_config("tests"))
 add_rules("alcy_common_config")
 add_packages("fmt")
+add_files("tests/**.cc|tests/llvm/**.cc")
 if has_config("llvm") then
+  add_rules("alcy_setup_llvm")
   add_files("tests/llvm/**.cc")
 end
 for m, e in pairs(alcy_modules) do
@@ -613,7 +618,6 @@ for m, e in pairs(alcy_modules) do
   end
 end
 set_kind("binary")
-add_files("tests/**.cc|llvm/**")
 add_packages("catch2")
 add_includedirs("tests", { public = true })
 set_default(false)
