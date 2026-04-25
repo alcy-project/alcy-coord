@@ -44,7 +44,7 @@ struct Operand {
 };
 
 struct Instruction {
-  OpCode op;
+  Opcode op;
   InstuctionFlags flags;
   // u16 _padding;
 

@@ -8,7 +8,7 @@
 
 namespace ir {
 
-enum class OpCode : u8 {
+enum class Opcode : u8 {
   Noop,
 
   ConstInt,

@@ -34,10 +34,10 @@ TEST_CASE("LlvmIrEmitter: simple addition and execution", "[codegen][llvm]") {
   // reg[1] = 20;
   // reg[2] = reg[0] + reg[1];
   // ret reg[2]
-  // mock_ir.add_instruction({ir::OpCode::ConstInt, {}, 0, 10, 0});
-  // mock_ir.add_instruction({ir::OpCode::ConstInt, {}, 1, 20, 0});
-  // mock_ir.add_instruction({ir::OpCode::IAdd, {}, 2, 0, 1});
-  // mock_ir.add_instruction({ir::OpCode::Ret, {}, 0, 2, 0});
+  // mock_ir.add_instruction({ir::Opcode::ConstInt, {}, 0, 10, 0});
+  // mock_ir.add_instruction({ir::Opcode::ConstInt, {}, 1, 20, 0});
+  // mock_ir.add_instruction({ir::Opcode::IAdd, {}, 2, 0, 1});
+  // mock_ir.add_instruction({ir::Opcode::Ret, {}, 0, 2, 0});
 
   mem::ConcurrentArena arena;
   arena.reserve(4 * 1024 * 1024);  // 4 MiB
@@ -45,12 +45,12 @@ TEST_CASE("LlvmIrEmitter: simple addition and execution", "[codegen][llvm]") {
   b.init(&arena, {.fn_name_id = {.offset = 0, .length = 0},
                   .return_type = ir::Type::I32});
 
-  b.inst(ir::OpCode::ConstInt, 0, b.imm_i_operand(10, ir::Type::I32),
+  b.inst(ir::Opcode::ConstInt, 0, b.imm_i_operand(10, ir::Type::I32),
          b.invalid());
-  b.inst(ir::OpCode::ConstInt, 1, b.imm_i_operand(20, ir::Type::I32),
+  b.inst(ir::Opcode::ConstInt, 1, b.imm_i_operand(20, ir::Type::I32),
          b.invalid());
-  b.inst(ir::OpCode::IAdd, 2, b.reg_operand(0), b.reg_operand(1));
-  b.inst(ir::OpCode::Ret, 0, b.reg_operand(2), b.invalid());
+  b.inst(ir::Opcode::IAdd, 2, b.reg_operand(0), b.reg_operand(1));
+  b.inst(ir::Opcode::Ret, 0, b.reg_operand(2), b.invalid());
 
   b.build();
   const auto mock_ir = std::move(b).take();

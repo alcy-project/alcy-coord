@@ -80,7 +80,7 @@ class Builder {
     return reg_operand(kInvalidRegisterId, Type::Void);
   }
 
-  void inst(OpCode op, RegisterId dst, Operand lhs, Operand rhs) {
+  void inst(Opcode op, RegisterId dst, Operand lhs, Operand rhs) {
     storage_->add_instruction(
         {.op = op, .flags = {}, .dst = dst, .lhs = lhs, .rhs = rhs});
   }
