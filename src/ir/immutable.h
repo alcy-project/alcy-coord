@@ -5,17 +5,28 @@
 #pragma once
 
 #include "base/id.h"
-#include "ir/common.h"
+#include "fpag/base/numeric.h"
 #include "ir/type.h"
 
 namespace ir {
 
-// Single static assignment register
-struct Register {
+struct Immutable {
   Type type;
-  InstructionId def_idx;
+  union {
+    bool i1;
+    i8 i8;
+    i16 i16;
+    i32 i32;
+    i64 i64;
+    f32 f32;
+    f64 f64;
+    u64 ptr;
+    u64 mutptr;
+    u64 ref;
+    u64 mutref;
+  } data;
 };
 
-using RegisterId = base::Id<Register, IdBaseType>;
+using ImmutableId = base::Id<Immutable, u32>;
 
 }  // namespace ir

@@ -4,18 +4,27 @@
 
 #pragma once
 
-#include "base/id.h"
 #include "ir/common.h"
 #include "ir/type.h"
 
 namespace ir {
 
-// Single static assignment register
-struct Register {
-  Type type;
-  InstructionId def_idx;
+enum class OperandTag : u8 {
+  Register,
+  Block,
+  Immutable,
+  Unknown,
 };
 
-using RegisterId = base::Id<Register, IdBaseType>;
+struct Operand {
+  OperandTag tag;
+  Type type;
+
+  union Data {
+    RegisterId register_id;
+    BlockId block_id;
+    ImmutableId immutable_id;
+  } data;
+};
 
 }  // namespace ir

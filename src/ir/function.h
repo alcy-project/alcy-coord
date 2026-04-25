@@ -5,17 +5,20 @@
 #pragma once
 
 #include "base/id.h"
+#include "fpag/base/numeric.h"
 #include "ir/common.h"
 #include "ir/type.h"
 
 namespace ir {
 
-// Single static assignment register
-struct Register {
-  Type type;
-  InstructionId def_idx;
+struct Function {
+  BlockId head_id;
+  BlockId::IdType length;
+  Type return_type;
+
+  inline constexpr BlockId end() const { return BlockId(head_id.id + length); }
 };
 
-using RegisterId = base::Id<Register, IdBaseType>;
+using FunctionId = base::Id<Function, IdBaseType>;
 
 }  // namespace ir

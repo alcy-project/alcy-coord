@@ -4,18 +4,10 @@
 
 #pragma once
 
-#include "base/id.h"
-#include "ir/common.h"
-#include "ir/type.h"
-
 namespace ir {
 
-// Single static assignment register
-struct Register {
-  Type type;
-  InstructionId def_idx;
+struct InstuctionFlags {
+  bool is_var_len : 1 = false;  // For call, etc.
 };
-
-using RegisterId = base::Id<Register, IdBaseType>;
 
 }  // namespace ir

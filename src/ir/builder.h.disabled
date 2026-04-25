@@ -12,7 +12,7 @@
 #include "fpag/mem/concurrent_arena.h"
 #include "ir/block.h"
 #include "ir/function_meta.h"
-#include "ir/imm.h"
+#include "ir/immutable.h"
 #include "ir/instruction.h"
 #include "ir/opcode.h"
 #include "ir/register.h"

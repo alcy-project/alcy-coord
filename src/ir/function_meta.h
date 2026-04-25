@@ -10,8 +10,8 @@
 namespace ir {
 
 struct FunctionMeta {
-  str::StringPoolId fn_name_id;
-  Type return_type = Type::Void;
+  str::StringPoolId fn_name;
+  Type return_type;
 };
 
 }  // namespace ir

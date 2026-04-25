@@ -4,25 +4,23 @@
 
 #pragma once
 
+#include "base/id.h"
 #include "fpag/base/numeric.h"
+#include "ir/common.h"
 
 namespace ir {
 
 struct Block {
-  u32 head;
-  u32 length;
+  InstructionId head_id;
+  InstructionId::IdType length;
 
-  u32 end() const { return head + length; }
+  inline constexpr InstructionId end() const {
+    return InstructionId(head_id.id + length);
+  }
 
-  // TODO: add parameters
+  // TODO: add block parameters(instead of phi)
 };
 
-struct BlockId {
-  u32 id = 0;
-
-  constexpr BlockId() = default;
-  // NOLINTNEXTLINE(google-explicit-constructor,runtime/explicit)
-  constexpr BlockId(u32 i) : id(i) {}
-};
+using BlockId = base::Id<Block, IdBaseType>;
 
 }  // namespace ir

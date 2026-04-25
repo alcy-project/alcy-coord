@@ -8,17 +8,30 @@
 #include <string>
 #include <vector>
 
+#include "base/allocator.h"
+#include "base/vec.h"
 #include "fpag/base/numeric.h"
 #include "ir/block.h"
-#include "ir/function_meta.h"
-#include "ir/imm.h"
+#include "ir/function.h"
+#include "ir/immutable.h"
 #include "ir/instruction.h"
+#include "ir/register.h"
 
 namespace ir {
 
-// instance per function
 class Storage {
  public:
+  template <typename T>
+  using Alloc = base::SingleThreadPageAllocator<T>;
+  // using Alloc = std::allocator<T>;
+
+  using Functions = base::Vec<Function, FunctionId, Alloc<Function>>;
+  using Blocks = base::Vec<Block, BlockId, Alloc<Block>>;
+  using Instructions =
+      base::Vec<Instruction, InstructionId, Alloc<Instruction>>;
+  using Immutables = base::Vec<Immutable, ImmutableId, Alloc<Immutable>>;
+  using Registers = base::Vec<Register, RegisterId, Alloc<Register>>;
+
   Storage() = default;
   ~Storage() = default;
 
@@ -28,48 +41,42 @@ class Storage {
   Storage(Storage&&) noexcept = default;
   Storage& operator=(Storage&&) noexcept = default;
 
-  inline void init_function_meta(FunctionMeta function_meta) {
-    function_meta_ = function_meta;
+  inline FunctionId add_function(Function&& function) {
+    return functions_.emplace_back(function);
   }
 
-  inline u32 add_instruction(Instruction instruction) {
-    insts_.emplace_back(instruction);
-    return static_cast<u32>(insts_.size());
-  }
-  inline BlockId add_block(Block block) {
-    blocks_.emplace_back(block);
-    return static_cast<u32>(blocks_.size() - 1);
-  }
-  // TODO: use local hash table or concurrent global hash table to eliminate
-  // duplicated values
-  inline ImmIId add_imm_i(u64 i) {
-    imm_i_.emplace_back(i);
-    return static_cast<u32>(imm_i_.size() - 1);
-  }
-  inline ImmFId add_imm_f(f64 f) {
-    imm_f_.emplace_back(f);
-    return static_cast<u32>(imm_f_.size() - 1);
+  inline BlockId add_block(Block&& block) {
+    return blocks_.emplace_back(block);
   }
 
-  inline const FunctionMeta function_meta() const { return function_meta_; }
-  inline const Instruction instruction(usize index) const {
-    return insts_[index];
+  inline InstructionId add_instruction(Instruction&& instruction) {
+    return instrs_.emplace_back(instruction);
   }
-  inline const Block block(usize index) const { return blocks_[index]; }
-  inline u64 imm_i(usize index) const { return imm_i_[index]; }
-  inline f64 imm_f(usize index) const { return imm_f_[index]; }
 
-  inline usize num_instructions() const { return insts_.size(); }
-  inline usize num_blocks() const { return blocks_.size(); }
+  inline ImmutableId add_immutable(Immutable&& immutable) {
+    return immutables_.emplace_back(immutable);
+  }
 
-  std::string dump() const;
+  inline RegisterId add_register(Register&& reg) {
+    return registers_.emplace_back(reg);
+  }
+
+  const Functions& functions() const { return functions_; }
+  const Instructions& instructions() const { return instrs_; }
+  const Blocks& blocks() const { return blocks_; }
+  const Immutables& immutables() const { return immutables_; }
+  const Registers& registers() const { return registers_; }
+
+  // std::string dump() const;
 
  private:
-  FunctionMeta function_meta_;
-  std::vector<Block> blocks_;
-  std::vector<u64> imm_i_;
-  std::vector<f64> imm_f_;
-  std::vector<Instruction> insts_;
+  // FunctionMeta function_meta_;
+
+  Functions functions_;
+  Blocks blocks_;
+  Instructions instrs_;
+  Immutables immutables_;
+  Registers registers_;
 };
 
 }  // namespace ir

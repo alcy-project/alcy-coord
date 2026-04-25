@@ -6,23 +6,23 @@
 
 #include "base/id.h"
 #include "fpag/base/numeric.h"
-#include "ir/common.h"
-#include "ir/instruction_flags.h"
-#include "ir/opcode.h"
-#include "ir/operand.h"
 
 namespace ir {
 
-struct Instruction {
-  Opcode op;
-  InstuctionFlags flags;
-  // u16 _padding;
+using IdBaseType = u32;
 
-  RegisterId dst;
-  Operand lhs;
-  Operand rhs;
-};
+struct Block;
+using BlockId = base::Id<Block, IdBaseType>;
 
+struct Immutable;
+using ImmutableId = base::Id<Immutable, IdBaseType>;
+
+struct Register;
+using RegisterId = base::Id<Register, IdBaseType>;
+
+struct Operand;
+
+struct Instruction;
 using InstructionId = base::Id<Instruction, IdBaseType>;
 
 }  // namespace ir

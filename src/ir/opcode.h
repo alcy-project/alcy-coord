@@ -11,75 +11,38 @@ namespace ir {
 enum class Opcode : u8 {
   Noop,
 
-  ConstInt,
-  ConstFloat,
-  ConstPool,
-
   Alloca,
   Load,
   Store,
   GetElementPtr,
   ExtractValue,
   InsertValue,
-  MemCopy,
-  MemSet,
 
-  IAdd,
-  ISub,
-  IMul,
-  IDiv,  // signed
-  UDiv,  // unsigned
-  IRem,  // signed
-  URem,  // unsigned
-
-  IAddWrapping,
-  ISubWrapping,
-  IMulWrapping,
-  IAddSaturating,
-  ISubSaturating,
-  IMulSaturating,
+  IntAdd,
+  IntSub,
+  IntMul,
+  IntDiv,   // Signed devision
+  UintDiv,  // Unsigned devision
+  IntRem,   // Signed remainder
+  UintRem,  // Unsigned remainder
 
   And,
   Or,
   Xor,
-  Shl,
-  LShr,
-  AShr,
+  ShiftLeft,
+  ArithmeticShiftRight,
+  LogicalShiftRight,
   Not,
   BitReverse,
-  PopCount,
 
-  FAdd,
-  FSub,
-  FMul,
-  FDiv,
-  FRem,
-  FNeg,
-  FAbs,
+  Eq,
+  Ne,
+  Le,
+  Lt,
+  Ge,
+  Gt,
 
-  ICmpEq,
-  ICmpNe,
-  ICmpSlt,
-  ICmpSle,
-  ICmpUlt,
-  ICmpUle,
-
-  FCmpEq,
-  FCmpNe,
-  FCmpLt,
-  FCmpLe,
-  FCmpOEq,
-  FCmpONe,
-  FCmpOLt,
-  FCmpOLe,
-  FCmpUEq,
-  FCmpUNe,
-  FCmpULt,
-  FCmpULe,
-  FCmpOrd,
-  FCmpUno,
-
-  Cast,
+  TypeCast,
 
   Select,
 
@@ -92,19 +55,19 @@ enum class Opcode : u8 {
 
   AtomicLoad,
   AtomicStore,
-  AtomicRMW,
-  AtomicCmpXchg,
+  AtomicRmw,
+  AtomicCompareExchange,
   Fence,
 
   Move,
   Drop,
-  BorrowBegin,
-  BorrowEnd,
+  // BorrowBegin,
+  // BorrowEnd,
 
-  VecSplat,
-  VecExtract,
-  VecInsert,
-  VecReduce,
+  // VecSplat,
+  // VecExtract,
+  // VecInsert,
+  // VecReduce,
 };
 
 }  // namespace ir
