@@ -153,14 +153,14 @@ def main():
     )
 
     parser.add_argument(
-        "--cache-llvm",
-        default=True,
+        "--disable-cache-llvm",
+        action="store_true",
         help="Use preinstalled LLVM if available",
     )
 
     parser.add_argument(
-        "--download-llvm",
-        default=True,
+        "--disable-download-llvm",
+        action="store_true",
         help="Download prebuilt LLVM from GitHub releases if available",
     )
 
@@ -176,20 +176,22 @@ def main():
         print(f"Source directory not found: {args.src_dir}")
         return -2
     if not os.path.isfile(args.configure_script):
-        print(f"Configure script not found.: {args.configure_script}")
+        print(f"Configure script not found: {args.configure_script}")
         return -3
 
     include_dir = os.path.join(args.install_dir, "include")
     lib_dir = os.path.join(args.install_dir, "lib")
 
-    if os.path.isdir(include_dir) and os.path.join(lib_dir) and args.cache_llvm:
+    enable_cache_llvm = not args.disable_cache_llvm
+    enable_download_llvm = not args.disable_download_llvm
+
+    if os.path.isdir(include_dir) and os.path.join(lib_dir) and enable_cache_llvm:
         print(f"Preinstalled LLVM found in {args.install_dir}; skipped operation.")
         return 0
     else:
-        print(f"Preinstalled LLVM not found in {args.install_dir}")
         url = download_llvm.release_url(tag=args.tag, triple=args.triple)
         exists = download_llvm.check_release_exists(url)
-        if exists and args.download_llvm:
+        if exists and enable_download_llvm:
             print(f"Found prebuilt binary in {url}")
             return download_llvm.download_and_extract(
                 tag=args.tag,
@@ -198,8 +200,6 @@ def main():
                 install_dir=args.install_dir,
             )
         else:
-            if args.download_llvm:
-                print(f"Not found prebuilt binary in {url}")
             return build_llvm.build_llvm(
                 build_type=args.type,
                 configure_script=args.configure_script,
