@@ -28,7 +28,7 @@ struct SingleThreadPageAllocator {
     return static_cast<T*>(mem::allocate_pages(n));
   }
 
-  static inline void deallocate(T* p, std::size_t n) noexcept {
+  static inline void deallocate(T* p, usize n) noexcept {
     mem::free_pages(p, n);
   }
 };
