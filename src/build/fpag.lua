@@ -11,6 +11,7 @@ add_versions("v0.0.7", "779139e798e3ee567dec7db31c755771662c505f")
 add_versions("v0.0.8", "d6644009fe518f171c55a920ced92dfda7a47f9f")
 add_versions("v0.0.9", "8d23657b1149db5d8f6059a57d054817877b23ad")
 add_versions("v0.0.10", "6fcc98dc6cdb442dd8bc5d68524555b51a2b4326")
+add_versions("v0.0.11", "0dfd43224c42d152f58e23423720989388aab670")
 
 add_configs("fmtlib", {
   description = 'Use fmtlib for formatting (You need to manually execute add_requires("fmt <version>") with correct version and add_packages("fmt").)',
