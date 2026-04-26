@@ -9,9 +9,7 @@
 #include <utility>
 #include <vector>
 
-#include "base/debug/check.h"
 #include "base/id.h"
-#include "fpag/base/numeric.h"
 
 namespace base {
 
@@ -27,17 +25,14 @@ class Vec {
   Vec(Vec&&) noexcept = default;
   Vec& operator=(Vec&&) noexcept = default;
 
-  const T& operator[](const Id id) const {
-    range_check(id);
-    return vec_[id.id];
-  }
-  T& operator[](const Id id) {
-    range_check(id);
-    return vec_[id.id];
-  }
+  const T& operator[](const Id id) const { return vec_[id.id]; }
+  T& operator[](const Id id) { return vec_[id.id]; }
 
   inline void reserve(usize size) { vec_.reserve(size); }
   inline void resize(usize size) { vec_.resize(size); }
+  inline void resize(usize size, T init_value) {
+    vec_.resize(size, init_value);
+  }
 
   inline Id emplace_back(T&& obj) {
     vec_.emplace_back(std::move(obj));
@@ -62,11 +57,6 @@ class Vec {
   // inline const T* data() const { return vec_.data(); }
 
  private:
-  inline void range_check(Id id) const {
-    DCHECK_GE_MSG(id.id, 0, "Vec range check failed");
-    DCHECK_LT_MSG(id.id, size(), "Vec range check failed");
-  }
-
   std::vector<T, Allocator> vec_;
 };
 

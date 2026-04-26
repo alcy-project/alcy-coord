@@ -5,6 +5,9 @@
 #pragma once
 
 #include <compare>
+#include <limits>
+
+#include "fpag/base/numeric.h"
 
 namespace base {
 
@@ -22,6 +25,10 @@ struct Id {
     return *this;
   }
 };
+
+using IdBaseType = u32;
+
+constexpr IdBaseType kInvalidId = std::numeric_limits<IdBaseType>::max();
 
 template <typename T>
 concept HasIdType = requires { typename T::IdType; };
