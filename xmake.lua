@@ -7,6 +7,7 @@ local project_version = "0.1.0"
 set_version(project_version)
 
 includes("src/build/fpag.lua")
+includes("src/build/llvm.lua")
 
 option("coverage")
 set_default(false)
@@ -286,6 +287,17 @@ if has_config("benchmarks") then
   })
 end
 
+if has_config("llvm") then
+  add_requires("alcy_llvm", {
+    system = false,
+    external = true,
+    configs = table.join(stdlib_config(), {
+      download_llvm = has_config("download-llvm"),
+      cache_llvm = has_config("cache-llvm"),
+    }),
+  })
+end
+
 local alcy_modules = {
   ["alcy_analyzer"] = true,
   ["alcy_base"] = true,
@@ -517,36 +529,6 @@ on_load(function(target)
 end)
 rule_end()
 
-local llvm_initialized = false
-rule("alcy_setup_llvm")
-on_load(function(target)
-  if has_config("llvm") then
-    local function setup_llvm()
-      if llvm_initialized then
-        return
-      end
-      os.exec("uv sync")
-      os.execv("uv", {
-        "run",
-        "./scripts/setup_llvm.py",
-        "--download-llvm="
-          .. (has_config("download-llvm") and "true" or "false"),
-        "--cache-llvm=" .. (has_config("cache-llvm") and "true" or "false"),
-      })
-      llvm_initialized = true
-    end
-
-    setup_llvm()
-    target:add(
-      "sysincludedirs",
-      "third_party/llvm-project/.alcy/install/include"
-    )
-    target:add("linkdirs", "third_party/llvm-project/.alcy/install/lib")
-    target:add("links", llvm_components)
-  end
-end)
-rule_end()
-
 target("alcy_analyzer")
 set_enabled(alcy_modules["alcy_analyzer"])
 add_rules("alcy_common_config")
@@ -574,7 +556,7 @@ target_end()
 target("alcy_codegen_llvm")
 set_enabled(alcy_modules["alcy_codegen_llvm"])
 add_rules("alcy_common_config")
-add_rules("alcy_setup_llvm")
+add_packages("alcy_llvm")
 set_kind(alcy_component_kind)
 add_files("src/codegen_llvm/**.cc")
 set_default(false)
@@ -626,7 +608,7 @@ set_kind("binary")
 add_files("src/app/**.cc")
 add_packages("fmt")
 if has_config("llvm") then
-  add_rules("alcy_setup_llvm")
+  add_packages("alcy_llvm")
 end
 for m, e in pairs(alcy_modules) do
   if e then
@@ -642,7 +624,7 @@ add_rules("alcy_common_config")
 add_packages("fmt")
 add_files("tests/**.cc|codegen_llvm/**.cc")
 if has_config("llvm") then
-  add_rules("alcy_setup_llvm")
+  add_packages("alcy_llvm")
   add_files("tests/codegen_llvm/**.cc")
 end
 for m, e in pairs(alcy_modules) do
@@ -660,6 +642,10 @@ target("benchmarks")
 set_enabled(has_config("benchmarks"))
 add_rules("alcy_common_config")
 add_packages("fmt")
+if has_config("llvm") then
+  add_packages("alcy_llvm")
+  add_files("benchmarks/codegen_llvm/**.cc")
+end
 for m, e in pairs(alcy_modules) do
   if e then
     add_deps(m)
