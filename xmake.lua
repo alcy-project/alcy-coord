@@ -6,9 +6,6 @@ set_project("alcy_lang")
 local project_version = "0.1.0"
 set_version(project_version)
 
-includes("src/build/fpag.lua")
-includes("src/build/llvm.lua")
-
 option("coverage")
 set_default(false)
 set_showmenu(true)
@@ -109,6 +106,9 @@ set_showmenu(true)
 set_description("specify stl to use")
 option_end()
 
+includes("src/build/fpag.lua")
+includes("src/build/llvm.lua")
+
 set_policy("build.ccache", true)
 set_policy("check.auto_ignore_flags", false)
 set_policy("build.optimization.lto", has_config("lto"))
@@ -119,10 +119,8 @@ set_policy("package.install_only", true)
 set_policy("diagnosis.check_build_deps", true)
 
 -- add_rules("mode.debug", "mode.release", "mode.releasedbg")
--- add_rules("plugin.compile_commands.autoupdate", { outputdir = "build/" })
 add_rules("plugin.compile_commands.autoupdate")
 
--- Helper functions
 local function coverage(target)
   return has_config("coverage")
     and target:name() == "tests"
@@ -176,7 +174,6 @@ local function is_libcxx()
     and get_config("stdlib") == "libc++"
 end
 
-local subdirs = { "src", "tests", "benchmarks" }
 local function source_files()
   local files = {}
   table.join2(files, os.files("src/**.cc|codegen_llvm/**"))
@@ -199,58 +196,17 @@ local function source_files()
     table.join2(files, os.files("benchmarks/**.cc|codegen_llvm/**"))
     table.join2(files, os.files("benchmarks/**.h|codegen_llvm/**"))
     if has_config("llvm") then
-      table.join2(files, os.files("benchmarks/llvm/**.cc"))
-      table.join2(files, os.files("benchmarks/llvm/**.h"))
+      table.join2(files, os.files("benchmarks/codegen_llvm/**.cc"))
+      table.join2(files, os.files("benchmarks/codegen_llvm/**.h"))
     end
   end
   return files
 end
 
-local alcy_component_kind = "object"
--- local alcy_component_kind = "static"
--- local alcy_component_kind = "shared"
-
--- from `llvm-config --libs --ignore-libllvm codegen`
-local llvm_components = {
-  "LLVMCodeGen",
-  "LLVMTarget",
-  "LLVMScalarOpts",
-  "LLVMInstCombine",
-  "LLVMAggressiveInstCombine",
-  "LLVMObjCARCOpts",
-  "LLVMTransformUtils",
-  "LLVMCodeGenTypes",
-  "LLVMCGData",
-  "LLVMBitWriter",
-  "LLVMAnalysis",
-  "LLVMProfileData",
-  "LLVMSymbolize",
-  "LLVMDebugInfoBTF",
-  "LLVMDebugInfoPDB",
-  "LLVMDebugInfoMSF",
-  "LLVMDebugInfoCodeView",
-  "LLVMDebugInfoGSYM",
-  "LLVMDebugInfoDWARF",
-  "LLVMObject",
-  "LLVMTextAPI",
-  "LLVMMCParser",
-  "LLVMIRReader",
-  "LLVMAsmParser",
-  "LLVMMC",
-  "LLVMDebugInfoDWARFLowLevel",
-  "LLVMBitReader",
-  "LLVMFrontendHLSL",
-  "LLVMCore",
-  "LLVMRemarks",
-  "LLVMBitstreamReader",
-  "LLVMBinaryFormat",
-  "LLVMTargetParser",
-  "LLVMSupport",
-  "LLVMDemangle",
-}
+local alcy_component_kind = "object" -- or static, shared
 
 -- Dependencies
-add_requires("fpag v0.0.8", {
+add_requires("fpag v0.0.9", {
   system = false,
   external = true,
   configs = {
@@ -259,6 +215,17 @@ add_requires("fpag v0.0.8", {
     libunwind = get_config("libunwind"),
   },
 })
+
+if has_config("llvm") then
+  add_requires("alcy_llvm", {
+    system = false,
+    external = true,
+    configs = table.join(stdlib_config(), {
+      download_llvm = has_config("download-llvm"),
+      cache_llvm = has_config("cache-llvm"),
+    }),
+  })
+end
 
 if has_config("tests") then
   add_requires("catch2 v3.13.0", {
@@ -287,17 +254,6 @@ if has_config("benchmarks") then
   })
 end
 
-if has_config("llvm") then
-  add_requires("alcy_llvm", {
-    system = false,
-    external = true,
-    configs = table.join(stdlib_config(), {
-      download_llvm = has_config("download-llvm"),
-      cache_llvm = has_config("cache-llvm"),
-    }),
-  })
-end
-
 local alcy_modules = {
   ["alcy_analyzer"] = true,
   ["alcy_base"] = true,
@@ -309,6 +265,8 @@ local alcy_modules = {
   ["alcy_parser"] = true,
   ["alcy_pipeline"] = true,
 }
+
+local subdirs = { "src", "tests", "benchmarks" }
 
 -- Tasks
 task("format")
