@@ -68,7 +68,7 @@ jobs:
         if: runner.os == 'Linux'
         run: |
           sudo apt-get update
-          sudo apt-get install -y --no-install-recommends libc++-dev libc++abi-dev clang clang-format clang-tidy
+          sudo apt-get install -y --no-install-recommends libc++-dev libc++abi-dev
 
       - name: Fetch tags
         run: git submodule foreach --recursive 'git fetch --tags --depth=1'
@@ -112,6 +112,12 @@ jobs:
           build-cache-key: ${{ matrix.os }}-${{ matrix.plat }}-${{ matrix.arch }}-build
           project-path: .
 
+      - name: Install LLVM tools
+        uses: KyleMayes/install-llvm-action@ebc0426251bc40c7cd31162802432c68818ab8f0
+        with:
+          # https://github.com/KyleMayes/install-llvm-action/blob/master/assets.json
+          version: 21.1.8
+
       - name: Setup environment variables
         shell: bash
         run: |
@@ -130,6 +136,7 @@ jobs:
             -m debug \
             --tests=y \
             --benchmarks=y \
+            --toolchain=llvm \
             --fmtlib=y \
             --llvm=y \
             --stdlib="${{ matrix.stdlib }}" \
