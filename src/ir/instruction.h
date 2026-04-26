@@ -4,7 +4,6 @@
 
 #pragma once
 
-#include "base/id.h"
 #include "fpag/base/numeric.h"
 #include "ir/common.h"
 #include "ir/instruction_flags.h"
@@ -15,14 +14,11 @@ namespace ir {
 
 struct Instruction {
   Opcode op;
-  InstuctionFlags flags;
-  // u16 _padding;
+  InstructionFlags flags;
 
   RegisterId dst;
   Operand lhs;
   Operand rhs;
 };
-
-using InstructionId = base::Id<Instruction, IdBaseType>;
 
 }  // namespace ir

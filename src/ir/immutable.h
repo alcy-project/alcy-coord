@@ -4,7 +4,6 @@
 
 #pragma once
 
-#include "base/id.h"
 #include "fpag/base/numeric.h"
 #include "ir/type.h"
 
@@ -26,7 +25,5 @@ struct Immutable {
     u64 mutref;
   } data;
 };
-
-using ImmutableId = base::Id<Immutable, u32>;
 
 }  // namespace ir

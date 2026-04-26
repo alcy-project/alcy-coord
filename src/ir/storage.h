@@ -8,10 +8,11 @@
 #include <string>
 #include <vector>
 
-#include "base/allocator.h"
 #include "base/vec.h"
 #include "fpag/base/numeric.h"
 #include "ir/block.h"
+#include "ir/common.h"
+#include "ir/external_function.h"
 #include "ir/function.h"
 #include "ir/immutable.h"
 #include "ir/instruction.h"
@@ -22,8 +23,8 @@ namespace ir {
 class Storage {
  public:
   template <typename T>
-  using Alloc = base::SingleThreadPageAllocator<T>;
-  // using Alloc = std::allocator<T>;
+  // using Alloc = base::SingleThreadPageAllocator<T>;
+  using Alloc = std::allocator<T>;
 
   using Functions = base::Vec<Function, FunctionId, Alloc<Function>>;
   using Blocks = base::Vec<Block, BlockId, Alloc<Block>>;
@@ -31,6 +32,8 @@ class Storage {
       base::Vec<Instruction, InstructionId, Alloc<Instruction>>;
   using Immutables = base::Vec<Immutable, ImmutableId, Alloc<Immutable>>;
   using Registers = base::Vec<Register, RegisterId, Alloc<Register>>;
+  using ExternalFunctions =
+      base::Vec<ExternalFunction, ExternalFunctionId, Alloc<ExternalFunction>>;
 
   Storage() = default;
   ~Storage() = default;
@@ -60,23 +63,28 @@ class Storage {
   inline RegisterId add_register(Register&& reg) {
     return registers_.emplace_back(reg);
   }
+  inline ExternalFunctionId add_external_function(ExternalFunction&& ex_func) {
+    return external_functions_.emplace_back(ex_func);
+  }
 
-  const Functions& functions() const { return functions_; }
-  const Instructions& instructions() const { return instrs_; }
-  const Blocks& blocks() const { return blocks_; }
-  const Immutables& immutables() const { return immutables_; }
-  const Registers& registers() const { return registers_; }
+  inline const Functions& functions() const { return functions_; }
+  inline const Instructions& instructions() const { return instrs_; }
+  inline const Blocks& blocks() const { return blocks_; }
+  inline const Immutables& immutables() const { return immutables_; }
+  inline const Registers& registers() const { return registers_; }
+  inline const ExternalFunctions& external_functions() const {
+    return external_functions_;
+  }
 
   // std::string dump() const;
 
  private:
-  // FunctionMeta function_meta_;
-
   Functions functions_;
   Blocks blocks_;
   Instructions instrs_;
   Immutables immutables_;
   Registers registers_;
+  ExternalFunctions external_functions_;
 };
 
 }  // namespace ir

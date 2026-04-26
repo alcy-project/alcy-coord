@@ -6,19 +6,24 @@
 
 #include "base/id.h"
 #include "fpag/base/numeric.h"
+#include "fpag/str/string_pool_id.h"
 #include "ir/common.h"
 #include "ir/type.h"
 
 namespace ir {
 
+struct FunctionMeta {
+  Type return_type;
+  str::StringPoolId name;
+};
+
 struct Function {
+  FunctionMeta meta;
+
   BlockId head_id;
   BlockId::IdType length;
-  Type return_type;
 
   inline constexpr BlockId end() const { return BlockId(head_id.id + length); }
 };
-
-using FunctionId = base::Id<Function, IdBaseType>;
 
 }  // namespace ir

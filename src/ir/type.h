@@ -29,6 +29,7 @@ enum class Type : u8 {
   Ref,     // Immutable reference (region tracked)
   MutRef,  // Mutable reference  (exclusive, region tracked)
 
+  Function,
   Block,  // SSA block
 };
 

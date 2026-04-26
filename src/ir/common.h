@@ -9,7 +9,10 @@
 
 namespace ir {
 
-using IdBaseType = u32;
+using IdBaseType = base::IdBaseType;
+
+struct Function;
+using FunctionId = base::Id<Function, IdBaseType>;
 
 struct Block;
 using BlockId = base::Id<Block, IdBaseType>;
@@ -20,9 +23,12 @@ using ImmutableId = base::Id<Immutable, IdBaseType>;
 struct Register;
 using RegisterId = base::Id<Register, IdBaseType>;
 
-struct Operand;
-
 struct Instruction;
 using InstructionId = base::Id<Instruction, IdBaseType>;
+
+struct ExternalFunction;
+using ExternalFunctionId = base::Id<ExternalFunction, IdBaseType>;
+
+struct Operand;
 
 }  // namespace ir
