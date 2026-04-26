@@ -129,7 +129,6 @@ jobs:
             -m debug \
             --tests=y \
             --benchmarks=y \
-            --toolchain=llvm \
             --fmtlib=y \
             --llvm=y \
             --stdlib="${{ matrix.stdlib }}" \
