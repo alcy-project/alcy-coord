@@ -7,7 +7,6 @@
 #include "fpag/base/numeric.h"
 #include "fpag/str/string_pool_id.h"
 #include "ir/function.h"
-#include "ir/type.h"
 
 namespace ir {
 
@@ -28,7 +27,6 @@ struct ExternalFunction {
   FunctionMeta meta;
 
   CallingConvention calling_conv;
-  Type parameter_types[32];
 };
 
 }  // namespace ir

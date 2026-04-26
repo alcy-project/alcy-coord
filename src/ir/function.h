@@ -14,6 +14,8 @@ namespace ir {
 
 struct FunctionMeta {
   Type return_type;
+  u8 parameter_count;
+  Type parameter_types[32];
   str::StringPoolId name;
 };
 
