@@ -7,11 +7,13 @@
 #include "fpag/base/console.h"
 #include "fpag/base/debug/signal_handler.h"
 #include "fpag/base/debug/terminate_handler.h"
+#include "fpag/base/exit_handler.h"
 
 namespace app {
 
 void init() {
   base::register_console();
+  base::register_exit_handler();
   base::register_terminate_handler();
   base::register_signal_handlers();
 }
