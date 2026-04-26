@@ -54,8 +54,9 @@ jobs:
     env:
       CC: ${{ matrix.cc }}
       CXX: ${{ matrix.cxx }}
-      XMAKE_COLORTERM: color256
-      XMAKE_ROOT: y
+      COLORTERM: 256color
+      XMAKE_COLORTERM: 256color
+      XMAKE_ROOT: true
     steps:
       - name: Checkout repository
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
@@ -63,14 +64,14 @@ jobs:
           submodules: recursive
           fetch-depth: 1
 
-      - name: Fetch tags
-        run: git submodule foreach --recursive 'git fetch --tags --depth=1'
-
       - name: Install dependencies (Ubuntu)
         if: runner.os == 'Linux'
         run: |
           sudo apt-get update
           sudo apt-get install -y --no-install-recommends libc++-dev libc++abi-dev clang clang-format clang-tidy
+
+      - name: Fetch tags
+        run: git submodule foreach --recursive 'git fetch --tags --depth=1'
 
       - name: Install uv
         uses: astral-sh/setup-uv@08807647e7069bb48b6ef5acd8ec9567f424441b
