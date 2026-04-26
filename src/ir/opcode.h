@@ -70,4 +70,72 @@ enum class Opcode : u8 {
   // VecReduce,
 };
 
+constexpr const char* opcode_to_str(const Opcode opcode) {
+  using O = Opcode;
+  switch (opcode) {
+    case O::Noop: return "Noop";
+
+    case O::Alloca: return "Alloca";
+    case O::Load: return "Load";
+    case O::Store: return "Store";
+    case O::GetElementPtr: return "GetElementPtr";
+    case O::ExtractValue: return "ExtractValue";
+    case O::InsertValue: return "InsertValue";
+
+    case O::IntAdd: return "IntAdd";
+    case O::IntSub: return "IntSub";
+    case O::IntMul: return "IntMul";
+    case O::IntDiv: return "IntDiv";
+    case O::UintDiv: return "UintDiv";
+    case O::IntRem: return "IntRem";
+    case O::UintRem: return "UintRem";
+
+    case O::And: return "And";
+    case O::Or: return "Or";
+    case O::Xor: return "Xor";
+    case O::ShiftLeft: return "ShiftLeft";
+    case O::ArithmeticShiftRight: return "ArithmeticShiftRight";
+    case O::LogicalShiftRight: return "LogicalShiftRight";
+    case O::Not: return "Not";
+    case O::BitReverse: return "BitReverse";
+
+    case O::Eq: return "Eq";
+    case O::Ne: return "Ne";
+    case O::Le: return "Le";
+    case O::Lt: return "Lt";
+    case O::Ge: return "Ge";
+    case O::Gt: return "Gt";
+
+    case O::TypeCast: return "TypeCast";
+
+    case O::Select: return "Select";
+
+    case O::Br: return "Br";
+    case O::CondBr: return "CondBr";
+    case O::Switch: return "Switch";
+    case O::Call: return "Call";
+    case O::Ret: return "Ret";
+    case O::Unreachable: return "Unreachable";
+
+    case O::AtomicLoad: return "AtomicLoad";
+    case O::AtomicStore: return "AtomicStore";
+    case O::AtomicRmw: return "AtomicRmw";
+    case O::AtomicCompareExchange: return "AtomicCompareExchange";
+
+    case O::Fence: return "Fence";
+
+    case O::Move: return "Move";
+    case O::Drop:
+      return "Drop";
+
+      // case O::BorrowBegin: return "BorrowBegin";
+      // case O::BorrowEnd: return "BorrowEnd";
+
+      // case O::VecSplat: return "VecSplat";
+      // case O::VecExtract: return "VecExtract";
+      // case O::VecInsert: return "VecInsert";
+      // case O::VecReduce: return "VecReduce";
+  }
+}
+
 }  // namespace ir
