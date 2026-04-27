@@ -189,13 +189,16 @@ def main():
         print(f"Preinstalled LLVM found in {args.install_dir}; skipped operation.")
         return 0
     else:
-        url = download_llvm.release_url(tag=args.tag, triple=args.triple)
+        url = download_llvm.release_url(
+            tag=args.tag, triple=args.triple, build_type=args.type
+        )
         exists = download_llvm.check_release_exists(url)
         if exists and enable_download_llvm:
             print(f"Found prebuilt binary in {url}")
             return download_llvm.download_and_extract(
                 tag=args.tag,
                 triple=args.triple,
+                build_type=args.type,
                 download_dir=args.download_dir,
                 install_dir=args.install_dir,
             )

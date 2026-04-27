@@ -18,15 +18,15 @@ def archive_ext(triple):
     return "tar.gz"
 
 
-def archive_file_name(triple):
+def archive_file_name(build_type, triple):
     """Generate the filename for the archive."""
     ext = archive_ext(triple)
-    return f"llvm-{triple}.{ext}"
+    return f"llvm-{build_type}-{triple}.{ext}"
 
 
-def release_url(tag, triple):
+def release_url(tag, triple, build_type):
     """Construct the GitHub release download URL."""
-    filename = archive_file_name(triple)
+    filename = archive_file_name(build_type, triple)
     return f"https://github.com/alcy-project/llvm_alcy_fork/releases/download/{tag}/{filename}"
 
 
@@ -41,16 +41,16 @@ def check_release_exists(url):
         return False
 
 
-def download_and_extract(tag, triple, download_dir, install_dir):
+def download_and_extract(tag, triple, build_type, download_dir, install_dir):
     """Download the LLVM archive and extract it to the specified directory."""
-    archive_name = archive_file_name(triple)
+    archive_name = archive_file_name(build_type, triple)
     archive_path = os.path.join(download_dir, archive_name)
 
     # Ensure directories exist
     os.makedirs(download_dir, exist_ok=True)
     os.makedirs(install_dir, exist_ok=True)
 
-    url = release_url(tag, triple)
+    url = release_url(tag, triple, build_type)
     if not check_release_exists(url):
         return 1
 

@@ -55,7 +55,8 @@ on_load(function(package)
     "third_party",
     "llvm-project",
     ".alcy",
-    "install"
+    "install",
+    package:is_debug() and "debug" or "release"
   )
   package:set("installdir", install_dir)
 
@@ -73,6 +74,7 @@ on_load(function(package)
     "run",
     llvm_setup_script,
     "--type=" .. llvm_build_type,
+    "--install-dir=" .. package:installdir(),
   }
   if not package:config("download_llvm") then
     table.join2(args, "--disable-download-llvm")
