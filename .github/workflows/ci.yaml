@@ -9,6 +9,7 @@ on:
       - benchmarks/**
       - third_party/**
       - scripts/**
+      - .github/actions/setup/**
       - .github/workflows/ci.yml
       - xmake.lua
       - .clang-tidy
