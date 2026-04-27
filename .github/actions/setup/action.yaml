@@ -1,0 +1,80 @@
+name: 'Setup build environment'
+description: 'Install uv, ccache, mold, xmake, and LLVM'
+
+inputs:
+  os:
+    required: true
+  plat:
+    required: true
+  arch:
+    required: true
+  cc:
+    required: true
+  cxx:
+    required: true
+
+runs:
+  using: "composite"
+  steps:
+    - name: Install dependencies (Ubuntu)
+      if: inputs.os == 'Linux'
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y --no-install-recommends libc++-dev libc++abi-dev
+
+    - name: Fetch tags
+      run: git submodule foreach --recursive 'git fetch --tags --depth=1'
+
+    - name: Install uv
+      uses: astral-sh/setup-uv@08807647e7069bb48b6ef5acd8ec9567f424441b
+      with:
+        # https://github.com/astral-sh/uv/tags
+        version: 0.10.7
+        enable-cache: true
+
+    - name: Sync python dependencies with uv
+      run: uv sync
+
+    - name: Setup ccache
+      uses: hendrikmuhs/ccache-action@4d0316e3a1f3f3c1a7a424368dc64f860c345402
+      with:
+        key: ${{ inputs.os }}-${{ inputs.plat }}-${{ inputs.arch }}-ccache
+        max-size: 4G
+        job-summary: ""
+
+    - name: Setup mold
+      if: inputs.os == 'Linux'
+      uses: rui314/setup-mold@9c9c13bf4c3f1adef0cc596abc155580bcb04444
+      with:
+        mold-version: 2.41.0
+        make-default: true
+
+    - name: Setup xmake
+      uses: xmake-io/github-action-setup-xmake@3a1a5dddfc7fa625d9a698738334bf55655a861a
+      with:
+        # https://github.com/xmake-io/xmake/tags
+        xmake-version: 3.0.8
+        actions-cache-folder: .xmake-cache
+        actions-cache-key: ${{ inputs.os }}-${{ inputs.plat }}-${{ inputs.arch }}-xmake
+        package-cache: true
+        package-cache-key: ${{ inputs.os }}-${{ inputs.plat }}-${{ inputs.arch }}-packages
+        build-cache: true
+        build-cache-path: build/.build_cache
+        build-cache-key: ${{ inputs.os }}-${{ inputs.plat }}-${{ inputs.arch }}-build
+        project-path: .
+
+    - name: Install LLVM tools
+      uses: KyleMayes/install-llvm-action@ebc0426251bc40c7cd31162802432c68818ab8f0
+      with:
+        # https://github.com/KyleMayes/install-llvm-action/blob/master/assets.json
+        version: 21.1.8
+
+    - name: Setup environment variables
+      run: |
+        if [[ "${{ inputs.plat }}" == "macosx" ]]; then
+          xcode-select --install || true
+          SDK=$(xcrun --show-sdk-path)
+          echo "SDKROOT=$SDK" >> $GITHUB_ENV
+          echo "LDFLAGS=-L$SDK/usr/lib" >> $GITHUB_ENV
+          echo "CXXFLAGS=-isysroot $SDK" >> $GITHUB_ENV
+        fi

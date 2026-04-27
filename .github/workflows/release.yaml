@@ -1,0 +1,111 @@
+name: release
+
+permissions:
+  contents: write
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+
+jobs:
+  release:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-24.04
+            plat: linux
+            arch: x86_64
+            cc: clang
+            cxx: clang++
+            stdlib: libc++
+            archive: tar.gz
+          - os: windows-2025-vs2026
+            plat: windows
+            arch: x64
+            cc: clang
+            cxx: clang++
+            stdlib: msvc
+            archive: zip
+          - os: macos-26
+            plat: macosx
+            arch: arm64
+            cc: clang
+            cxx: clang++
+            stdlib: libc++
+            archive: tar.gz
+    runs-on: ${{ matrix.os }}
+    name: Release (${{ matrix.plat }}-${{ matrix.arch }})
+    env:
+      CC: ${{ matrix.cc }}
+      CXX: ${{ matrix.cxx }}
+      COLORTERM: 256color
+      XMAKE_COLORTERM: 256color
+      XMAKE_ROOT: y
+      basename: "alcy"
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+        with:
+          submodules: recursive
+          fetch-depth: 1
+
+      - name: Setup build environment
+        uses: ./.github/actions/setup
+        with:
+          os: ${{ runner.os }}
+          plat: ${{ matrix.plat }}
+          arch: ${{ matrix.arch }}
+          cc: ${{ matrix.cc }}
+          cxx: ${{ matrix.cxx }}
+
+      - name: Configure
+        shell: bash
+        run: |
+          xmake config -c -y \
+            -m release \
+            --toolchain=llvm \
+            --unitybuild=y \
+            --fmtlib=y \
+            --llvm=y \
+            --lto=y \
+            --stdlib="${{ matrix.stdlib }}" \
+            -p "${{ matrix.plat }}" \
+            -a "${{ matrix.arch }}"
+
+      - name: Build
+        shell: bash
+        run: |
+          ccache -z
+          xmake build -w
+          ccache -s
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: ${{ matrix.plat }}-${{ matrix.arch }}
+          path: build/${{ matrix.plat }}/${{ matrix.arch }}/**
+
+      - name: Package artifacts
+        shell: bash
+        run: |
+          mkdir -p dist
+          cp LICENSE README.md dist/
+          cp build/${{ matrix.plat }}/${{ matrix.arch }}/**/${{ env.basename }}* dist/
+          if [[ "${{ matrix.plat }}" == "windows" ]]; then
+            cd dist && 7z a ../${{ env.basename }}-${{ matrix.plat }}-${{ matrix.arch }}.zip *
+          else
+            cd dist && tar -czvf ../${{ env.basename }}-${{ matrix.plat }}-${{ matrix.arch }}.tar.gz *
+          fi
+
+      - name: Upload artifacts to release
+        uses: softprops/action-gh-release@b4309332981a82ec1c5618f44dd2e27cc8bfbfda
+        with:
+          files: ${{ env.basename }}-${{ matrix.plat }}-${{ matrix.arch }}.${{ matrix.archive }}
+          draft: true
+          generate_release_notes: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
