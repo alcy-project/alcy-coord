@@ -22,36 +22,31 @@ on:
 
 jobs:
   build:
+    name: Build and test (${{ matrix.plat }}-${{ matrix.arch }}-${{ matrix.build_type }})
+    runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
+        build_type: [debug, release]
+        cc: [clang]
+        cxx: [clang++]
+        os:
+          - ubuntu-24.04
+          - macos-26
+          - windows-2025-vs2026
         include:
           - os: ubuntu-24.04
             plat: linux
             arch: x86_64
-            cc: clang
-            cxx: clang++
             stdlib: libc++
-            sanitizers: y
-            libunwind: y
-          - os: windows-2025-vs2026
-            plat: windows
-            arch: x64
-            cc: clang
-            cxx: clang++
-            stdlib: msvc
-            sanitizers: n
-            libunwind: n
           - os: macos-26
             plat: macosx
             arch: arm64
-            cc: clang
-            cxx: clang++
             stdlib: libc++
-            sanitizers: n
-            libunwind: n
-    runs-on: ${{ matrix.os }}
-    name: Build and test (${{ matrix.plat }}-${{ matrix.arch }})
+          - os: windows-2025-vs2026
+            plat: windows
+            arch: x64
+            stdlib: msvc
     env:
       CC: ${{ matrix.cc }}
       CXX: ${{ matrix.cxx }}
@@ -78,15 +73,15 @@ jobs:
         shell: bash
         run: |
           xmake config -y \
-            -m debug \
+            -m ${{ matrix.build_type }} \
             --tests=y \
             --benchmarks=y \
             --toolchain=llvm \
             --fmtlib=y \
             --llvm=y \
             --stdlib="${{ matrix.stdlib }}" \
-            --sanitizers="${{ matrix.sanitizers }}" \
-            --libunwind="${{ matrix.libunwind }}" \
+            --sanitizers=y \
+            --libunwind=y \
             -p "${{ matrix.plat }}" \
             -a "${{ matrix.arch }}"
 

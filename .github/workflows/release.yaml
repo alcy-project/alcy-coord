@@ -11,33 +11,33 @@ on:
 
 jobs:
   release:
+    name: Release (${{ matrix.plat }}-${{ matrix.arch }})
+    runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
+        cc: [clang]
+        cxx: [clang++]
+        os:
+          - ubuntu-24.04
+          - macos-26
+          - windows-2025-vs2026
         include:
           - os: ubuntu-24.04
             plat: linux
             arch: x86_64
-            cc: clang
-            cxx: clang++
+            stdlib: libc++
+            archive: tar.gz
+          - os: macos-26
+            plat: macosx
+            arch: arm64
             stdlib: libc++
             archive: tar.gz
           - os: windows-2025-vs2026
             plat: windows
             arch: x64
-            cc: clang
-            cxx: clang++
             stdlib: msvc
             archive: zip
-          - os: macos-26
-            plat: macosx
-            arch: arm64
-            cc: clang
-            cxx: clang++
-            stdlib: libc++
-            archive: tar.gz
-    runs-on: ${{ matrix.os }}
-    name: Release (${{ matrix.plat }}-${{ matrix.arch }})
     env:
       CC: ${{ matrix.cc }}
       CXX: ${{ matrix.cxx }}
