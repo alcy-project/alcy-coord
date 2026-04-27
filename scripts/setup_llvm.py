@@ -155,13 +155,19 @@ def main():
     parser.add_argument(
         "--disable-cache-llvm",
         action="store_true",
-        help="Use preinstalled LLVM if available",
+        help="Not to use preinstalled LLVM if available",
     )
 
     parser.add_argument(
         "--disable-download-llvm",
         action="store_true",
-        help="Download prebuilt LLVM from GitHub releases if available",
+        help="Not to download prebuilt LLVM from GitHub releases if available",
+    )
+
+    parser.add_argument(
+        "--disable-build-llvm",
+        action="store_true",
+        help="Not to build LLVM if no caches or downloads available",
     )
 
     args = parser.parse_args()
@@ -184,6 +190,7 @@ def main():
 
     enable_cache_llvm = not args.disable_cache_llvm
     enable_download_llvm = not args.disable_download_llvm
+    enable_build_llvm = not args.disable_build_llvm
 
     if os.path.isdir(include_dir) and os.path.join(lib_dir) and enable_cache_llvm:
         print(f"Preinstalled LLVM found in {args.install_dir}; skipped operation.")
@@ -202,7 +209,7 @@ def main():
                 download_dir=args.download_dir,
                 install_dir=args.install_dir,
             )
-        else:
+        elif enable_build_llvm:
             return build_llvm.build_llvm(
                 build_type=args.type,
                 configure_script=args.configure_script,
@@ -215,6 +222,9 @@ def main():
                 generator=args.generator,
                 triple=args.triple,
             )
+        else:
+            print("Failed to setup LLVM")
+            return -4
 
 
 if __name__ == "__main__":

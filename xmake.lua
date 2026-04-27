@@ -76,6 +76,12 @@ set_showmenu(true)
 set_description("download prebuilt LLVM from GitHub releases if available")
 option_end()
 
+option("build-llvm")
+set_default(true)
+set_showmenu(true)
+set_description("build LLVM if no caches or downloads available")
+option_end()
+
 option("unitybuild")
 set_default(false)
 set_showmenu(true)
@@ -223,6 +229,7 @@ if has_config("llvm") then
     configs = table.join(stdlib_config(), {
       download_llvm = has_config("download-llvm"),
       cache_llvm = has_config("cache-llvm"),
+      build_llvm = has_config("build-llvm"),
     }),
   })
 end

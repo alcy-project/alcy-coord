@@ -9,6 +9,11 @@ add_configs("download_llvm", {
   default = true,
   type = "boolean",
 })
+add_configs("build_llvm", {
+  description = "build LLVM if no caches or downloads available",
+  default = true,
+  type = "boolean",
+})
 
 -- from `llvm-config --libs --ignore-libllvm codegen`
 local llvm_components = {
@@ -91,6 +96,9 @@ on_load(function(package)
   end
   if not package:config("cache_llvm") then
     table.join2(args, "--disable-cache-llvm")
+  end
+  if not package:config("build_llvm") then
+    table.join2(args, "--disable-build-llvm")
   end
 
   os.execv("uv", args, { cwd = os.projectdir() })

@@ -79,6 +79,9 @@ jobs:
             --toolchain=llvm \
             --fmtlib=y \
             --llvm=y \
+            --cache-llvm=y \
+            --download-llvm=y \
+            --build-llvm=n \
             --stdlib="${{ matrix.stdlib }}" \
             --sanitizers=y \
             --libunwind=y \

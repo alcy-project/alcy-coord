@@ -71,6 +71,9 @@ jobs:
             --unitybuild=y \
             --fmtlib=y \
             --llvm=y \
+            --cache-llvm=y \
+            --download-llvm=y \
+            --build-llvm=n \
             --lto=y \
             --stdlib="${{ matrix.stdlib }}" \
             -p "${{ matrix.plat }}" \
