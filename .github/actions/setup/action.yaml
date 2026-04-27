@@ -52,6 +52,11 @@ runs:
         mold-version: 2.41.0
         make-default: true
 
+    - name: Setup cmake
+      uses: jwlawson/actions-setup-cmake@0d6a7d60b009d01c9e7523be22153ff8f19460d3
+      with:
+        cmake-version: 4.3.2
+
     - name: Setup xmake
       uses: xmake-io/github-action-setup-xmake@3a1a5dddfc7fa625d9a698738334bf55655a861a
       with:
