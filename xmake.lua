@@ -116,7 +116,7 @@ set_policy("build.c++.msvc.runtime", "MD")
 set_policy("package.include_external_headers", true)
 set_policy("package.inherit_external_configs", true)
 set_policy("package.install_only", true)
-set_policy("diagnosis.check_build_deps", true)
+-- set_policy("diagnosis.check_build_deps", true)
 
 -- add_rules("mode.debug", "mode.release", "mode.releasedbg")
 add_rules("plugin.compile_commands.autoupdate")
