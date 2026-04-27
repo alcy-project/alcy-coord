@@ -60,6 +60,15 @@ on_load(function(package)
   )
   package:set("installdir", install_dir)
 
+  local build_dir = path.join(
+    os.projectdir(),
+    "third_party",
+    "llvm-project",
+    ".alcy",
+    "build",
+    package:is_debug() and "debug" or "release"
+  )
+
   os.exec("uv sync", { cwd = os.projectdir() })
   local llvm_build_type = "Debug"
   if is_mode("release") then
@@ -74,7 +83,8 @@ on_load(function(package)
     "run",
     llvm_setup_script,
     "--type=" .. llvm_build_type,
-    "--install-dir=" .. package:installdir(),
+    "--build-dir=" .. build_dir,
+    "--install-dir=" .. install_dir,
   }
   if not package:config("download_llvm") then
     table.join2(args, "--disable-download-llvm")
