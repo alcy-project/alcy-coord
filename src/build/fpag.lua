@@ -13,12 +13,10 @@ add_versions("v0.0.9", "8d23657b1149db5d8f6059a57d054817877b23ad")
 add_versions("v0.0.10", "6fcc98dc6cdb442dd8bc5d68524555b51a2b4326")
 add_versions("v0.0.11", "0dfd43224c42d152f58e23423720989388aab670")
 add_versions("v0.0.12", "b6abb13115633c7a25065b290af156cd9b027f38")
+add_versions("v0.0.13", "62231be0d160183980c348e6cc16ba7265b1b84f")
+add_versions("v0.0.14", "d4ec6993569c20cb3119bf3e5530bc49948e65a4")
+add_versions("v0.0.15", "1483861f8bcaa7cac02d4ec5d825d1f396e11004")
 
-add_configs("fmtlib", {
-  description = 'Use fmtlib for formatting (You need to manually execute add_requires("fmt <version>") with correct version and add_packages("fmt").)',
-  default = true,
-  type = "boolean",
-})
 add_configs("libunwind", {
   description = "Use libunwind for stack tracing",
   default = false,
@@ -29,17 +27,25 @@ add_configs(
   { description = "stl to use", default = "libstdc++", type = "string" }
 )
 
-add_deps("xxhash v0.8.3")
+add_deps("xxhash v0.8.3", {
+  external = true,
+  system = false,
+  -- configs = { cxxflags = "-stdlib=libc++", ldflags = "-stdlib=libc++" },
+})
+-- add_deps("fmt 12.1.0", {
+--   external = false,
+--   system = false,
+--   -- configs = { cxxflags = "-stdlib=libc++", ldflags = "-stdlib=libc++" },
+-- })
 
 on_load(function(package)
-  if package:config("fmtlib") then
-    package:add("deps", "fmt")
-    package:add("defines", "FPAG_BUILD_FLAG_INTERNAL_USE_FMTLIB()=1")
-  else
-    package:add("defines", "FPAG_BUILD_FLAG_INTERNAL_USE_FMTLIB()=0")
-  end
+  -- package:add("deps", "fmt")
   if package:config("libunwind") and package:is_plat("linux") then
-    package:add("deps", "libunwind")
+    package:add("deps", "libunwind v1.8.3", {
+      external = true,
+      system = false,
+      -- configs = { cxxflags = "-stdlib=libc++", ldflags = "-stdlib=libc++" },
+    })
   end
 end)
 
@@ -47,7 +53,6 @@ on_install("linux", "macosx", "windows", function(package)
   local configs = {}
   configs.tests = false
   configs.benchmarks = false
-  configs.fmtlib = package:config("fmtlib")
   configs.libunwind = package:config("libunwind")
   configs.stdlib = package:config("stdlib")
   configs.kind = package:config("shared") and "shared" or "static"

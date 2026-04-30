@@ -48,14 +48,6 @@ set_showmenu(true)
 set_description("use libunwind for stack tracing (for fpag)")
 option_end()
 
-option("fmtlib")
-set_default(true)
-set_showmenu(true)
-set_description(
-  "use fmtlib for formatting (use std::format if false) (for fpag)"
-)
-option_end()
-
 option("llvm")
 set_default(true)
 set_showmenu(true)
@@ -182,42 +174,48 @@ end
 
 local function source_files()
   local files = {}
-  table.join2(files, os.files("src/**.cc|codegen_llvm/**"))
-  table.join2(files, os.files("src/**.h|codegen_llvm/**"))
-  if has_config("llvm") then
-    table.join2(files, os.files("src/codegen_llvm/**.cc"))
-    table.join2(files, os.files("src/codegen_llvm/**.h"))
-  end
+  table.join2(files, os.files("src/**.cc"))
+  table.join2(files, os.files("src/**.h"))
+  table.join2(files, os.files("tests/**.cc"))
+  table.join2(files, os.files("tests/**.h"))
+  table.join2(files, os.files("benchmarks/**.cc"))
+  table.join2(files, os.files("benchmarks/**.h"))
 
-  if has_config("tests") then
-    table.join2(files, os.files("tests/**.cc|codegen_llvm/**"))
-    table.join2(files, os.files("tests/**.h|codegen_llvm/**"))
-    if has_config("llvm") then
-      table.join2(files, os.files("tests/codegen_llvm/**.cc"))
-      table.join2(files, os.files("tests/codegen_llvm/**.h"))
-    end
-  end
+  -- table.join2(files, os.files("src/**.cc|codegen_llvm/**"))
+  -- table.join2(files, os.files("src/**.h|codegen_llvm/**"))
+  -- if has_config("llvm") then
+  --   table.join2(files, os.files("src/codegen_llvm/**.cc"))
+  --   table.join2(files, os.files("src/codegen_llvm/**.h"))
+  -- end
 
-  if has_config("benchmarks") then
-    table.join2(files, os.files("benchmarks/**.cc|codegen_llvm/**"))
-    table.join2(files, os.files("benchmarks/**.h|codegen_llvm/**"))
-    if has_config("llvm") then
-      table.join2(files, os.files("benchmarks/codegen_llvm/**.cc"))
-      table.join2(files, os.files("benchmarks/codegen_llvm/**.h"))
-    end
-  end
+  -- if has_config("tests") then
+  --   table.join2(files, os.files("tests/**.cc|codegen_llvm/**"))
+  --   table.join2(files, os.files("tests/**.h|codegen_llvm/**"))
+  --   if has_config("llvm") then
+  --     table.join2(files, os.files("tests/codegen_llvm/**.cc"))
+  --     table.join2(files, os.files("tests/codegen_llvm/**.h"))
+  --   end
+  -- end
+
+  -- if has_config("benchmarks") then
+  --   table.join2(files, os.files("benchmarks/**.cc|codegen_llvm/**"))
+  --   table.join2(files, os.files("benchmarks/**.h|codegen_llvm/**"))
+  --   if has_config("llvm") then
+  --     table.join2(files, os.files("benchmarks/codegen_llvm/**.cc"))
+  --     table.join2(files, os.files("benchmarks/codegen_llvm/**.h"))
+  --   end
+  -- end
   return files
 end
 
-local alcy_component_kind = "object" -- or static, shared
+local alcy_component_kind = "static" -- object, static, or shared
 
 -- Dependencies
-add_requires("fpag v0.0.12", {
+add_requires("fpag v0.0.15", {
   system = false,
   external = true,
   configs = {
     stdlib = get_config("stdlib"),
-    fmtlib = get_config("fmtlib"),
     libunwind = get_config("libunwind"),
   },
 })
@@ -242,13 +240,11 @@ if has_config("tests") then
   })
 end
 
-if has_config("fmtlib") then
-  add_requires("fmt 12.1.0", {
-    system = false,
-    external = false,
-    configs = stdlib_config(),
-  })
-end
+add_requires("fmt 12.1.0", {
+  system = false,
+  external = false,
+  configs = stdlib_config(),
+})
 
 if has_config("benchmarks") then
   add_requires("benchmark v1.9.5", {
@@ -304,7 +300,7 @@ on_run(function()
     os.execv(
       "clang-tidy",
       table.join(
-        { "--use-color", "--fix", "--config-file=./.clang-tidy" },
+        { "--use-color", "--fix", "--config-file=./.clang-tidy", "-p=." },
         files
       )
     )
@@ -383,7 +379,7 @@ end)
 -- Rules
 rule("alcy_common_config")
 on_load(function(target)
-  target:set("languages", "c++23")
+  target:set("languages", "c++20")
   target:set("warnings", { "all", "extra", "error", "pedantic" })
   target:set("encodings", "source:utf-8", "utf-8")
 
@@ -622,3 +618,8 @@ add_packages("benchmark")
 add_includedirs("benchmarks", { public = true })
 set_default(false)
 target_end()
+
+target("all")
+set_kind("phony")
+add_deps("alcy", "tests", "benchmarks")
+set_default(false)
