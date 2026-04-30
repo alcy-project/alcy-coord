@@ -32,11 +32,11 @@ add_deps("xxhash v0.8.3", {
   system = false,
   -- configs = { cxxflags = "-stdlib=libc++", ldflags = "-stdlib=libc++" },
 })
--- add_deps("fmt 12.1.0", {
---   external = false,
---   system = false,
---   -- configs = { cxxflags = "-stdlib=libc++", ldflags = "-stdlib=libc++" },
--- })
+add_deps("fmt 12.1.0", {
+  external = false,
+  system = false,
+  -- configs = { cxxflags = "-stdlib=libc++", ldflags = "-stdlib=libc++" },
+})
 
 on_load(function(package)
   -- package:add("deps", "fmt")
