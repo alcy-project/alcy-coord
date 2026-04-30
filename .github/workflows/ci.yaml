@@ -1,4 +1,4 @@
-name: ci
+name: CI
 
 on:
   push:
@@ -76,8 +76,7 @@ jobs:
             -m ${{ matrix.build_type }} \
             --tests=y \
             --benchmarks=y \
-            --toolchain=llvm \
-            --fmtlib=y \
+            --toolchain=clang \
             --llvm=y \
             --cache-llvm=y \
             --download-llvm=y \
@@ -91,9 +90,7 @@ jobs:
       - name: Build
         shell: bash
         run: |
-          ccache -z
           xmake build -w
-          ccache -s
 
       - name: Build tests and run
         shell: bash

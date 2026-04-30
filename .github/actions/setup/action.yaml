@@ -1,5 +1,5 @@
-name: 'Setup build environment'
-description: 'Install uv, ccache, mold, xmake, and LLVM'
+name: Setup build environment
+description: Install uv, xmake, and LLVM
 
 inputs:
   os:
@@ -37,20 +37,6 @@ runs:
     - name: Sync python dependencies with uv
       shell: bash
       run: uv sync
-
-    - name: Setup ccache
-      uses: hendrikmuhs/ccache-action@4d0316e3a1f3f3c1a7a424368dc64f860c345402
-      with:
-        key: ${{ inputs.os }}-${{ inputs.plat }}-${{ inputs.arch }}-ccache
-        max-size: 4G
-        job-summary: ""
-
-    - name: Setup mold
-      if: inputs.os == 'Linux'
-      uses: rui314/setup-mold@9c9c13bf4c3f1adef0cc596abc155580bcb04444
-      with:
-        mold-version: 2.41.0
-        make-default: true
 
     - name: Setup xmake
       uses: xmake-io/github-action-setup-xmake@3a1a5dddfc7fa625d9a698738334bf55655a861a

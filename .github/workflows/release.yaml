@@ -1,4 +1,4 @@
-name: release
+name: Release
 
 permissions:
   contents: write
@@ -67,9 +67,8 @@ jobs:
         run: |
           xmake config -c -y \
             -m release \
-            --toolchain=llvm \
+            --toolchain=clang \
             --unitybuild=y \
-            --fmtlib=y \
             --llvm=y \
             --cache-llvm=y \
             --download-llvm=y \
@@ -82,9 +81,7 @@ jobs:
       - name: Build
         shell: bash
         run: |
-          ccache -z
           xmake build -w
-          ccache -s
 
       - name: Upload build artifacts
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
