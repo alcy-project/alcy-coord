@@ -8,7 +8,7 @@ namespace ir {
 
 // Bit packed 1 B struct for instruction.
 struct InstructionFlags {
-  bool is_var_len : 1 = false;  // For call, etc.
+  bool some_flag : 1 = false;
 };
 
 }  // namespace ir

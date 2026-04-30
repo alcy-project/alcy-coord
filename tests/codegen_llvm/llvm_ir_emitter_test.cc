@@ -20,6 +20,7 @@
 #include "llvm/IR/LLVMContext.h"
 #include "llvm/IR/Module.h"
 #include "llvm/IR/Verifier.h"
+#include "util/test_util.h"
 
 namespace codegen_llvm {
 
@@ -36,8 +37,8 @@ TEST_CASE("simple failing", "[codegen_llvm]") {
 
   const ir::ExternalFunctionId func_puts = storage->add_external_function({
       .meta = {.return_type = ir::Type::I32,
-               .parameter_count = 1,
-               .parameter_types = {ir::Type::Ptr},
+               .param_types_count = 1,
+               .param_types = {.soo_buf = {ir::Type::Ptr}},
                .name = puts_str},
       .calling_conv = ir::CallingConvention::C,
   });
@@ -45,20 +46,20 @@ TEST_CASE("simple failing", "[codegen_llvm]") {
   // reg 0 := 1 - 1 = 0
   const ir::InstructionId head = storage->add_instruction({
       .op = ir::Opcode::IntSub,
-      .flags = {.is_var_len = false},
+      .flags = {},
       .dst = ir::RegisterId(0),
       .lhs = {.tag = ir::OperandTag::Immutable,
               .type = ir::Type::I32,
               .data = {.immutable_id = imm_1}},
-      .rhs = {.tag = ir::OperandTag::Immutable,
-              .type = ir::Type::I32,
-              .data = {.immutable_id = imm_1}},
+      .rhs = {.op = {.tag = ir::OperandTag::Immutable,
+                     .type = ir::Type::I32,
+                     .data = {.immutable_id = imm_1}}},
   });
   storage->add_register({.type = ir::Type::I32, .def_idx = head});
 
   storage->add_instruction({
       .op = ir::Opcode::Call,
-      .flags = {.is_var_len = false},
+      .flags = {},
       .dst = ir::RegisterId(1),
       .lhs = {.tag = ir::OperandTag::ExternalFunction,
               .type = ir::Type::Function,
@@ -67,28 +68,30 @@ TEST_CASE("simple failing", "[codegen_llvm]") {
       // .rhs = {.tag = ir::OperandTag::Immutable,
       //         .type = ir::Type::Ptr,
       //         .data = {.immutable_id = imm_str}},
-      .rhs = ir::kInvalidOperand,
+      .rhs = {.op = ir::kInvalidOperand},
   });
 
   const ir::InstructionId end = storage->add_instruction({
       .op = ir::Opcode::Ret,
-      .flags = {.is_var_len = false},
+      .flags = {},
       .dst = ir::RegisterId(2),
       .lhs = {.tag = ir::OperandTag::Register,
               .type = ir::Type::I32,
               .data = {.register_id = ir::RegisterId(0)}},
-      .rhs = ir::kInvalidOperand,
+      .rhs = {.op = ir::kInvalidOperand},
   });
 
   const ir::BlockId block = storage->add_block({
       .head_id = head,
       .length = end.id - head.id + 1,
+      .param_types_count = 0,
+      .param_types = {.soo_buf = {}},
   });
 
   storage->add_function({
       .meta = {.return_type = ir::Type::I32,
-               .parameter_count = 0,
-               .parameter_types = {},
+               .param_types_count = 0,
+               .param_types = {.soo_buf = {}},
                .name = main_str},
       .head_id = block,
       .length = 1,
@@ -107,8 +110,8 @@ TEST_CASE("simple failing", "[codegen_llvm]") {
   llvm::raw_string_ostream os(ir_str);
   module->print(os, nullptr);
 
-  // logging::SyncLogger& logger = test_logger();
-  // logger.debug("LLVM IR dump:\n{}", os.str());
+  tests::TestLogger& logger = tests::test_logger();
+  logger.debug("LLVM IR dump:\n{}", ir_str);
 }
 
 }  // namespace codegen_llvm

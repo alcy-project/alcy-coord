@@ -14,8 +14,13 @@ namespace ir {
 
 struct FunctionMeta {
   Type return_type;
-  u8 parameter_count;
-  Type parameter_types[32];
+
+  ParameterTypeId::IdType param_types_count;
+  union {
+    Type soo_buf[kFunctionParameterTypesSooThreshold];
+    ParameterTypeId storage_id;
+  } param_types;
+
   str::StringPoolId name;
 };
 

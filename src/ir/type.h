@@ -15,6 +15,7 @@ enum class Type : u8 {
   I16,
   I32,
   I64,
+  // TODO: add these types
   // I128,
   // U8,
   // U16,
@@ -25,6 +26,7 @@ enum class Type : u8 {
   F32,
   F64,
   // F128,
+  Str,
   Ptr,     // Opaque pointer
   Ref,     // Immutable reference (region tracked)
   MutRef,  // Mutable reference  (exclusive, region tracked)
@@ -36,28 +38,29 @@ enum class Type : u8 {
 constexpr const char* type_to_str(Type type) {
   using T = Type;
   switch (type) {
-    case T::Void: return "Void";
-    case T::I1: return "I1";
-    case T::I8: return "I8";
-    case T::I16: return "I16";
-    case T::I32: return "I32";
-    case T::I64: return "I64";
-    // case T::I128: return "I128";
-    // case T::U8: return "U8";
-    // case T::U16: return "U16";
-    // case T::U32: return "U32";
-    // case T::U64: return "U64";
-    // case T::U128: return "U128";
-    // case T::F16: return "F16";
-    case T::F32: return "F32";
-    case T::F64: return "F64";
-    // case T::F128: return "F128";
-    case T::Ptr: return "Ptr";
-    case T::Ref: return "Ref";
-    case T::MutRef: return "MutRef";
+    case T::Void: return "void";
+    case T::I1: return "i1";
+    case T::I8: return "i8";
+    case T::I16: return "i16";
+    case T::I32: return "i32";
+    case T::I64: return "i64";
+    // case T::I128: return "i128";
+    // case T::U8: return "u8";
+    // case T::U16: return "u16";
+    // case T::U32: return "u32";
+    // case T::U64: return "u64";
+    // case T::U128: return "u128";
+    // case T::F16: return "f16";
+    case T::F32: return "f32";
+    case T::F64: return "f64";
+    // case T::F128: return "f128";
+    case T::Str: return "str";
+    case T::Ptr: return "ptr";
+    case T::Ref: return "ref";
+    case T::MutRef: return "mut_ref";
 
-    case T::Function: return "Function";
-    case T::Block: return "Block";
+    case T::Function: return "function";
+    case T::Block: return "block";
   }
 }
 

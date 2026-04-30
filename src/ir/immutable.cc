@@ -6,7 +6,7 @@
 
 namespace ir {
 
-static_assert(sizeof(Immutable) == 16);
+static_assert(sizeof(Immutable) == 24);
 
 }  // namespace ir
 

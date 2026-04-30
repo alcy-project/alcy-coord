@@ -7,6 +7,7 @@
 #include "base/debug/check.h"
 #include "base/debug/fatal.h"
 #include "fpag/base/numeric.h"
+#include "fpag/str/string_pool_id.h"
 #include "ir/type.h"
 #include "ir/type_util.h"
 
@@ -22,6 +23,7 @@ struct Immutable {
     i64 i64;
     f32 f32;
     f64 f64;
+    str::StringPoolId str;
     u64 ptr;
     u64 mutptr;
     u64 ref;

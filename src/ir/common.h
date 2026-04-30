@@ -13,9 +13,11 @@ using IdBaseType = base::IdBaseType;
 
 struct Function;
 using FunctionId = base::Id<Function, IdBaseType>;
+constexpr u32 kFunctionParameterTypesSooThreshold = 8;
 
 struct Block;
 using BlockId = base::Id<Block, IdBaseType>;
+constexpr u32 kBlockParameterTypesSooThreshold = 20;
 
 struct Immutable;
 using ImmutableId = base::Id<Immutable, IdBaseType>;
@@ -30,5 +32,9 @@ struct ExternalFunction;
 using ExternalFunctionId = base::Id<ExternalFunction, IdBaseType>;
 
 struct Operand;
+using OperandId = base::Id<Operand, IdBaseType>;
+
+enum class Type : u8;
+using ParameterTypeId = base::Id<Type, IdBaseType>;
 
 }  // namespace ir

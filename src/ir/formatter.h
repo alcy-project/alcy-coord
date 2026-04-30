@@ -6,13 +6,8 @@
 
 #include <string_view>
 
-#include "build/build_config.h"
 #include "ir/opcode.h"
 #include "ir/type.h"
-
-#if !FPAG_BUILD_FLAG(USE_FMTLIB)
-#include <format>
-#endif
 
 namespace ir {
 
@@ -25,16 +20,3 @@ constexpr std::string_view format_as(const Type t) {
 }
 
 }  // namespace ir
-
-// For std::format
-#if !FPAG_BUILD_FLAG(USE_FMTLIB)
-
-template <typename T>
-  requires requires(T obj) { ir::format_as(obj); }
-struct std::formatter<T> : std::formatter<std::string_view> {
-  auto format(T obj, format_context& ctx) const {
-    return std::formatter<std::string_view>::format(ir::format_as(obj), ctx);
-  }
-};
-
-#endif

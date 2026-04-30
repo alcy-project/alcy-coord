@@ -6,7 +6,7 @@
 
 namespace ir {
 
-static_assert(sizeof(FunctionMeta) == 56);
-static_assert(sizeof(Function) == 64);
+static_assert(sizeof(FunctionMeta) == 32);
+static_assert(sizeof(Function) == 40);
 
 }  // namespace ir

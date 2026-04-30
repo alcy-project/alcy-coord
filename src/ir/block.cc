@@ -6,7 +6,7 @@
 
 namespace ir {
 
-static_assert(sizeof(Block) == 8);
+static_assert(sizeof(Block) == 32);
 
 }
 

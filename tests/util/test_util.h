@@ -4,6 +4,15 @@
 
 #pragma once
 
-#include "fpag/logging/sync_logger.h"
+#include "fpag/logging/log_level.h"
+#include "fpag/logging/sink/stdout_sink.h"
+#include "fpag/logging/sync/sync_logger.h"
 
-logging::SyncLogger& test_logger();
+namespace tests {
+
+using TestLogger =
+    logging::SyncLogger<logging::StdoutSink, logging::LogLevel::Debug>;
+
+TestLogger& test_logger();
+
+}  // namespace tests

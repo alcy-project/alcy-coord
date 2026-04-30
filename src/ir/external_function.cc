@@ -6,7 +6,7 @@
 
 namespace ir {
 
-static_assert(sizeof(ExternalFunction) == 64);
+static_assert(sizeof(ExternalFunction) == 40);
 
 }  // namespace ir
 

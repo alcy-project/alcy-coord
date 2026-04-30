@@ -34,6 +34,8 @@ class Storage {
   using Registers = base::Vec<Register, RegisterId, Alloc<Register>>;
   using ExternalFunctions =
       base::Vec<ExternalFunction, ExternalFunctionId, Alloc<ExternalFunction>>;
+  using Operands = base::Vec<Operand, OperandId, Alloc<Operand>>;
+  using ParameterTypes = base::Vec<Type, ParameterTypeId, Alloc<Type>>;
 
   Storage() = default;
   ~Storage() = default;
@@ -66,6 +68,12 @@ class Storage {
   inline ExternalFunctionId add_external_function(ExternalFunction&& ex_func) {
     return external_functions_.emplace_back(ex_func);
   }
+  inline OperandId add_operand(Operand&& op) {
+    return operands_.emplace_back(op);
+  }
+  inline ParameterTypeId add_parameter_type(Type&& type) {
+    return parameter_types_.emplace_back(type);
+  }
 
   inline const Functions& functions() const { return functions_; }
   inline const Instructions& instructions() const { return instrs_; }
@@ -74,6 +82,10 @@ class Storage {
   inline const Registers& registers() const { return registers_; }
   inline const ExternalFunctions& external_functions() const {
     return external_functions_;
+  }
+  inline const Operands& operands() const { return operands_; }
+  inline const ParameterTypes& parameter_types() const {
+    return parameter_types_;
   }
 
   // std::string dump() const;
@@ -85,6 +97,8 @@ class Storage {
   Immutables immutables_;
   Registers registers_;
   ExternalFunctions external_functions_;
+  Operands operands_;
+  ParameterTypes parameter_types_;
 };
 
 }  // namespace ir

@@ -18,7 +18,11 @@ struct Instruction {
 
   RegisterId dst;
   Operand lhs;
-  Operand rhs;
+
+  union {
+    Operand op;
+    OperandId storage_id;
+  } rhs;
 };
 
 }  // namespace ir
