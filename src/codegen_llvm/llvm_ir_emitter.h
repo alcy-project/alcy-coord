@@ -7,9 +7,11 @@
 #include <memory>
 
 #include "base/id.h"
+#include "base/vec.h"
 #include "codegen_llvm/common.h"
 #include "fpag/str/string_interner.h"
 #include "ir/common.h"
+#include "ir/function.h"
 #include "ir/storage.h"
 
 namespace codegen_llvm {

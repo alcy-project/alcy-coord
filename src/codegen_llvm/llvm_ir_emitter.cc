@@ -81,7 +81,7 @@ inline llvm::Type* LlvmIrEmitter::type(ir::Type type) const {
     case T::Ref: return builder_->getPtrTy();
     case T::MutRef: return builder_->getPtrTy();
     default: {
-      DLOG("unsupported type: {}", static_cast<u8>(type));
+      DLOG("unsupported type: {}", type);
       UNREACHABLE();
     }
   }
@@ -174,8 +174,9 @@ void LlvmIrEmitter::emit_instruction(const ir::Instruction& instr) {
       break;
     }
     case Op::Store: {
-      add_register(i.dst, builder_->CreateStore(resolve_operand_value(i.lhs),
-                                                resolve_operand_value(i.rhs)));
+      add_register(i.dst,
+                   builder_->CreateStore(resolve_operand_value(i.lhs),
+                                         resolve_operand_value(i.rhs.op)));
       break;
     }
       // GetElementPtr
@@ -184,17 +185,17 @@ void LlvmIrEmitter::emit_instruction(const ir::Instruction& instr) {
 
     case Op::IntAdd: {
       add_register(i.dst, builder_->CreateAdd(resolve_operand_value(i.lhs),
-                                              resolve_operand_value(i.rhs)));
+                                              resolve_operand_value(i.rhs.op)));
       break;
     }
     case Op::IntSub: {
       add_register(i.dst, builder_->CreateSub(resolve_operand_value(i.lhs),
-                                              resolve_operand_value(i.rhs)));
+                                              resolve_operand_value(i.rhs.op)));
       break;
     }
     case Op::IntMul: {
       add_register(i.dst, builder_->CreateMul(resolve_operand_value(i.lhs),
-                                              resolve_operand_value(i.rhs)));
+                                              resolve_operand_value(i.rhs.op)));
       break;
     }
       // IntDiv,   // Signed devision
@@ -204,32 +205,34 @@ void LlvmIrEmitter::emit_instruction(const ir::Instruction& instr) {
 
     case Op::And: {
       add_register(i.dst, builder_->CreateAnd(resolve_operand_value(i.lhs),
-                                              resolve_operand_value(i.rhs)));
+                                              resolve_operand_value(i.rhs.op)));
       break;
     }
     case Op::Or: {
       add_register(i.dst, builder_->CreateOr(resolve_operand_value(i.lhs),
-                                             resolve_operand_value(i.rhs)));
+                                             resolve_operand_value(i.rhs.op)));
       break;
     }
     case Op::Xor: {
       add_register(i.dst, builder_->CreateXor(resolve_operand_value(i.lhs),
-                                              resolve_operand_value(i.rhs)));
+                                              resolve_operand_value(i.rhs.op)));
       break;
     }
     case Op::ShiftLeft: {
       add_register(i.dst, builder_->CreateShl(resolve_operand_value(i.lhs),
-                                              resolve_operand_value(i.rhs)));
+                                              resolve_operand_value(i.rhs.op)));
       break;
     }
     case Op::ArithmeticShiftRight: {
-      add_register(i.dst, builder_->CreateAShr(resolve_operand_value(i.lhs),
-                                               resolve_operand_value(i.rhs)));
+      add_register(i.dst,
+                   builder_->CreateAShr(resolve_operand_value(i.lhs),
+                                        resolve_operand_value(i.rhs.op)));
       break;
     }
     case Op::LogicalShiftRight: {
-      add_register(i.dst, builder_->CreateLShr(resolve_operand_value(i.lhs),
-                                               resolve_operand_value(i.rhs)));
+      add_register(i.dst,
+                   builder_->CreateLShr(resolve_operand_value(i.lhs),
+                                        resolve_operand_value(i.rhs.op)));
       break;
     }
     case Op::Not: {
@@ -255,7 +258,7 @@ void LlvmIrEmitter::emit_instruction(const ir::Instruction& instr) {
     case Op::Call: {
       // TODO: Support not only one argument
       // builder_->CreateCall(resolve_operand_function(i.lhs),
-      //                      {resolve_operand_value(i.rhs)});
+      //                      {resolve_operand_value(i.rhs.op)});
 
       llvm::Constant* test_str = builder_->CreateGlobalString("Hello, World");
       builder_->CreateCall(resolve_operand_function(i.lhs), {test_str});
@@ -297,12 +300,24 @@ void LlvmIrEmitter::emit_instruction(const ir::Instruction& instr) {
 
 llvm::Function* LlvmIrEmitter::create_function(
     const ir::FunctionMeta& function_meta) const {
-  llvm::SmallVector<llvm::Type*, 8> parameter_types;
-  parameter_types.reserve(function_meta.parameter_count);
+  llvm::SmallVector<llvm::Type*, ir::kFunctionParameterTypesSooThreshold>
+      parameter_types;
+  parameter_types.reserve(function_meta.param_types_count);
 
-  for (usize i = 0; i < function_meta.parameter_count; ++i) {
-    parameter_types.push_back(type(function_meta.parameter_types[i]));
+  if (function_meta.param_types_count <=
+      ir::kFunctionParameterTypesSooThreshold) [[likely]] {
+    for (usize i = 0; i < function_meta.param_types_count; ++i) {
+      parameter_types.emplace_back(type(function_meta.param_types.soo_buf[i]));
+    }
+  } else {
+    using Id = ir::ParameterTypeId;
+    const Id begin = function_meta.param_types.storage_id;
+    const Id end = Id{begin.id + function_meta.param_types_count};
+    for (Id id = begin; id < end; ++id) {
+      parameter_types.emplace_back(type(storage_->parameter_types()[id]));
+    }
   }
+
   llvm::FunctionType* func_type = llvm::FunctionType::get(
       type(function_meta.return_type),
       llvm::ArrayRef<llvm::Type*>(parameter_types), false);
