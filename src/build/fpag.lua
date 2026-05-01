@@ -47,6 +47,10 @@ on_load(function(package)
       -- configs = { cxxflags = "-stdlib=libc++", ldflags = "-stdlib=libc++" },
     })
   end
+
+  if package:is_plat("windows") then
+    package:add("syslinks", { "dbghelp", "onecore" })
+  end
 end)
 
 on_install("linux", "macosx", "windows", function(package)
