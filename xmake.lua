@@ -391,10 +391,7 @@ on_load(function(target)
   )
   target:add("defines", {
     "LLVM_ENABLE_ABI_BREAKING_CHECKS=" .. (is_mode("debug") and "1" or "0"),
-    "LLVM_DISABLE_ABI_BREAKING_CHECKS="
-      .. (not is_mode("debug") and "1" or "0"),
     "LLVM_ENABLE_ASSERTIONS=" .. (is_mode("debug") and "1" or "0"),
-    "LLVM_DISABLE_ASSERTIONS=" .. (not is_mode("debug") and "1" or "0"),
   }, { force = true })
 
   target:add("packages", "fpag")

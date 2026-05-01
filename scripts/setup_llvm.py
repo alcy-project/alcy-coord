@@ -13,7 +13,7 @@ import download_llvm
 import build_llvm
 
 script_dir = os.path.dirname(__file__)
-root_dir = os.path.join(script_dir, "..")
+root_dir = os.path.dirname(script_dir)
 
 default_llvm_root_dir = os.path.join(root_dir, "third_party", "llvm-project")
 
@@ -197,13 +197,17 @@ def main():
     enable_cache_llvm = not args.disable_cache_llvm
     enable_download_llvm = not args.disable_download_llvm
     enable_build_llvm = not args.disable_build_llvm
+    lower_type = args.type.lower()
+
+    for arg, value in vars(args).items():
+        print(f"{arg}: {value}")
 
     if os.path.isdir(include_dir) and os.path.join(lib_dir) and enable_cache_llvm:
         print(f"Preinstalled LLVM found in {args.install_dir}; skipped operation.")
         return 0
     else:
         url = download_llvm.release_url(
-            tag=args.tag, triple=args.triple, build_type=args.type
+            tag=args.tag, triple=args.triple, build_type=lower_type
         )
         exists = download_llvm.check_release_exists(url)
         if exists and enable_download_llvm:
@@ -211,7 +215,7 @@ def main():
             return download_llvm.download_and_extract(
                 tag=args.tag,
                 triple=args.triple,
-                build_type=args.type,
+                build_type=lower_type,
                 download_dir=args.download_dir,
                 install_dir=args.install_dir,
             )
