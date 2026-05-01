@@ -90,6 +90,7 @@ on_load(function(package)
     "--type=" .. llvm_build_type,
     "--build-dir=" .. build_dir,
     "--install-dir=" .. install_dir,
+    "--libcxx",
   }
   if not package:config("download_llvm") then
     table.join2(args, "--disable-download-llvm")

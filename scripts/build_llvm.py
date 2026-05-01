@@ -13,6 +13,8 @@ def build_llvm(
     cxx_compiler,
     generator,
     triple,
+    assertions,
+    libcxx,
 ):
     """
     Simulates the LLVM build step logic from Zig.
@@ -27,11 +29,13 @@ def build_llvm(
         llvm_build_dir,
         llvm_install_dir,
         build_type,
+        assertions,
+        triple,
+        libcxx,
         generator,
         compiler_launcher or "",
         c_compiler or "",
         cxx_compiler or "",
-        f"-DLLVM_DEFAULT_TARGET_TRIPLE={triple}",
     ]
 
     # 2. Prepare the Build Command

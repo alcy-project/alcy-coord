@@ -170,6 +170,12 @@ def main():
         help="Not to build LLVM if no caches or downloads available",
     )
 
+    parser.add_argument(
+        "--libcxx",
+        action="store_true",
+        help="Use libc++ for LLVM build",
+    )
+
     args = parser.parse_args()
 
     if args.tag is None or args.tag == "":
@@ -221,6 +227,8 @@ def main():
                 cxx_compiler=args.cxx,
                 generator=args.generator,
                 triple=args.triple,
+                assertions=("ON" if args.type == "debug" else "OFF"),
+                libcxx=("ON" if args.libcxx else "OFF"),
             )
         else:
             print("Failed to setup LLVM")
