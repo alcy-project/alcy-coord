@@ -16,6 +16,15 @@ inputs:
 runs:
   using: "composite"
   steps:
+    - name: Free Disk Space
+      if: inputs.os == 'Linux'
+      run: |
+        sudo rm -rf /usr/local/lib/android
+        sudo rm -rf /usr/share/dotnet
+        sudo rm -rf /opt/ghc
+        sudo rm -rf "/usr/local/share/boost"
+        sudo rm -rf "$AGENT_TOOLSDIRECTORY"
+
     - name: Install dependencies (Ubuntu)
       if: inputs.os == 'Linux'
       shell: bash
