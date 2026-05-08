@@ -67,7 +67,6 @@ class LlvmIrEmitter {
 
   // TODO: Move these fields to LlvmIrStorage.
   template <typename T>
-  // using Alloc = base::SingleThreadPageAllocator<T>;
   using Alloc = std::allocator<T>;
 
   base::Vec<llvm::Function*, ir::FunctionId, Alloc<llvm::Function*>> functions_;

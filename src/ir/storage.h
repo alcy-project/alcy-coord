@@ -23,7 +23,6 @@ namespace ir {
 class Storage {
  public:
   template <typename T>
-  // using Alloc = base::SingleThreadPageAllocator<T>;
   using Alloc = std::allocator<T>;
 
   using Functions = base::Vec<Function, FunctionId, Alloc<Function>>;
