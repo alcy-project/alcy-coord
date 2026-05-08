@@ -424,6 +424,8 @@ on_load(function(target)
     if is_mode("debug") then
       target:add("ldflags", "-Wl,--build-id")
     end
+  elseif is_plat("windows") then
+    target:add("syslinks", { "ntdll", "advapi32", "user32", "shell32" })
   end
 
   if not is_mode("release") then
