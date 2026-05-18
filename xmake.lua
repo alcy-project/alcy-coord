@@ -395,6 +395,7 @@ on_load(function(target)
   }, { force = true })
 
   target:add("packages", "fpag")
+  target:add("packages", "fmt")
 
   target:set("exceptions", "none")
   target:add("cxxflags", { "-fno-exceptions", "-fno-rtti" })
@@ -566,7 +567,6 @@ target("alcy")
 add_rules("alcy_common_config")
 set_kind("binary")
 add_files("src/app/**.cc")
-add_packages("fmt")
 if has_config("llvm") then
   add_packages("alcy_llvm")
 end
@@ -581,7 +581,6 @@ target_end()
 target("tests")
 set_enabled(has_config("tests"))
 add_rules("alcy_common_config")
-add_packages("fmt")
 add_files("tests/**.cc|codegen_llvm/**.cc")
 if has_config("llvm") then
   add_packages("alcy_llvm")
@@ -601,7 +600,6 @@ target_end()
 target("benchmarks")
 set_enabled(has_config("benchmarks"))
 add_rules("alcy_common_config")
-add_packages("fmt")
 if has_config("llvm") then
   add_packages("alcy_llvm")
   add_files("benchmarks/codegen_llvm/**.cc")
