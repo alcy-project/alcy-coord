@@ -104,8 +104,8 @@ set_showmenu(true)
 set_description("specify stl to use")
 option_end()
 
-includes("src/build/fpag.lua")
-includes("src/build/llvm.lua")
+includes("src/build/xmake/fpag.lua")
+includes("src/build/xmake/llvm.lua")
 
 set_policy("build.ccache", true)
 set_policy("check.auto_ignore_flags", false)
@@ -152,7 +152,7 @@ local function is_gcc()
     or (not is_config("toolchain", "clang", "llvm") and is_plat("linux"))
 end
 
-local function stdlib_config()
+local function package_common_config()
   if is_clang() and not is_plat("windows") and has_config("stdlib") then
     local std = get_config("stdlib")
     return {
@@ -211,7 +211,7 @@ end
 local alcy_component_kind = "static" -- object, static, or shared
 
 -- Dependencies
-add_requires("fpag v0.0.15", {
+add_requires("fpag v0.0.16", {
   system = false,
   external = true,
   configs = {
@@ -224,7 +224,7 @@ if has_config("llvm") then
   add_requires("alcy_llvm", {
     system = false,
     external = true,
-    configs = table.join(stdlib_config(), {
+    configs = table.join(package_common_config(), {
       download_llvm = has_config("download-llvm"),
       cache_llvm = has_config("cache-llvm"),
       build_llvm = has_config("build-llvm"),
@@ -236,21 +236,21 @@ if has_config("tests") then
   add_requires("catch2 v3.13.0", {
     system = false,
     external = true,
-    configs = stdlib_config(),
+    configs = package_common_config(),
   })
 end
 
 add_requires("fmt 12.1.0", {
   system = false,
   external = false,
-  configs = stdlib_config(),
+  configs = package_common_config(),
 })
 
 if has_config("benchmarks") then
   add_requires("benchmark v1.9.5", {
     system = false,
     external = true,
-    configs = table.join(stdlib_config(), {
+    configs = table.join(package_common_config(), {
       exceptions = false,
       cxflags = "-DBENCHMARK_USE_LIBCXX=" .. (is_libcxx() and "ON" or "OFF"),
     }),
@@ -395,7 +395,7 @@ on_load(function(target)
   }, { force = true })
 
   target:add("packages", "fpag")
-  target:add("packages", "fmt")
+  -- target:add("packages", "fmt")
 
   target:set("exceptions", "none")
   target:add("cxxflags", { "-fno-exceptions", "-fno-rtti" })

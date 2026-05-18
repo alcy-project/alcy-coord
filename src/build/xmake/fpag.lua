@@ -16,6 +16,7 @@ add_versions("v0.0.12", "b6abb13115633c7a25065b290af156cd9b027f38")
 add_versions("v0.0.13", "62231be0d160183980c348e6cc16ba7265b1b84f")
 add_versions("v0.0.14", "d4ec6993569c20cb3119bf3e5530bc49948e65a4")
 add_versions("v0.0.15", "1483861f8bcaa7cac02d4ec5d825d1f396e11004")
+add_versions("v0.0.16", "1f70ca6ebfd8cb6702103ac13bfa968b22903d95")
 
 add_configs("libunwind", {
   description = "Use libunwind for stack tracing",
@@ -27,23 +28,47 @@ add_configs(
   { description = "stl to use", default = "libstdc++", type = "string" }
 )
 
+local function is_clang()
+  return is_config("toolchain", "clang", "llvm")
+    or (
+      not is_config("toolchain", "gcc")
+      and (is_plat("macosx", "iphoneos") or is_host("macosx"))
+    )
+end
+
+local function config()
+  if is_clang() and not is_plat("windows") and has_config("stdlib") then
+    local std = get_config("stdlib")
+    return {
+      cxxflags = "-stdlib=" .. std,
+      ldflags = "-stdlib=" .. std,
+      -- for releasedbg
+      debug = not is_mode("release"),
+    }
+  end
+  return {}
+end
+
 add_deps("xxhash v0.8.3", {
   external = true,
   system = false,
+  configs = config(),
   -- configs = { cxxflags = "-stdlib=libc++", ldflags = "-stdlib=libc++" },
 })
 add_deps("fmt 12.1.0", {
   external = false,
   system = false,
+  configs = config(),
   -- configs = { cxxflags = "-stdlib=libc++", ldflags = "-stdlib=libc++" },
 })
 
 on_load(function(package)
-  -- package:add("deps", "fmt")
+  package:add("deps", "fmt")
   if package:config("libunwind") and package:is_plat("linux") then
     package:add("deps", "libunwind v1.8.3", {
       external = true,
       system = false,
+      configs = config(),
       -- configs = { cxxflags = "-stdlib=libc++", ldflags = "-stdlib=libc++" },
     })
   end
@@ -72,8 +97,8 @@ on_test(function(package)
                 #include <fpag/base/math_util.h>
                 #include <assert.h>
                 void test() {
-                    assert(base::next_power_of_two(31) == 32);
-                    assert(base::next_power_of_two(4096) == 4096);
+                  assert(base::next_power_of_two(31) == 32);
+                  assert(base::next_power_of_two(4096) == 4096);
                 }
             ]],
       },
