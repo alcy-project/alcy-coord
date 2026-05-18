@@ -12,6 +12,8 @@ inputs:
     required: true
   cxx:
     required: true
+  build_type:
+    required: true
 
 runs:
   using: "composite"
@@ -54,12 +56,12 @@ runs:
         # https://github.com/xmake-io/xmake/tags
         xmake-version: 3.0.8
         actions-cache-folder: .xmake-cache
-        actions-cache-key: ${{ inputs.os }}-${{ inputs.plat }}-${{ inputs.arch }}-xmake
+        actions-cache-key: ${{ inputs.os }}-${{ inputs.plat }}-${{ inputs.arch }}-${{ inputs.build_type }}-xmake
         package-cache: true
-        package-cache-key: ${{ inputs.os }}-${{ inputs.plat }}-${{ inputs.arch }}-packages
+        package-cache-key: ${{ inputs.os }}-${{ inputs.plat }}-${{ inputs.arch }}-${{ inputs.build_type }}-packages
         build-cache: true
         build-cache-path: build/.build_cache
-        build-cache-key: ${{ inputs.os }}-${{ inputs.plat }}-${{ inputs.arch }}-build
+        build-cache-key: ${{ inputs.os }}-${{ inputs.plat }}-${{ inputs.arch }}-${{ inputs.build_type }}-build
         project-path: .
 
     - name: Install LLVM tools

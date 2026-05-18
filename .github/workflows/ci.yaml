@@ -68,6 +68,7 @@ jobs:
           arch: ${{ matrix.arch }}
           cc: ${{ matrix.cc }}
           cxx: ${{ matrix.cxx }}
+          build_type: ${{ matrix.build_type }}
 
       - name: Configure
         shell: bash
