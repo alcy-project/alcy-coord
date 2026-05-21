@@ -17,10 +17,10 @@ enum class Type : u8 {
   I64,
   // TODO: add these types
   // I128,
-  // U8,
-  // U16,
-  // U32,
-  // U64,
+  U8,
+  U16,
+  U32,
+  U64,
   // U128,
   // F16,
   F32,
@@ -45,10 +45,10 @@ constexpr const char* type_to_str(Type type) {
     case T::I32: return "i32";
     case T::I64: return "i64";
     // case T::I128: return "i128";
-    // case T::U8: return "u8";
-    // case T::U16: return "u16";
-    // case T::U32: return "u32";
-    // case T::U64: return "u64";
+    case T::U8: return "u8";
+    case T::U16: return "u16";
+    case T::U32: return "u32";
+    case T::U64: return "u64";
     // case T::U128: return "u128";
     // case T::F16: return "f16";
     case T::F32: return "f32";

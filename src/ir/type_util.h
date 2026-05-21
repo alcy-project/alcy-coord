@@ -16,11 +16,11 @@ inline constexpr bool is_integer_type(Type type) {
     case T::I16:
     case T::I32:
     case T::I64:
-      // case T::I128:
-      // case T::U8:
-      // case T::U16:
-      // case T::U32:
-      // case T::U64:
+    // case T::I128:
+    case T::U8:
+    case T::U16:
+    case T::U32:
+    case T::U64:
       // case T::U128:
       return true;
     default: return false;

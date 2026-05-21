@@ -8,6 +8,7 @@ namespace ir {
 
 // Bit packed 1 B struct for instruction.
 struct InstructionFlags {
+  // TODO
   bool some_flag : 1 = false;
 };
 

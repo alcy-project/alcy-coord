@@ -75,6 +75,7 @@ inline llvm::Type* LlvmIrEmitter::type(ir::Type type) const {
     case T::I16: return builder_->getInt16Ty();
     case T::I32: return builder_->getInt32Ty();
     case T::I64: return builder_->getInt64Ty();
+    // case T::I128: return builder_->getInt128Ty();
     case T::F32: return builder_->getFloatTy();
     case T::F64: return builder_->getDoubleTy();
     case T::Ptr: return builder_->getPtrTy();

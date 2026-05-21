@@ -21,13 +21,19 @@ struct Immutable {
     i16 i16;
     i32 i32;
     i64 i64;
+    // i128 i128;
+    u8 u8;
+    u16 u16;
+    u32 u32;
+    u64 u64;
+    // u128 u128;
     f32 f32;
     f64 f64;
     str::StringPoolId str;
-    u64 ptr;
-    u64 mutptr;
-    u64 ref;
-    u64 mutref;
+    ::u64 ptr;
+    ::u64 mutptr;
+    ::u64 ref;
+    ::u64 mutref;
   } data;
 
   inline u64 as_u64_integer() const {
@@ -39,6 +45,10 @@ struct Immutable {
       case Type::I16: return static_cast<u64>(data.i16);
       case Type::I32: return static_cast<u64>(data.i32);
       case Type::I64: return static_cast<u64>(data.i64);
+      case Type::U8: return static_cast<u64>(data.u8);
+      case Type::U16: return static_cast<u64>(data.u16);
+      case Type::U32: return static_cast<u64>(data.u32);
+      case Type::U64: return static_cast<u64>(data.u64);
       default: UNREACHABLE();
     }
   }
