@@ -385,6 +385,8 @@ void LlvmIrEmitter::setup_immutables() {
     const ir::Immutable& immutable = storage_->immutables()[immutable_id];
 
     if (ir::is_integer_type(immutable.type)) {
+      // TODO: Add i128, u128, i256, u256, and arbitrary bit support with
+      // llvm::APInt
       llvm::Constant* c = llvm::ConstantInt::get(
           type(immutable.type), immutable.as_u64_integer(),
           ir::is_signed_integer_type(immutable.type));
