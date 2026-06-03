@@ -19,6 +19,7 @@ add_versions("v0.0.15", "1483861f8bcaa7cac02d4ec5d825d1f396e11004")
 add_versions("v0.0.16", "1f70ca6ebfd8cb6702103ac13bfa968b22903d95")
 add_versions("v0.0.17", "ade17fb06541a3979adf8e8eb1a1cdd78e1f3b6c")
 add_versions("v0.0.18", "cdbb4b278e21d1ddb04912c39ea3da64f8970113")
+add_versions("v0.0.19", "e0ecd089a34f6185f4900109d52dac0442d48e47")
 
 add_configs("libunwind", {
   description = "Use libunwind for stack tracing",
