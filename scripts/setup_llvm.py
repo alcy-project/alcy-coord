@@ -25,6 +25,8 @@ default_llvm_build_dir = os.path.join(default_llvm_alcy_dir, "build")
 default_llvm_install_dir = os.path.join(default_llvm_alcy_dir, "install")
 default_llvm_download_dir = os.path.join(default_llvm_build_dir, "download")
 
+tag_cache_file = os.path.join(script_dir, ".llvm_tag_cache")
+
 default_compiler_launcher = "ccache"
 default_cc = "clang"
 default_cxx = "clang++"
@@ -32,7 +34,7 @@ default_generator = "Ninja"
 
 
 def host_triple():
-    # 1. Detect Architecture
+    # Detect Architecture
     arch = platform.machine().lower()
     # Normalize arch names to match LLVM/Zig conventions
     arch_map = {
@@ -43,7 +45,7 @@ def host_triple():
     }
     arch = arch_map.get(arch, arch)
 
-    # 2. Detect OS and Vendor/ABI
+    # Detect OS and Vendor/ABI
     system = platform.system().lower()
 
     if system == "darwin":
@@ -80,6 +82,14 @@ def current_tag(src_dir):
         ["git", "describe", "--tags"], cwd=src_dir, capture_output=True
     )
     return result.stdout.decode().strip()
+
+
+def write_tag_cache(tag):
+    try:
+        with open(tag_cache_file, "w") as f:
+            f.write(tag.strip())
+    except Exception as e:
+        print(f"Warning: Failed to update tag cache file: {e}")
 
 
 def main():
@@ -202,41 +212,71 @@ def main():
     for arg, value in vars(args).items():
         print(f"{arg}: {value}")
 
-    if os.path.isdir(include_dir) and os.path.join(lib_dir) and enable_cache_llvm:
-        print(f"Preinstalled LLVM found in {args.install_dir}; skipped operation.")
-        return 0
-    else:
-        url = download_llvm.release_url(
-            tag=args.tag, triple=args.triple, build_type=lower_type
+    # Check tag cache file
+    cached_tag = None
+    if os.path.isfile(tag_cache_file):
+        try:
+            with open(tag_cache_file, "r") as f:
+                cached_tag = f.read().strip()
+        except Exception:
+            cached_tag = None
+
+    tag_matches = cached_tag == args.tag if cached_tag is not None else False
+
+    # Skip setup only if cached tag matches target tag AND preinstalled files exist
+    if (
+        tag_matches
+        and os.path.isdir(include_dir)
+        and os.path.isdir(lib_dir)
+        and enable_cache_llvm
+    ):
+        print(
+            f"Preinstalled LLVM with matching tag found in {args.install_dir}; skipped operation."
         )
-        exists = download_llvm.check_release_exists(url)
-        if exists and enable_download_llvm:
-            print(f"Found prebuilt binary in {url}")
-            return download_llvm.download_and_extract(
-                tag=args.tag,
-                triple=args.triple,
-                build_type=lower_type,
-                download_dir=args.download_dir,
-                install_dir=args.install_dir,
-            )
-        elif enable_build_llvm:
-            return build_llvm.build_llvm(
-                build_type=args.type,
-                configure_script=args.configure_script,
-                llvm_src_dir=args.src_dir,
-                llvm_build_dir=args.build_dir,
-                llvm_install_dir=args.install_dir,
-                compiler_launcher=args.compiler_launcher,
-                c_compiler=args.cc,
-                cxx_compiler=args.cxx,
-                generator=args.generator,
-                triple=args.triple,
-                assertions=("ON" if args.type == "debug" else "OFF"),
-                libcxx=("ON" if args.libcxx else "OFF"),
-            )
-        else:
-            print("Failed to setup LLVM")
-            return -4
+        return 0
+
+    if not tag_matches and cached_tag is not None:
+        print(
+            f"Tag mismatch detected (cached: '{cached_tag}', requested: '{args.tag}'). Re-setting up LLVM..."
+        )
+
+    url = download_llvm.release_url(
+        tag=args.tag, triple=args.triple, build_type=lower_type
+    )
+    exists = download_llvm.check_release_exists(url)
+    if exists and enable_download_llvm:
+        print(f"Found prebuilt binary in {url}")
+        res = download_llvm.download_and_extract(
+            tag=args.tag,
+            triple=args.triple,
+            build_type=lower_type,
+            download_dir=args.download_dir,
+            install_dir=args.install_dir,
+        )
+        if res == 0:
+            write_tag_cache(args.tag)
+        return res
+    elif enable_build_llvm:
+        res = build_llvm.build_llvm(
+            build_type=args.type,
+            configure_script=args.configure_script,
+            llvm_src_dir=args.src_dir,
+            llvm_build_dir=args.build_dir,
+            llvm_install_dir=args.install_dir,
+            compiler_launcher=args.compiler_launcher,
+            c_compiler=args.cc,
+            cxx_compiler=args.cxx,
+            generator=args.generator,
+            triple=args.triple,
+            assertions=("ON" if args.type == "debug" else "OFF"),
+            libcxx=("ON" if args.libcxx else "OFF"),
+        )
+        if res == 0:
+            write_tag_cache(args.tag)
+        return res
+    else:
+        print("Failed to setup LLVM")
+        return -4
 
 
 if __name__ == "__main__":
