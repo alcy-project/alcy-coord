@@ -96,17 +96,41 @@ jobs:
           mkdir -p dist
           cp LICENSE README.md dist/
           cp build/${{ matrix.plat }}/${{ matrix.arch }}/**/${{ env.basename }}* dist/
+
+          FILE="${{ env.basename }}-${{ matrix.plat }}-${{ matrix.arch }}.${{ matrix.archive }}"
           if [[ "${{ matrix.plat }}" == "windows" ]]; then
-            cd dist && 7z a ../${{ env.basename }}-${{ matrix.plat }}-${{ matrix.arch }}.${{ matrix.archive }} *
+            cd dist && 7z a "../${FILE}" *
           else
-            cd dist && tar -czvf ../${{ env.basename }}-${{ matrix.plat }}-${{ matrix.arch }}.${{ matrix.archive }} *
+            cd dist && tar -czvf "../${FILE}" *
           fi
+
+      - name: Generate Checksum
+        shell: bash
+        run: |
+          FILE="${{ env.basename }}-${{ matrix.plat }}-${{ matrix.arch }}.${{ matrix.archive }}"
+          if command -v sha256sum &> /dev/null; then
+            sha256sum "$FILE" > "${FILE}.sha256"
+          else
+            shasum -a 256 "$FILE" > "${FILE}.sha256"
+          fi
+
+      - name: Upload checksum artifact
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: checksum-${{ matrix.plat }}-${{ matrix.arch }}
+          path: "*.sha256"
 
       - name: Upload artifacts to release
         uses: softprops/action-gh-release@718ea10b132b3b2eba29c1007bb80653f286566b
         with:
-          files: ${{ env.basename }}-${{ matrix.plat }}-${{ matrix.arch }}.${{ matrix.archive }}
+          files: |
+            ${{ env.basename }}-${{ matrix.plat }}-${{ matrix.arch }}.${{ matrix.archive }}
+            ${{ env.basename }}-${{ matrix.plat }}-${{ matrix.arch }}.${{ matrix.archive }}.sha256
           draft: true
           generate_release_notes: false
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  summary:
+    needs: release
+    uses: ./.github/workflows/generate-summary.yaml

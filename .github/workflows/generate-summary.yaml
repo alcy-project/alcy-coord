@@ -1,0 +1,34 @@
+name: Generate Summary
+
+on:
+  workflow_call:
+    inputs:
+      artifact_pattern:
+        description: "Pattern to match checksum artifact names"
+        type: string
+        required: false
+        default: "checksum-*"
+jobs:
+  summary:
+    name: Generate Summary
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download all checksum artifacts
+        uses: actions/download-artifact@fa0a91b85d4f404e444e00e005971372dc801d16
+        with:
+          pattern: ${{ inputs.artifact_pattern }}
+          merge-multiple: true
+
+      - name: Write Summary
+        run: |
+          echo "### 📦 Build Artifacts & SHA-256 Checksums" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Filename | SHA-256 Checksum |" >> $GITHUB_STEP_SUMMARY
+          echo "| :--- | :--- |" >> $GITHUB_STEP_SUMMARY
+
+          shopt -s nullglob
+          for f in *.sha256; do
+            HASH=$(awk '{print $1}' "$f")
+            FILENAME="${f%.sha256}"
+            echo "| \`$FILENAME\` | \`$HASH\` |" >> $GITHUB_STEP_SUMMARY
+          done
