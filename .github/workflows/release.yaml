@@ -63,6 +63,12 @@ jobs:
           cxx: ${{ matrix.cxx }}
           build_type: release
 
+      - name: Cache LLVM tag
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9
+        with:
+          path: scripts/.llvm_tag_cache
+          key: ${{ runner.os }}-${{ matrix.plat }}-${{ matrix.arch }}-${{ matrix.cc }}-${{ matrix.cxx }}-${{ matrix.build_type }}-llvm_tag_cache
+
       - name: Configure
         shell: bash
         run: |
