@@ -1,7 +1,7 @@
 package("fpag")
 set_urls("https://github.com/pug523/fpag.git")
 
-add_versions("v0.1.0", "b3e1d7de7c852fea1d7a4d917f99f583a957806e")
+add_versions("v0.1.0", "53155fdea12d3f534429afc49735abdb0a9cec15")
 
 add_configs("libunwind", {
   description = "Use libunwind for stack tracing",
