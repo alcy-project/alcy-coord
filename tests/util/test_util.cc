@@ -18,7 +18,7 @@ TestLogger& test_logger() {
     TestLogger l;
     l.init(logging::StdoutSink(
         static_cast<char*>(mem::allocate_pages(mem::kPageSize)), mem::kPageSize,
-        base::console_color_mode(base::Stream::Stdout), true));
+        base::console_color_style(base::Stream::Stdout), true));
     return l;
   }();
   return logger;

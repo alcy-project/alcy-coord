@@ -209,7 +209,7 @@ end
 local alcy_component_kind = "static" -- object, static, or shared
 
 -- Dependencies
-add_requires("fpag v0.1.0", {
+add_requires("fpag 419c9bee39f133e7d0bf0adb3928a172dd561f93", {
   system = false,
   external = true,
   configs = {

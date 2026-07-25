@@ -27,7 +27,7 @@ def archive_file_name(build_type, triple):
 def release_url(tag, triple, build_type):
     """Construct the GitHub release download URL."""
     filename = archive_file_name(build_type, triple)
-    return f"https://github.com/alcy-project/llvm_alcy_fork/releases/download/{tag}/{filename}"
+    return f"https://github.com/alcy-project/llvm-alcy-fork/releases/download/{tag}/{filename}"
 
 
 def check_release_exists(url):
