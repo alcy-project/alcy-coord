@@ -7,6 +7,7 @@
 #include "fpag/base/debug/signal_handler.h"
 #include "fpag/base/debug/terminate_handler.h"
 #include "fpag/base/numeric.h"
+#include "util/test_util.h"
 
 #define CATCH_CONFIG_RUNNER
 
@@ -14,6 +15,7 @@ void init() {
   base::register_console();
   base::register_terminate_handler();
   base::register_signal_handlers();
+  tests::init_logger();
 }
 
 void clean_up() {

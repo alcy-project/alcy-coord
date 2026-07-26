@@ -9,7 +9,7 @@
 #include "fpag/base/console.h"
 #include "fpag/logging/sink/stdout_sink.h"
 #include "fpag/logging/sync/sync_logger.h"
-#include "fpag/mem/page_allocator.h"
+// #include "fpag/mem/page_allocator.h"
 
 namespace tests {
 

@@ -129,8 +129,7 @@ TEST_CASE("Emit Hello World", "[codegen_llvm]") {
   llvm::raw_string_ostream os(ir_str);
   module->print(os, nullptr);
 
-  tests::TestLogger& logger = tests::test_logger();
-  logger.debug("LLVM IR dump:\n{}", ir_str);
+  tests::logger.debug("LLVM IR dump:\n{}", ir_str);
 }
 
 }  // namespace codegen_llvm

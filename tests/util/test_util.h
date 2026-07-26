@@ -13,6 +13,8 @@ namespace tests {
 using TestLogger =
     logging::SyncLogger<logging::StdoutSink, logging::LogLevel::Debug>;
 
-TestLogger& test_logger();
+extern TestLogger logger;
+
+void init_logger();
 
 }  // namespace tests
