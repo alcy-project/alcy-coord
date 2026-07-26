@@ -13,15 +13,11 @@
 
 namespace tests {
 
-TestLogger& test_logger() {
-  static TestLogger logger = [] {
-    TestLogger l;
-    l.init(logging::StdoutSink(
-        static_cast<char*>(mem::allocate_pages(mem::kPageSize)), mem::kPageSize,
-        base::console_color_style(base::Stream::Stdout), true));
-    return l;
-  }();
-  return logger;
+TestLogger logger;
+
+void init_logger() {
+  logger.init(logging::StdoutSink(
+      nullptr, 0, base::console_color_style(base::Stream::Stdout), false));
 }
 
 }  // namespace tests

@@ -7,9 +7,7 @@ namespace base {
 Logger logger;
 
 void init_logger(ColorStyle style) {
-  logging::StdoutSink sink(
-      static_cast<char*>(mem::allocate_pages(mem::kPageSize)), mem::kPageSize,
-      style, true);
+  logging::StdoutSink sink(nullptr, 0, style, false);
   logger.init(std::move(sink));
 }
 
