@@ -4,14 +4,15 @@
 
 #pragma once
 
-#include "fpag/base/numeric.h"
 #include "ir/common.h"
+#include "ir/type.h"
 
 namespace ir {
 
-struct Block {
-  InstructionIdxRange instrs;
-  BlockParamIdxRange block_params;
+struct BlockParam {
+  Type type;
+  RegisterIdx reg;
 };
 
 }  // namespace ir
+
