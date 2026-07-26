@@ -6,14 +6,14 @@
 
 #include <functional>
 
-#include "base/id.h"
+#include "base/idx.h"
 #include "fpag/base/numeric.h"
 
 namespace std {
 
 template <typename T, typename I>
-struct hash<base::Id<T, I>> {
-  usize operator()(const base::Id<T, I>& id) const noexcept {
+struct hash<base::Idx<T, I>> {
+  usize operator()(const base::Idx<T, I>& id) const noexcept {
     return std::hash<I>{}(id.value);
   }
 };

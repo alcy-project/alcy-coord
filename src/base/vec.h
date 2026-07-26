@@ -9,15 +9,19 @@
 #include <utility>
 #include <vector>
 
-#include "base/id.h"
+#include "base/idx.h"
+#include "base/idx_range.h"
+#include "base/vec_slice.h"
 
 namespace base {
 
 template <typename T,
-          base::HasIdType Id,
+          base::HasIdxType Idx,
           typename Allocator = std::allocator<T>>
 class Vec {
  public:
+  using IdxType = typename Idx::IdxType;
+
   Vec() = default;
   ~Vec() = default;
   Vec(const Vec&) = delete;
@@ -25,8 +29,8 @@ class Vec {
   Vec(Vec&&) noexcept = default;
   Vec& operator=(Vec&&) noexcept = default;
 
-  const T& operator[](const Id id) const { return vec_[id.id]; }
-  T& operator[](const Id id) { return vec_[id.id]; }
+  const T& operator[](const Idx idx) const { return vec_[idx.idx]; }
+  T& operator[](const Idx idx) { return vec_[idx.idx]; }
 
   inline void reserve(usize size) { vec_.reserve(size); }
   inline void resize(usize size) { vec_.resize(size); }
@@ -34,15 +38,10 @@ class Vec {
     vec_.resize(size, init_value);
   }
 
-  inline Id emplace_back(T&& obj) {
-    vec_.emplace_back(std::move(obj));
-    return Id(size() - 1);
-  }
-
-  inline Id emplace_back(T obj) {
-    static_assert(std::is_trivially_copyable_v<T>);
-    vec_.emplace_back(std::move(obj));
-    return Id(static_cast<Id::IdType>((size() - 1)));
+  template <typename... Args>
+  inline Idx emplace_back(Args&&... args) {
+    vec_.emplace_back(std::forward<Args>(args)...);
+    return Idx(static_cast<IdxType>(size() - 1));
   }
 
   inline void pop_back() { vec_.pop_back(); }
@@ -54,7 +53,22 @@ class Vec {
   inline auto begin() const { return vec_.begin(); }
   inline auto end() const { return vec_.end(); }
 
-  // inline const T* data() const { return vec_.data(); }
+  inline IdxRange<Idx> idx_range() const {
+    return IdxRange<Idx>(Idx{0}, static_cast<IdxType>(vec_.size()));
+  }
+
+  inline const T* data() const { return vec_.data(); }
+  inline T* data() { return vec_.data(); }
+
+  inline VecSlice<T, Idx> slice(IdxType offset, IdxType size) {
+    return VecSlice<T, Idx>(data() + offset, size);
+  }
+  inline VecSlice<T, Idx> slice() { return slice(0, size()); }
+
+  inline VecSlice<const T, Idx> slice(IdxType offset, IdxType size) const {
+    return VecSlice<T, Idx>(data() + offset, size);
+  }
+  inline VecSlice<const T, Idx> slice() const { return slice(0, size()); }
 
  private:
   std::vector<T, Allocator> vec_;
