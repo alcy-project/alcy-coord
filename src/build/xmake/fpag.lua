@@ -38,7 +38,7 @@ local function config()
 end
 
 add_deps("xxhash v0.8.3", {
-  private = true,
+  private = false,
   system = false,
   configs = config(),
   -- configs = { cxxflags = "-stdlib=libc++", ldflags = "-stdlib=libc++" },
