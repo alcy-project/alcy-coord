@@ -37,12 +37,12 @@ local function config()
   return {}
 end
 
--- add_deps("xxhash v0.8.3", {
---   private = true,
---   system = false,
---   configs = config(),
---   -- configs = { cxxflags = "-stdlib=libc++", ldflags = "-stdlib=libc++" },
--- })
+add_deps("xxhash v0.8.3", {
+  private = true,
+  system = false,
+  configs = config(),
+  -- configs = { cxxflags = "-stdlib=libc++", ldflags = "-stdlib=libc++" },
+})
 add_deps("fmt 12.2.0", {
   private = false,
   system = false,
