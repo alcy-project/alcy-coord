@@ -212,7 +212,7 @@ end
 local alcy_component_kind = "static" -- object, static, or shared
 
 -- Dependencies
-add_requires("fpag 728795d7f2927212de58f8b70cdd760d6f07fb90", {
+add_requires("fpag 4d988baf45ddd1e9c5a0f19c45030622c67f0edb", {
   system = false,
   private = true,
   debug = package_debug,
@@ -610,7 +610,8 @@ set_enabled(has_config("benchmarks"))
 add_rules("alcy_common_config")
 if has_config("llvm") then
   add_packages("alcy_llvm")
-  add_files("benchmarks/codegen_llvm/**.cc")
+  -- TODO:
+  -- add_files("benchmarks/codegen_llvm/**.cc")
 end
 for m, e in pairs(alcy_modules) do
   if e then
