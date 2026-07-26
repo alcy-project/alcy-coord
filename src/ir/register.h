@@ -12,7 +12,7 @@ namespace ir {
 // Single static assignment register
 struct Register {
   Type type;
-  InstructionId def_idx;
+  InstructionIdx def_idx;
 };
 
 }  // namespace ir

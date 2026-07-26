@@ -21,8 +21,8 @@ enum class Opcode : u8 {
   IntAdd,
   IntSub,
   IntMul,
-  IntDiv,   // Signed devision
-  UintDiv,  // Unsigned devision
+  IntDiv,   // Signed division
+  UintDiv,  // Unsigned division
   IntRem,   // Signed remainder
   UintRem,  // Unsigned remainder
 

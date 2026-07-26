@@ -4,7 +4,8 @@
 
 #pragma once
 
-#include "base/id.h"
+#include "base/idx.h"
+#include "fpag/base/tagged_union.h"
 #include "ir/common.h"
 #include "ir/type.h"
 
@@ -24,18 +25,18 @@ struct Operand {
   Type type;
 
   union {
-    RegisterId register_id;
-    FunctionId function_id;
-    BlockId block_id;
-    ImmutableId immutable_id;
-    ExternalFunctionId external_function_id;
+    RegisterIdx register_idx;
+    FunctionIdx function_idx;
+    BlockIdx block_idx;
+    ImmutableIdx immutable_idx;
+    ExternalFunctionIdx external_function_idx;
   } data;
 };
 
 constexpr Operand kInvalidOperand = {
     .tag = OperandTag::Unknown,
     .type = Type::Void,
-    .data = {.register_id = RegisterId(base::kInvalidId)},
+    .data = {.register_idx = RegisterIdx(base::kInvalidIdx)},
 };
 
 }  // namespace ir

@@ -4,37 +4,50 @@
 
 #pragma once
 
-#include "base/id.h"
+#include "base/idx.h"
+#include "base/idx_range.h"
 #include "fpag/base/numeric.h"
 
 namespace ir {
 
-using IdBaseType = base::IdBaseType;
+using IdBaseType = base::IdxBaseType;
 
 struct Function;
-using FunctionId = base::Id<Function, IdBaseType>;
-constexpr u32 kFunctionParameterTypesSooThreshold = 8;
+using FunctionIdx = base::Idx<Function, IdBaseType>;
+using FunctionIdxRange = base::IdxRange<FunctionIdx>;
+// constexpr u32 kFunctionParameterTypesSooThreshold = 8;
 
 struct Block;
-using BlockId = base::Id<Block, IdBaseType>;
-constexpr u32 kBlockParameterTypesSooThreshold = 20;
+using BlockIdx = base::Idx<Block, IdBaseType>;
+using BlockIdxRange = base::IdxRange<BlockIdx>;
+// constexpr u32 kBlockParameterTypesSooThreshold = 20;
+
+struct BlockParam;
+using BlockParamIdx = base::Idx<BlockParam, IdBaseType>;
+using BlockParamIdxRange = base::IdxRange<BlockParamIdx>;
 
 struct Immutable;
-using ImmutableId = base::Id<Immutable, IdBaseType>;
+using ImmutableIdx = base::Idx<Immutable, IdBaseType>;
+using ImmutableIdxRange = base::IdxRange<ImmutableIdx>;
 
 struct Register;
-using RegisterId = base::Id<Register, IdBaseType>;
+using RegisterIdx = base::Idx<Register, IdBaseType>;
+using RegisterIdxRange = base::IdxRange<RegisterIdx>;
 
 struct Instruction;
-using InstructionId = base::Id<Instruction, IdBaseType>;
+using InstructionIdx = base::Idx<Instruction, IdBaseType>;
+using InstructionIdxRange = base::IdxRange<InstructionIdx>;
 
 struct ExternalFunction;
-using ExternalFunctionId = base::Id<ExternalFunction, IdBaseType>;
+using ExternalFunctionIdx = base::Idx<ExternalFunction, IdBaseType>;
+using ExternalFunctionIdxRange = base::IdxRange<ExternalFunctionIdx>;
 
 struct Operand;
-using OperandId = base::Id<Operand, IdBaseType>;
+using OperandIdx = base::Idx<Operand, IdBaseType>;
+using OperandIdxRange = base::IdxRange<OperandIdx>;
 
 enum class Type : u8;
-using ParameterTypeId = base::Id<Type, IdBaseType>;
+using TypeIdx = base::Idx<Type, IdBaseType>;
+using TypeIdxRange = base::IdxRange<TypeIdx>;
 
 }  // namespace ir

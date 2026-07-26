@@ -8,7 +8,6 @@
 #include "ir/common.h"
 #include "ir/instruction_flags.h"
 #include "ir/opcode.h"
-#include "ir/operand.h"
 
 namespace ir {
 
@@ -16,13 +15,9 @@ struct Instruction {
   Opcode op;
   InstructionFlags flags;
 
-  RegisterId dst;
-  Operand lhs;
+  RegisterIdx dst;
 
-  union {
-    Operand op;
-    OperandId storage_id;
-  } rhs;
+  OperandIdxRange operands;
 };
 
 }  // namespace ir

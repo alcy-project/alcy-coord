@@ -12,11 +12,13 @@
 #include "base/vec.h"
 #include "fpag/base/numeric.h"
 #include "ir/block.h"
+#include "ir/block_param.h"
 #include "ir/common.h"
 #include "ir/external_function.h"
 #include "ir/function.h"
 #include "ir/immutable.h"
 #include "ir/instruction.h"
+#include "ir/operand.h"
 #include "ir/register.h"
 
 namespace ir {
@@ -25,25 +27,27 @@ struct StorageState {
   template <typename T>
   using Alloc = std::allocator<T>;
 
-  using Functions = base::Vec<Function, FunctionId, Alloc<Function>>;
-  using Blocks = base::Vec<Block, BlockId, Alloc<Block>>;
+  using Functions = base::Vec<Function, FunctionIdx, Alloc<Function>>;
+  using Blocks = base::Vec<Block, BlockIdx, Alloc<Block>>;
+  using BlockParams = base::Vec<BlockParam, BlockParamIdx, Alloc<BlockParam>>;
   using Instructions =
-      base::Vec<Instruction, InstructionId, Alloc<Instruction>>;
-  using Immutables = base::Vec<Immutable, ImmutableId, Alloc<Immutable>>;
-  using Registers = base::Vec<Register, RegisterId, Alloc<Register>>;
+      base::Vec<Instruction, InstructionIdx, Alloc<Instruction>>;
+  using Immutables = base::Vec<Immutable, ImmutableIdx, Alloc<Immutable>>;
+  using Registers = base::Vec<Register, RegisterIdx, Alloc<Register>>;
   using ExternalFunctions =
-      base::Vec<ExternalFunction, ExternalFunctionId, Alloc<ExternalFunction>>;
-  using Operands = base::Vec<Operand, OperandId, Alloc<Operand>>;
-  using ParameterTypes = base::Vec<Type, ParameterTypeId, Alloc<Type>>;
+      base::Vec<ExternalFunction, ExternalFunctionIdx, Alloc<ExternalFunction>>;
+  using Operands = base::Vec<Operand, OperandIdx, Alloc<Operand>>;
+  using Types = base::Vec<Type, TypeIdx, Alloc<Type>>;
 
   Functions functions;
   Blocks blocks;
+  BlockParams block_params;
   Instructions instrs;
   Immutables immutables;
   Registers registers;
   ExternalFunctions external_functions;
   Operands operands;
-  ParameterTypes parameter_types;
+  Types types;
 };
 
 class Storage {
@@ -63,6 +67,9 @@ class Storage {
     return state_.functions;
   }
   inline const StorageState::Blocks& blocks() const { return state_.blocks; }
+  inline const StorageState::BlockParams& block_params() const {
+    return state_.block_params;
+  }
   inline const StorageState::Instructions& instrs() const {
     return state_.instrs;
   }
@@ -78,9 +85,7 @@ class Storage {
   inline const StorageState::Operands& operands() const {
     return state_.operands;
   }
-  inline const StorageState::ParameterTypes& parameter_types() const {
-    return state_.parameter_types;
-  }
+  inline const StorageState::Types& types() const { return state_.types; }
 
  private:
   StorageState state_;

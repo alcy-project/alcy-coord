@@ -7,7 +7,17 @@
 #include <memory>
 #include <utility>
 
+#include "ir/block.h"
+#include "ir/block_param.h"
+#include "ir/common.h"
+#include "ir/external_function.h"
+#include "ir/function.h"
+#include "ir/immutable.h"
+#include "ir/instruction.h"
+#include "ir/operand.h"
+#include "ir/register.h"
 #include "ir/storage.h"
+#include "ir/type.h"
 
 namespace ir {
 
@@ -32,6 +42,11 @@ class StorageBuilder {
     state_.blocks = std::move(blocks);
     return *this;
   }
+  inline StorageBuilder& block_params(
+      StorageState::BlockParams&& block_params) {
+    state_.block_params = std::move(block_params);
+    return *this;
+  }
   inline StorageBuilder& instrs(StorageState::Instructions&& instrs) {
     state_.instrs = std::move(instrs);
     return *this;
@@ -54,36 +69,37 @@ class StorageBuilder {
     return *this;
   }
   inline StorageBuilder& parameter_types(
-      StorageState::ParameterTypes&& parameter_types) {
-    state_.parameter_types = std::move(parameter_types);
+      StorageState::Types&& parameter_types) {
+    state_.types = std::move(parameter_types);
     return *this;
   }
 
-  inline FunctionId function(Function function) {
+  inline FunctionIdx function(Function function) {
     return state_.functions.emplace_back(function);
   }
-  inline BlockId block(Block block) {
+  inline BlockIdx block(Block block) {
     return state_.blocks.emplace_back(block);
   }
-  inline InstructionId instr(Instruction instr) {
+  inline BlockParamIdx block_param(BlockParam block_param) {
+    return state_.block_params.emplace_back(block_param);
+  }
+  inline InstructionIdx instr(Instruction instr) {
     return state_.instrs.emplace_back(instr);
   }
-  inline ImmutableId immutable(Immutable immutable) {
+  inline ImmutableIdx immutable(Immutable immutable) {
     return state_.immutables.emplace_back(immutable);
   }
-  inline RegisterId reg(Register reg) {
+  inline RegisterIdx reg(Register reg) {
     return state_.registers.emplace_back(reg);
   }
-  inline ExternalFunctionId external_function(
+  inline ExternalFunctionIdx external_function(
       ExternalFunction external_function) {
     return state_.external_functions.emplace_back(external_function);
   }
-  inline OperandId operand(Operand operand) {
+  inline OperandIdx operand(Operand operand) {
     return state_.operands.emplace_back(operand);
   }
-  inline ParameterTypeId parameter_type(Type parameter_type) {
-    return state_.parameter_types.emplace_back(parameter_type);
-  }
+  inline TypeIdx type(Type type) { return state_.types.emplace_back(type); }
 
   inline Storage build() && { return Storage(std::move(state_)); }
 

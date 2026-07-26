@@ -4,7 +4,9 @@
 
 #pragma once
 
+#include "base/debug/fatal.h"
 #include "fpag/base/numeric.h"
+#include "ir/common.h"
 
 namespace ir {
 
@@ -31,8 +33,18 @@ enum class Type : u8 {
   Ref,     // Immutable reference (region tracked)
   MutRef,  // Mutable reference  (exclusive, region tracked)
 
+  Struct,
   Function,
-  Block,  // SSA block
+};
+
+struct StructTypeMetaData {
+  TypeIdx fields_head;
+  u32 field_count;
+};
+
+struct ArrayTypeMetaData {
+  Type element_type;
+  u64 element_count;
 };
 
 constexpr const char* type_to_str(Type type) {
@@ -59,8 +71,9 @@ constexpr const char* type_to_str(Type type) {
     case T::Ref: return "ref";
     case T::MutRef: return "mut_ref";
 
+    case T::Struct: return "struct";
     case T::Function: return "function";
-    case T::Block: return "block";
+    default: UNREACHABLE();
   }
 }
 

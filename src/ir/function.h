@@ -4,7 +4,6 @@
 
 #pragma once
 
-#include "base/id.h"
 #include "fpag/base/numeric.h"
 #include "fpag/str/string_pool_id.h"
 #include "ir/common.h"
@@ -14,12 +13,7 @@ namespace ir {
 
 struct FunctionMeta {
   Type return_type;
-
-  ParameterTypeId::IdType param_types_count;
-  union {
-    Type soo_buf[kFunctionParameterTypesSooThreshold];
-    ParameterTypeId storage_id;
-  } param_types;
+  TypeIdxRange param_types;
 
   str::StringPoolId name;
 };
@@ -27,10 +21,7 @@ struct FunctionMeta {
 struct Function {
   FunctionMeta meta;
 
-  BlockId head_id;
-  BlockId::IdType length;
-
-  inline constexpr BlockId end() const { return BlockId(head_id.id + length); }
+  BlockIdxRange blocks;
 };
 
 }  // namespace ir
