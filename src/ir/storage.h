@@ -6,6 +6,7 @@
 
 #include <memory>
 #include <string>
+#include <utility>
 #include <vector>
 
 #include "base/vec.h"
@@ -20,8 +21,7 @@
 
 namespace ir {
 
-class Storage {
- public:
+struct StorageState {
   template <typename T>
   using Alloc = std::allocator<T>;
 
@@ -36,7 +36,19 @@ class Storage {
   using Operands = base::Vec<Operand, OperandId, Alloc<Operand>>;
   using ParameterTypes = base::Vec<Type, ParameterTypeId, Alloc<Type>>;
 
-  Storage() = default;
+  Functions functions;
+  Blocks blocks;
+  Instructions instrs;
+  Immutables immutables;
+  Registers registers;
+  ExternalFunctions external_functions;
+  Operands operands;
+  ParameterTypes parameter_types;
+};
+
+class Storage {
+ public:
+  explicit Storage(StorageState&& state) : state_(std::move(state)) {}
   ~Storage() = default;
 
   Storage(const Storage&) = delete;
@@ -45,59 +57,33 @@ class Storage {
   Storage(Storage&&) noexcept = default;
   Storage& operator=(Storage&&) noexcept = default;
 
-  inline FunctionId add_function(Function&& function) {
-    return functions_.emplace_back(function);
-  }
+  inline const StorageState& state() const { return state_; }
 
-  inline BlockId add_block(Block&& block) {
-    return blocks_.emplace_back(block);
+  inline const StorageState::Functions& functions() const {
+    return state_.functions;
   }
-
-  inline InstructionId add_instruction(Instruction&& instruction) {
-    return instrs_.emplace_back(instruction);
+  inline const StorageState::Blocks& blocks() const { return state_.blocks; }
+  inline const StorageState::Instructions& instrs() const {
+    return state_.instrs;
   }
-
-  inline ImmutableId add_immutable(Immutable&& immutable) {
-    return immutables_.emplace_back(immutable);
+  inline const StorageState::Immutables& immutables() const {
+    return state_.immutables;
   }
-
-  inline RegisterId add_register(Register&& reg) {
-    return registers_.emplace_back(reg);
+  inline const StorageState::Registers& registers() const {
+    return state_.registers;
   }
-  inline ExternalFunctionId add_external_function(ExternalFunction&& ex_func) {
-    return external_functions_.emplace_back(ex_func);
+  inline const StorageState::ExternalFunctions& external_functions() const {
+    return state_.external_functions;
   }
-  inline OperandId add_operand(Operand&& op) {
-    return operands_.emplace_back(op);
+  inline const StorageState::Operands& operands() const {
+    return state_.operands;
   }
-  inline ParameterTypeId add_parameter_type(Type&& type) {
-    return parameter_types_.emplace_back(type);
+  inline const StorageState::ParameterTypes& parameter_types() const {
+    return state_.parameter_types;
   }
-
-  inline const Functions& functions() const { return functions_; }
-  inline const Instructions& instructions() const { return instrs_; }
-  inline const Blocks& blocks() const { return blocks_; }
-  inline const Immutables& immutables() const { return immutables_; }
-  inline const Registers& registers() const { return registers_; }
-  inline const ExternalFunctions& external_functions() const {
-    return external_functions_;
-  }
-  inline const Operands& operands() const { return operands_; }
-  inline const ParameterTypes& parameter_types() const {
-    return parameter_types_;
-  }
-
-  // std::string dump() const;
 
  private:
-  Functions functions_;
-  Blocks blocks_;
-  Instructions instrs_;
-  Immutables immutables_;
-  Registers registers_;
-  ExternalFunctions external_functions_;
-  Operands operands_;
-  ParameterTypes parameter_types_;
+  StorageState state_;
 };
 
 }  // namespace ir
