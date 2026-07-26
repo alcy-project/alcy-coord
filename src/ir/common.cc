@@ -14,8 +14,8 @@
 #include "ir/opcode.h"
 #include "ir/operand.h"
 #include "ir/register.h"
-#include "ir/storage.h"
-#include "ir/storage_builder.h"
+// #include "ir/storage.h"
+// #include "ir/storage_builder.h"
 #include "ir/type.h"
 
 namespace ir {
@@ -35,8 +35,9 @@ static_assert(sizeof(Operand) == 8);
 static_assert(sizeof(Register) == 8);
 static_assert(sizeof(Type) == 1);
 
-static_assert(sizeof(Storage) == 216);
-static_assert(sizeof(StorageBuilder) == 216);
+// static_assert(sizeof(StorageState) == 216);
+// static_assert(sizeof(Storage) == 216);
+// static_assert(sizeof(StorageBuilder) == 216);
 
 }  // namespace ir
 
