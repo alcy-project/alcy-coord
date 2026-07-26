@@ -8,13 +8,15 @@
 #include <string>
 #include <utility>
 
-#include "catch2/catch_all.hpp"
+#include "base/idx.h"
+#include "catch2/catch_test_macros.hpp"
 #include "fpag/str/string_interner.h"
 #include "ir/common.h"
 #include "ir/external_function.h"
 #include "ir/opcode.h"
 #include "ir/operand.h"
 #include "ir/storage.h"
+#include "ir/storage_builder.h"
 #include "ir/type.h"
 #include "llvm/IR/IRBuilder.h"
 #include "llvm/IR/LLVMContext.h"
@@ -24,82 +26,99 @@
 
 namespace codegen_llvm {
 
-TEST_CASE("simple failing", "[codegen_llvm]") {
-  std::unique_ptr<ir::Storage> storage = std::make_unique<ir::Storage>();
+ir::Storage hello_world_ir(str::StringInterner* interner) {
+  ir::StorageBuilder builder;
 
-  str::StringInterner interner(4096);
+  const str::StringPoolId main_str = interner->intern("main");
+  const str::StringPoolId puts_str = interner->intern("puts");
+  const str::StringPoolId hello_str = interner->intern("Hello, World!");
 
-  const str::StringPoolId main_str = interner.intern("main");
-  const str::StringPoolId puts_str = interner.intern("puts");
+  const ir::ImmutableIdx imm_1 =
+      builder.immutable({.type = ir::Type::I32, .data = {.i32_value = 1}});
 
-  const ir::ImmutableId imm_1 =
-      storage->add_immutable({.type = ir::Type::I32, .data = {.i32 = 1}});
+  const ir::ImmutableIdx imm_hello = builder.immutable(
+      {.type = ir::Type::Str, .data = {.str_id_value = hello_str}});
 
-  const ir::ExternalFunctionId func_puts = storage->add_external_function({
+  const ir::TypeIdx puts_param_type_id = builder.type(ir::Type::Ptr);
+  const ir::ExternalFunctionIdx func_puts = builder.external_function({
       .meta = {.return_type = ir::Type::I32,
-               .param_types_count = 1,
-               .param_types = {.soo_buf = {ir::Type::Ptr}},
+               .param_types = {puts_param_type_id, 1},
                .name = puts_str},
       .calling_conv = ir::CallingConvention::C,
   });
 
   // reg 0 := 1 - 1 = 0
-  const ir::InstructionId head = storage->add_instruction({
+  const ir::OperandIdx lhs = builder.operand({
+      .tag = ir::OperandTag::Immutable,
+      .type = ir::Type::I32,
+      .data = {.immutable_idx = imm_1},
+  });
+  const ir::OperandIdx rhs = builder.operand({
+      .tag = ir::OperandTag::Immutable,
+      .type = ir::Type::I32,
+      .data = {.immutable_idx = imm_1},
+  });
+  const ir::InstructionIdx inst_sub = builder.instr({
       .op = ir::Opcode::IntSub,
       .flags = {},
-      .dst = ir::RegisterId(0),
-      .lhs = {.tag = ir::OperandTag::Immutable,
-              .type = ir::Type::I32,
-              .data = {.immutable_id = imm_1}},
-      .rhs = {.op = {.tag = ir::OperandTag::Immutable,
-                     .type = ir::Type::I32,
-                     .data = {.immutable_id = imm_1}}},
+      .dst = ir::RegisterIdx(0),
+      .operands = ir::OperandIdxRange::from_to(lhs, rhs),
   });
-  storage->add_register({.type = ir::Type::I32, .def_idx = head});
+  builder.reg({.type = ir::Type::I32, .def_idx = inst_sub});
 
-  storage->add_instruction({
+  const ir::OperandIdx puts_op = builder.operand({
+      .tag = ir::OperandTag::ExternalFunction,
+      .type = ir::Type::Function,
+      .data = {.external_function_idx = func_puts},
+  });
+  const ir::OperandIdx arg_str_op = builder.operand({
+      .tag = ir::OperandTag::Immutable,
+      .type = ir::Type::Str,
+      .data = {.immutable_idx = imm_hello},
+  });
+
+  const ir::RegisterIdx ret_register(0);
+  const ir::OperandIdx reg_op = builder.operand({
+      .tag = ir::OperandTag::Register,
+      .type = ir::Type::I32,
+      .data = {.register_idx = ret_register},
+  });
+  /* const ir::InstructionId inst_call = */ builder.instr({
       .op = ir::Opcode::Call,
       .flags = {},
-      .dst = ir::RegisterId(1),
-      .lhs = {.tag = ir::OperandTag::ExternalFunction,
-              .type = ir::Type::Function,
-              .data = {.external_function_id = func_puts}},
-      // TODO
-      // .rhs = {.tag = ir::OperandTag::Immutable,
-      //         .type = ir::Type::Ptr,
-      //         .data = {.immutable_id = imm_str}},
-      .rhs = {.op = ir::kInvalidOperand},
+      .dst = ret_register,
+      .operands = ir::OperandIdxRange::from_to(puts_op, arg_str_op),
   });
 
-  const ir::InstructionId end = storage->add_instruction({
+  const ir::InstructionIdx inst_ret = builder.instr({
       .op = ir::Opcode::Ret,
       .flags = {},
-      .dst = ir::RegisterId(2),
-      .lhs = {.tag = ir::OperandTag::Register,
-              .type = ir::Type::I32,
-              .data = {.register_id = ir::RegisterId(0)}},
-      .rhs = {.op = ir::kInvalidOperand},
+      .dst = ir::RegisterIdx(base::kInvalidIdx),
+      .operands = {reg_op, 1},
   });
 
-  const ir::BlockId block = storage->add_block({
-      .head_id = head,
-      .length = end.id - head.id + 1,
-      .param_types_count = 0,
-      .param_types = {.soo_buf = {}},
+  const ir::BlockIdx block = builder.block({
+      .instrs = ir::InstructionIdxRange::from_to(inst_sub, inst_ret),
+      .block_params = {},
   });
 
-  storage->add_function({
+  builder.function({
       .meta = {.return_type = ir::Type::I32,
-               .param_types_count = 0,
-               .param_types = {.soo_buf = {}},
+               .param_types = {},
                .name = main_str},
-      .head_id = block,
-      .length = 1,
+      .blocks = {block, 1},
   });
 
+  return std::move(builder).build();
+}
+
+TEST_CASE("Emit Hello World", "[codegen_llvm]") {
   llvm::LLVMContext context;
   std::unique_ptr<llvm::Module> module =
       std::make_unique<llvm::Module>("llvm_ir_emitter_test", context);
+
+  str::StringInterner interner(mem::kPageSize);
+  ir::Storage storage = hello_world_ir(&interner);
   LlvmIrEmitter emitter(module.get(), std::move(storage), &interner);
 
   std::move(emitter).emit();

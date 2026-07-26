@@ -6,7 +6,6 @@
 
 #include <memory>
 
-#include "base/id.h"
 #include "base/vec.h"
 #include "codegen_llvm/common.h"
 #include "fpag/str/string_interner.h"
@@ -20,10 +19,10 @@ class LlvmIrEmitter {
  public:
   using IRBuilder =
       llvm::IRBuilder<llvm::ConstantFolder, llvm::IRBuilderDefaultInserter>;
-  using ValueId = base::Id<llvm::Value, base::IdBaseType>;
+  // using ValueIdx = base::Idx<llvm::Value, base::IdxBaseType>;
 
   LlvmIrEmitter(llvm::Module* module,
-                std::unique_ptr<ir::Storage> storage,
+                ir::Storage&& storage,
                 str::StringInterner* interner);
   ~LlvmIrEmitter() = default;
 
@@ -50,18 +49,18 @@ class LlvmIrEmitter {
 
   llvm::Value* resolve_operand_value(const ir::Operand& operand) const;
   llvm::Function* resolve_operand_function(const ir::Operand& operand) const;
-  void add_function(ir::FunctionId id, llvm::Function* function);
-  void add_register(ir::RegisterId id, llvm::Value* value);
-  void add_block(ir::BlockId id, llvm::BasicBlock* block);
-  void add_immutable(ir::ImmutableId id, llvm::Constant* immutable);
-  void add_external_function(ir::ExternalFunctionId id,
+  void add_function(ir::FunctionIdx id, llvm::Function* function);
+  void add_register(ir::RegisterIdx id, llvm::Value* value);
+  void add_block(ir::BlockIdx id, llvm::BasicBlock* block);
+  void add_immutable(ir::ImmutableIdx id, llvm::Constant* immutable);
+  void add_external_function(ir::ExternalFunctionIdx id,
                              llvm::Function* ex_function);
 
   void setup_immutables();
   void setup_external_functions();
 
   llvm::Module* module_;
-  std::unique_ptr<ir::Storage> storage_;
+  ir::Storage storage_;
   std::unique_ptr<IRBuilder> builder_;
   str::StringInterner* interner_;
 
@@ -69,13 +68,16 @@ class LlvmIrEmitter {
   template <typename T>
   using Alloc = std::allocator<T>;
 
-  base::Vec<llvm::Function*, ir::FunctionId, Alloc<llvm::Function*>> functions_;
-  base::Vec<llvm::Value*, ir::RegisterId, Alloc<llvm::Value*>> registers_;
-  base::Vec<llvm::BasicBlock*, ir::BlockId, Alloc<llvm::BasicBlock*>> blocks_;
-  base::Vec<llvm::Constant*, ir::ImmutableId, Alloc<llvm::Constant*>>
+  base::Vec<llvm::Function*, ir::FunctionIdx, Alloc<llvm::Function*>>
+      functions_;
+  base::Vec<llvm::Value*, ir::RegisterIdx, Alloc<llvm::Value*>> registers_;
+  base::Vec<llvm::BasicBlock*, ir::BlockIdx, Alloc<llvm::BasicBlock*>> blocks_;
+  base::Vec<llvm::Constant*, ir::ImmutableIdx, Alloc<llvm::Constant*>>
       immutables_;
-  base::Vec<llvm::Function*, ir::ExternalFunctionId, Alloc<llvm::Function*>>
+  base::Vec<llvm::Function*, ir::ExternalFunctionIdx, Alloc<llvm::Function*>>
       external_functions_;
+
+  static constexpr usize kFunctionArgsSooSize = 8;
 };
 
 }  // namespace codegen_llvm

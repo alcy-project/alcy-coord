@@ -2,7 +2,7 @@
 // This source code is licensed under the Apache License, Version 2.0 with LLVM
 // Exceptions which can be found in the LICENSE file.
 
-#include "catch2/catch_all.hpp"
+#include "catch2/catch_test_macros.hpp"
 
 TEST_CASE("test", "[sample]") {
   CHECK(1 + 1 == 2);
