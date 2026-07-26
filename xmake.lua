@@ -150,17 +150,20 @@ local function is_gcc()
     or (not is_config("toolchain", "clang", "llvm") and is_plat("linux"))
 end
 
+-- for releasedbg
+local package_debug = not is_mode("release")
+
 local function package_common_config()
-  if is_clang() and not is_plat("windows") and has_config("stdlib") then
+  local cfg = {}
+  if has_config("stdlib") then
     local std = get_config("stdlib")
-    return {
-      cxxflags = "-stdlib=" .. std,
-      ldflags = "-stdlib=" .. std,
-      -- for releasedbg
-      debug = not is_mode("release"),
-    }
+    cfg.stdlib = std
+    if is_clang() and not is_plat("windows") then
+      cfg.cxxflags = "-stdlib=" .. std
+      cfg.ldflags = "-stdlib=" .. std
+    end
   end
-  return {}
+  return cfg
 end
 
 local function is_libcxx()
@@ -172,12 +175,12 @@ end
 
 local function source_files()
   local files = {}
-  table.join2(files, os.files("src/**.cc"))
-  table.join2(files, os.files("src/**.h"))
-  table.join2(files, os.files("tests/**.cc"))
-  table.join2(files, os.files("tests/**.h"))
-  table.join2(files, os.files("benchmarks/**.cc"))
-  table.join2(files, os.files("benchmarks/**.h"))
+  table.join2(files, os.files("src/**/*.cc"))
+  table.join2(files, os.files("src/**/*.h"))
+  table.join2(files, os.files("tests/**/*.cc"))
+  table.join2(files, os.files("tests/**/*.h"))
+  table.join2(files, os.files("benchmarks/**/*.cc"))
+  table.join2(files, os.files("benchmarks/**/*.h"))
 
   -- table.join2(files, os.files("src/**.cc|codegen_llvm/**"))
   -- table.join2(files, os.files("src/**.h|codegen_llvm/**"))
@@ -209,9 +212,10 @@ end
 local alcy_component_kind = "static" -- object, static, or shared
 
 -- Dependencies
-add_requires("fpag 419c9bee39f133e7d0bf0adb3928a172dd561f93", {
+add_requires("fpag 728795d7f2927212de58f8b70cdd760d6f07fb90", {
   system = false,
-  external = true,
+  private = true,
+  debug = package_debug,
   configs = {
     stdlib = get_config("stdlib"),
     libunwind = get_config("libunwind"),
@@ -221,7 +225,8 @@ add_requires("fpag 419c9bee39f133e7d0bf0adb3928a172dd561f93", {
 if has_config("llvm") then
   add_requires("alcy_llvm", {
     system = false,
-    external = true,
+    private = true,
+    debug = package_debug,
     configs = table.join(package_common_config(), {
       download_llvm = has_config("download-llvm"),
       cache_llvm = has_config("cache-llvm"),
@@ -231,23 +236,26 @@ if has_config("llvm") then
 end
 
 if has_config("tests") then
-  add_requires("catch2 v3.13.0", {
+  add_requires("catch2 v3.15.2", {
     system = false,
-    external = true,
+    private = true,
+    debug = package_debug,
     configs = package_common_config(),
   })
 end
 
-add_requires("fmt 12.1.0", {
+add_requires("fmt 12.2.0", {
   system = false,
-  external = false,
+  private = true,
+  debug = package_debug,
   configs = package_common_config(),
 })
 
 if has_config("benchmarks") then
   add_requires("benchmark v1.9.5", {
     system = false,
-    external = true,
+    private = true,
+    debug = package_debug,
     configs = table.join(package_common_config(), {
       exceptions = false,
       cxflags = "-DBENCHMARK_USE_LIBCXX=" .. (is_libcxx() and "ON" or "OFF"),
@@ -592,7 +600,7 @@ for m, e in pairs(alcy_modules) do
   end
 end
 set_kind("binary")
-add_packages("catch2")
+add_packages("catch2", { components = "lib" })
 add_includedirs("tests", { public = true })
 set_default(false)
 target_end()
