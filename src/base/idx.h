@@ -31,26 +31,26 @@ struct Idx {
   constexpr auto operator<=>(const Idx&) const = default;
 
   // Preincrement
-  inline constexpr Idx& operator++() {
+  constexpr Idx& operator++() {
     ++idx;
     return *this;
   }
 
-  friend inline constexpr Idx operator+(const Idx& lhs, const Idx& rhs) {
+  friend constexpr Idx operator+(const Idx<T, U>& lhs, const Idx<T, U>& rhs) {
     return Idx(lhs.idx + rhs.idx);
   }
-  friend inline constexpr Idx operator-(const Idx& lhs, const Idx& rhs) {
-    return Idx(lhs.idx - rhs.idx);
+  friend constexpr Idx operator-(const Idx<T, U>& lhs, const Idx<T, U>& rhs) {
+    return Idx<T, U>(lhs.idx - rhs.idx);
   }
 
   template <typename N>
-  friend inline constexpr Idx operator+(const Idx& lhs, N i)
+  friend constexpr Idx operator+(const Idx& lhs, N i)
     requires(std::is_integral_v<N>)
   {
     return lhs + Idx{static_cast<IdxType>(i)};
   }
   template <typename N>
-  friend inline constexpr Idx operator-(const Idx& lhs, N i)
+  friend constexpr Idx operator-(const Idx& lhs, N i)
     requires(std::is_integral_v<N>)
   {
     return lhs - Idx{static_cast<IdxType>(i)};

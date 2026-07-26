@@ -32,43 +32,43 @@ class Vec {
   const T& operator[](const Idx idx) const { return vec_[idx.idx]; }
   T& operator[](const Idx idx) { return vec_[idx.idx]; }
 
-  inline void reserve(usize size) { vec_.reserve(size); }
-  inline void resize(usize size) { vec_.resize(size); }
-  inline void resize(usize size, T init_value) {
+  constexpr void reserve(usize size) { vec_.reserve(size); }
+  constexpr void resize(usize size) { vec_.resize(size); }
+  constexpr void resize(usize size, T init_value) {
     vec_.resize(size, init_value);
   }
 
   template <typename... Args>
-  inline Idx emplace_back(Args&&... args) {
+  constexpr Idx emplace_back(Args&&... args) {
     vec_.emplace_back(std::forward<Args>(args)...);
     return Idx(static_cast<IdxType>(size() - 1));
   }
 
-  inline void pop_back() { vec_.pop_back(); }
-  inline void shrink_to_fit() { vec_.shrink_to_fit(); }
+  constexpr void pop_back() { vec_.pop_back(); }
+  constexpr void shrink_to_fit() { vec_.shrink_to_fit(); }
 
-  inline usize size() const { return vec_.size(); }
-  inline usize capacity() const { return vec_.capacity(); }
+  constexpr usize size() const { return vec_.size(); }
+  constexpr usize capacity() const { return vec_.capacity(); }
 
-  inline auto begin() const { return vec_.begin(); }
-  inline auto end() const { return vec_.end(); }
+  constexpr auto begin() const { return vec_.begin(); }
+  constexpr auto end() const { return vec_.end(); }
 
-  inline IdxRange<Idx> idx_range() const {
+  constexpr IdxRange<Idx> idx_range() const {
     return IdxRange<Idx>(Idx{0}, static_cast<IdxType>(vec_.size()));
   }
 
-  inline const T* data() const { return vec_.data(); }
-  inline T* data() { return vec_.data(); }
+  constexpr const T* data() const { return vec_.data(); }
+  constexpr T* data() { return vec_.data(); }
 
-  inline VecSlice<T, Idx> slice(IdxType offset, IdxType size) {
+  constexpr VecSlice<T, Idx> slice(IdxType offset, IdxType size) {
     return VecSlice<T, Idx>(data() + offset, size);
   }
-  inline VecSlice<T, Idx> slice() { return slice(0, size()); }
+  constexpr VecSlice<T, Idx> slice() { return slice(0, size()); }
 
-  inline VecSlice<const T, Idx> slice(IdxType offset, IdxType size) const {
-    return VecSlice<T, Idx>(data() + offset, size);
+  constexpr ConstVecSlice<T, Idx> slice(IdxType offset, IdxType size) const {
+    return ConstVecSlice<T, Idx>(data() + offset, size);
   }
-  inline VecSlice<const T, Idx> slice() const { return slice(0, size()); }
+  constexpr ConstVecSlice<T, Idx> slice() const { return slice(0, size()); }
 
  private:
   std::vector<T, Allocator> vec_;

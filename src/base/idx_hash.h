@@ -13,8 +13,8 @@ namespace std {
 
 template <typename T, typename I>
 struct hash<base::Idx<T, I>> {
-  usize operator()(const base::Idx<T, I>& id) const noexcept {
-    return std::hash<I>{}(id.value);
+  constexpr usize operator()(const base::Idx<T, I>& id) const noexcept {
+    return std::hash<I>{}(id.idx);
   }
 };
 

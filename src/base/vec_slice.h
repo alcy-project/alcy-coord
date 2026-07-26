@@ -39,18 +39,14 @@ class VecSlice {
     DCHECK_GE(end, begin);
   }
 
-  template <typename Container,
-            std::enable_if_t <
-                !std::is_same_v<std::decay_t<Container>, VecSlice>&&
-                  requires(Container & c)
-                {
-    {c.data()}->std::same_as<pointer>;
-    {c.size()}->std::convertible_to<usize>;
-  }
-  ,
-      i32 > = 0 > constexpr explicit VecSlice(Container& container) noexcept
-      : data_(container.data()),
-          size_(container.size()) {}
+  template <typename Container>
+    requires(!std::is_same_v<std::decay_t<Container>, VecSlice> &&
+             requires(Container& c) {
+               { c.data() } -> std::same_as<pointer>;
+               { c.size() } -> std::convertible_to<usize>;
+             })
+  constexpr explicit VecSlice(Container& container) noexcept
+      : data_(container.data()), size_(container.size()) {}
 
   constexpr ~VecSlice() = default;
   constexpr VecSlice(const VecSlice&) noexcept = default;

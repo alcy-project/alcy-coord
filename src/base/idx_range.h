@@ -55,12 +55,14 @@ class IdxRange {
   template <typename N>
   Idx operator[](N offset) const {
     static_assert(std::is_integral_v<N>);
-    DCHECK_LE(static_cast<N>(0), offset);
+    if constexpr (std::is_signed_v<N>) {
+      DCHECK_LE(static_cast<N>(0), offset);
+    }
     DCHECK_LT(offset, static_cast<N>(size()));
     return head_ + offset;
   }
 
-  inline static constexpr IdxRange<Idx> from_to(Idx from, Idx to) {
+  static constexpr IdxRange<Idx> from_to(Idx from, Idx to) {
     return IdxRange<Idx>(from, static_cast<IdxType>(to.idx - from.idx + 1));
   }
 
