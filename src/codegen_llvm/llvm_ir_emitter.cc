@@ -7,7 +7,7 @@
 #include <memory>
 #include <utility>
 
-#include "base/debug/check.h"
+#include "base/debug/dcheck.h"
 #include "base/debug/dlog.h"
 #include "base/debug/fatal.h"
 #include "build/build_config.h"

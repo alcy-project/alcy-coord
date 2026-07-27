@@ -9,7 +9,7 @@
 #include <iterator>
 #include <type_traits>
 
-#include "base/debug/check.h"
+#include "base/debug/dcheck.h"
 #include "base/idx.h"
 #include "base/idx_range.h"
 #include "fpag/base/numeric.h"
