@@ -2,8 +2,11 @@
 -- This source code is licensed under the Apache License, Version 2.0 with LLVM
 -- Exceptions which can be found in the LICENSE file.
 
-set_project("alcy_lang")
+local project_name = "alcy"
 local project_version = "0.1.0"
+local command_about = "alcy compiler"
+
+set_project(project_name)
 set_version(project_version)
 
 option("coverage")
@@ -96,6 +99,12 @@ option("benchmarks")
 set_default(false)
 set_showmenu(true)
 set_description("build micro benchmarks")
+option_end()
+
+option("static-stdlib")
+set_default(false)
+set_showmenu(true)
+set_description("link stl as static library")
 option_end()
 
 option("stdlib")
@@ -212,7 +221,7 @@ end
 local alcy_component_kind = "static" -- object, static, or shared
 
 -- Dependencies
-add_requires("fpag 4d988baf45ddd1e9c5a0f19c45030622c67f0edb", {
+add_requires("fpag 71f3c867ed59d23bd8a08d22b8f4af54a8afe5e2", {
   system = false,
   private = true,
   debug = package_debug,
@@ -390,7 +399,11 @@ on_load(function(target)
   target:set("encodings", "source:utf-8", "utf-8")
 
   target:add("includedirs", "src", "third_party")
-  target:add("defines", 'ALCY_PROJECT_VERSION="' .. project_version .. '"')
+  target:add("defines", {
+    'ALCY_PROJECT_NAME="' .. project_name .. '"',
+    'ALCY_PROJECT_VERSION="' .. project_version .. '"',
+    'ALCY_COMMAND_ABOUT="' .. command_about .. '"',
+  })
   target:add(
     "defines",
     { "__STDC_CONSTANT_MACROS", "__STDC_FORMAT_MACROS", "__STDC_LIMIT_MACROS" }
@@ -494,6 +507,19 @@ on_load(function(target)
 
   if has_config("unitybuild") then
     target:add("rules", "c++.unity_build", { batchsize = 12 })
+  end
+
+  if has_config("static-stdlib") and (is_gcc() or is_clang()) then
+    add_cxxflags("-static-libstdc++", { public = true })
+    if is_clang and get_config("stdlib") == "libc++" then
+      add_ldflags(
+        "-Wl,-Bstatic",
+        "-lc++",
+        "-lc++abi",
+        "-Wl,-Bdynamic",
+        { public = true }
+      )
+    end
   end
 end)
 rule_end()
