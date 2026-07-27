@@ -28,16 +28,19 @@ jobs:
             plat: linux
             arch: x86_64
             stdlib: libc++
+            static_stdlib: true
             archive: tar.gz
           - os: macos-26
             plat: macosx
             arch: arm64
             stdlib: libc++
+            static_stdlib: false
             archive: tar.gz
           - os: windows-2025-vs2026
             plat: windows
             arch: x64
             stdlib: msvc
+            static_stdlib: false
             archive: zip
     env:
       CC: ${{ matrix.cc }}
@@ -82,6 +85,7 @@ jobs:
             --build-llvm=n \
             --lto=y \
             --stdlib="${{ matrix.stdlib }}" \
+            --static-stdlib="${{ matrix.static_stdlib }}" \
             -p "${{ matrix.plat }}" \
             -a "${{ matrix.arch }}"
 
