@@ -86,6 +86,7 @@ jobs:
             --lto=y \
             --stdlib="${{ matrix.stdlib }}" \
             --static-stdlib="${{ matrix.static_stdlib }}" \
+            --component_kind="static" \
             -p "${{ matrix.plat }}" \
             -a "${{ matrix.arch }}"
 

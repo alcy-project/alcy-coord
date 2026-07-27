@@ -93,6 +93,7 @@ jobs:
             --build-llvm=n \
             --stdlib="${{ matrix.stdlib }}" \
             --static-stdlib="${{ matrix.static_stdlib }}" \
+            --component_kind="static" \
             --sanitizers=y \
             --libunwind=y \
             -p "${{ matrix.plat }}" \
