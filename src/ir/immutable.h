@@ -4,7 +4,7 @@
 
 #pragma once
 
-#include "base/debug/check.h"
+#include "base/debug/dcheck.h"
 #include "base/debug/fatal.h"
 #include "fpag/base/numeric.h"
 #include "fpag/str/string_pool_id.h"

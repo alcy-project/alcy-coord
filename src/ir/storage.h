@@ -61,31 +61,23 @@ class Storage {
   Storage(Storage&&) noexcept = default;
   Storage& operator=(Storage&&) noexcept = default;
 
-  inline const StorageState& state() const { return state_; }
+  const StorageState& state() const { return state_; }
 
-  inline const StorageState::Functions& functions() const {
-    return state_.functions;
-  }
-  inline const StorageState::Blocks& blocks() const { return state_.blocks; }
-  inline const StorageState::BlockParams& block_params() const {
+  const StorageState::Functions& functions() const { return state_.functions; }
+  const StorageState::Blocks& blocks() const { return state_.blocks; }
+  const StorageState::BlockParams& block_params() const {
     return state_.block_params;
   }
-  inline const StorageState::Instructions& instrs() const {
-    return state_.instrs;
-  }
-  inline const StorageState::Immutables& immutables() const {
+  const StorageState::Instructions& instrs() const { return state_.instrs; }
+  const StorageState::Immutables& immutables() const {
     return state_.immutables;
   }
-  inline const StorageState::Registers& registers() const {
-    return state_.registers;
-  }
-  inline const StorageState::ExternalFunctions& external_functions() const {
+  const StorageState::Registers& registers() const { return state_.registers; }
+  const StorageState::ExternalFunctions& external_functions() const {
     return state_.external_functions;
   }
-  inline const StorageState::Operands& operands() const {
-    return state_.operands;
-  }
-  inline const StorageState::Types& types() const { return state_.types; }
+  const StorageState::Operands& operands() const { return state_.operands; }
+  const StorageState::Types& types() const { return state_.types; }
 
  private:
   StorageState state_;
