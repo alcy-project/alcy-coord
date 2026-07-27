@@ -113,6 +113,12 @@ set_showmenu(true)
 set_description("specify stl to use")
 option_end()
 
+option("component_kind")
+set_default("static")
+set_showmenu(true)
+set_description("component kind (static|shared|object)")
+option_end()
+
 includes("src/build/xmake/fpag.lua")
 includes("src/build/xmake/llvm.lua")
 
@@ -184,44 +190,22 @@ end
 
 local function source_files()
   local files = {}
-  table.join2(files, os.files("src/**/*.cc"))
-  table.join2(files, os.files("src/**/*.h"))
-  table.join2(files, os.files("tests/**/*.cc"))
-  table.join2(files, os.files("tests/**/*.h"))
-  table.join2(files, os.files("benchmarks/**/*.cc"))
-  table.join2(files, os.files("benchmarks/**/*.h"))
-
-  -- table.join2(files, os.files("src/**.cc|codegen_llvm/**"))
-  -- table.join2(files, os.files("src/**.h|codegen_llvm/**"))
-  -- if has_config("llvm") then
-  --   table.join2(files, os.files("src/codegen_llvm/**.cc"))
-  --   table.join2(files, os.files("src/codegen_llvm/**.h"))
-  -- end
-
-  -- if has_config("tests") then
-  --   table.join2(files, os.files("tests/**.cc|codegen_llvm/**"))
-  --   table.join2(files, os.files("tests/**.h|codegen_llvm/**"))
-  --   if has_config("llvm") then
-  --     table.join2(files, os.files("tests/codegen_llvm/**.cc"))
-  --     table.join2(files, os.files("tests/codegen_llvm/**.h"))
-  --   end
-  -- end
-
-  -- if has_config("benchmarks") then
-  --   table.join2(files, os.files("benchmarks/**.cc|codegen_llvm/**"))
-  --   table.join2(files, os.files("benchmarks/**.h|codegen_llvm/**"))
-  --   if has_config("llvm") then
-  --     table.join2(files, os.files("benchmarks/codegen_llvm/**.cc"))
-  --     table.join2(files, os.files("benchmarks/codegen_llvm/**.h"))
-  --   end
-  -- end
+  table.join2(files, os.files("src/**.cc"))
+  table.join2(files, os.files("src/**.h"))
+  table.join2(files, os.files("tests/**.cc"))
+  table.join2(files, os.files("tests/**.h"))
+  table.join2(files, os.files("benchmarks/**.cc"))
+  table.join2(files, os.files("benchmarks/**.h"))
   return files
 end
 
 local alcy_component_kind = "static" -- object, static, or shared
+if has_config("component_kind") then
+  alcy_component_kind = get_config("component_kind")
+end
 
 -- Dependencies
-add_requires("fpag 71f3c867ed59d23bd8a08d22b8f4af54a8afe5e2", {
+add_requires("fpag 1861dcf33d79220a26cddb392cad596a6ddcac5c", {
   system = false,
   private = true,
   debug = package_debug,
@@ -404,6 +388,7 @@ on_load(function(target)
     'ALCY_PROJECT_VERSION="' .. project_version .. '"',
     'ALCY_COMMAND_ABOUT="' .. command_about .. '"',
   })
+  target:add("defines", "NOMINMAX")
   target:add(
     "defines",
     { "__STDC_CONSTANT_MACROS", "__STDC_FORMAT_MACROS", "__STDC_LIMIT_MACROS" }
@@ -510,15 +495,14 @@ on_load(function(target)
   end
 
   if has_config("static-stdlib") and (is_gcc() or is_clang()) then
-    add_cxxflags("-static-libstdc++", { public = true })
+    target:add("cxxflags", "-static-libstdc++")
     if is_clang and get_config("stdlib") == "libc++" then
-      add_ldflags(
+      target:add("ldflags", {
         "-Wl,-Bstatic",
         "-lc++",
         "-lc++abi",
         "-Wl,-Bdynamic",
-        { public = true }
-      )
+      })
     end
   end
 end)

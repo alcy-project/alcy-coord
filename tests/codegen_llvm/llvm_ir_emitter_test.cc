@@ -117,7 +117,7 @@ TEST_CASE("Emit Hello World", "[codegen_llvm]") {
   std::unique_ptr<llvm::Module> module =
       std::make_unique<llvm::Module>("llvm_ir_emitter_test", context);
 
-  str::StringInterner interner(mem::kPageSize);
+  str::StringInterner interner(mem::page_size());
   ir::Storage storage = hello_world_ir(&interner);
   LlvmIrEmitter emitter(module.get(), std::move(storage), &interner);
 
