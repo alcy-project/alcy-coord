@@ -8,6 +8,7 @@
 #include <utility>
 #include <vector>
 
+#include "app/converters.h"
 #include "app/driver_config.h"
 #include "base/debug/fatal.h"
 #include "base/logger.h"
@@ -20,6 +21,7 @@ namespace {
 DriverConfig extract_from_matches(arg::Matches&& matches) {
   DriverConfig c{};
   c.time_trace = matches.get<bool>("time-trace").unwrap_or(c.time_trace);
+  c.color_mode = matches.get<base::ColorMode>("color").unwrap_or(c.color_mode);
 
   return c;
 }
@@ -57,18 +59,18 @@ ParseArgsResult parse_args(arg::Parser&& parser,
     case arg::ParseStatus::Error: {
       std::vector<arg::ParseError>&& errors = std::move(result).unwrap_err();
       const arg::DefaultErrorFormatter f;
-      base::logger.info("\n{}", f(name, errors, style));
+      base::logger.wo_prefix("{}", f(name, errors, style));
       return ParseInterruptedReason::ParseError;
     }
     case arg::ParseStatus::HelpRequested: {
       std::string&& help = std::move(result).unwrap_help();
-      base::logger.info("\n{}", std::move(help));
+      base::logger.wo_prefix("{}", std::move(help));
       return ParseInterruptedReason::HelpRequested;
     }
     case arg::ParseStatus::VersionRequested: {
       std::string&& version = std::move(result).unwrap_version();
       const arg::DefaultVersionFormatter f;
-      base::logger.info("\n{}", f(name, std::move(version), style));
+      base::logger.wo_prefix("{}", f(name, std::move(version), style));
       return ParseInterruptedReason::VersionRequested;
     }
     default: UNREACHABLE();

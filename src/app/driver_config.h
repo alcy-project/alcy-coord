@@ -5,6 +5,7 @@
 #pragma once
 
 #include "fpag/base/color_mode.h"
+#include "fpag/base/numeric.h"
 
 namespace app {
 
