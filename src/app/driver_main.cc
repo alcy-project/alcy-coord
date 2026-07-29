@@ -17,13 +17,9 @@
 
 namespace app {
 
-i32 driver_main(i32 argc, char** argv) {
-  init();
+namespace {
 
-  arg::Parser parser = build_parser();
-  ParseArgsResult args_result = parse_args(
-      std::move(parser), argc, argv,
-      base::console_color_style(base::Stream::Stdout, base::ColorMode::Auto));
+i32 dispatch(ParseArgsResult&& args_result) {
   switch (args_result.tag()) {
     case ParseArgsResult::TagOf<DriverConfig>: {
       const DriverConfig config = std::move(args_result).get<DriverConfig>();
@@ -46,6 +42,18 @@ i32 driver_main(i32 argc, char** argv) {
     }
     default: UNREACHABLE();
   }
+}
+
+}  // namespace
+
+i32 driver_main(i32 argc, char** argv) {
+  init();
+
+  arg::Parser parser = build_parser();
+  ParseArgsResult args_result = parse_args(
+      std::move(parser), argc, argv,
+      base::console_color_style(base::Stream::Stdout, base::ColorMode::Auto));
+  return dispatch(std::move(args_result));
 }
 
 }  // namespace app
