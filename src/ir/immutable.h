@@ -4,8 +4,8 @@
 
 #pragma once
 
-#include "base/debug/dcheck.h"
-#include "base/debug/fatal.h"
+#include "debug/dcheck.h"
+#include "debug/fatal.h"
 #include "fpag/base/numeric.h"
 #include "fpag/str/string_pool_id.h"
 #include "ir/type.h"

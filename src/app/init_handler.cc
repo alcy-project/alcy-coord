@@ -5,21 +5,21 @@
 #include "app/init_handler.h"
 
 #include "base/logger.h"
-#include "fpag/base/console.h"
-#include "fpag/base/debug/signal_handler.h"
-#include "fpag/base/debug/terminate_handler.h"
-#include "fpag/base/exit_handler.h"
+#include "fpag/debug/exit_handler.h"
+#include "fpag/debug/signal_handler.h"
+#include "fpag/debug/terminate_handler.h"
+#include "fpag/term/console.h"
 
 namespace app {
 
 void init() {
-  base::register_console();
-  base::register_exit_handler();
-  base::register_terminate_handler();
-  base::register_signal_handlers();
+  term::register_console();
+  debug::register_exit_handler();
+  debug::register_terminate_handler();
+  debug::register_signal_handlers();
 
-  const base::ColorStyle style =
-      base::console_color_style(base::Stream::Stdout);
+  const term::ColorStyle style =
+      term::console_color_style(term::Stream::Stdout);
   base::init_logger(style);
 }
 

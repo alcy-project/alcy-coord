@@ -4,6 +4,6 @@
 
 #pragma once
 
-#include "fpag/base/debug/dlog.h"
+#include "fpag/debug/dlog.h"
 
 #define DLOG(fmt, ...) FPAG_DLOG(fmt, __VA_ARGS__)

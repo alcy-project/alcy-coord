@@ -14,6 +14,6 @@ using Logger =
     logging::SyncLogger<logging::StdoutSink, logging::kDefaultLogLevel>;
 extern Logger logger;
 
-void init_logger(ColorStyle style);
+void init_logger(term::ColorStyle style);
 
 }  // namespace base

@@ -7,9 +7,9 @@
 #include "app/driver_config.h"
 #include "fpag/arg/parse_status.h"
 #include "fpag/arg/parser.h"
-#include "fpag/base/color_style.h"
 #include "fpag/base/numeric.h"
 #include "fpag/base/tagged_union.h"
+#include "fpag/term/color_style.h"
 
 namespace app {
 
@@ -27,6 +27,6 @@ arg::Parser build_parser();
 ParseArgsResult parse_args(arg::Parser&& parser,
                            i32 argc,
                            const char* const* argv,
-                           base::ColorStyle style);
+                           term::ColorStyle style);
 
 }  // namespace app

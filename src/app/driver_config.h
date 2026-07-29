@@ -4,14 +4,14 @@
 
 #pragma once
 
-#include "fpag/base/color_mode.h"
 #include "fpag/base/numeric.h"
+#include "fpag/term/color_mode.h"
 
 namespace app {
 
 struct DriverConfig {
   bool time_trace;
-  base::ColorMode color_mode;
+  term::ColorMode color_mode;
 };
 
 }  // namespace app

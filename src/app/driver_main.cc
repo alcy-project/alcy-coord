@@ -10,10 +10,10 @@
 #include "app/init_handler.h"
 #include "app/parse_args.h"
 #include "app/result_code.h"
-#include "base/debug/fatal.h"
+#include "debug/fatal.h"
 #include "fpag/arg/parser.h"
-#include "fpag/base/console.h"
 #include "fpag/base/numeric.h"
+#include "fpag/term/console.h"
 
 namespace app {
 
@@ -52,7 +52,7 @@ i32 driver_main(i32 argc, char** argv) {
   arg::Parser parser = build_parser();
   ParseArgsResult args_result = parse_args(
       std::move(parser), argc, argv,
-      base::console_color_style(base::Stream::Stdout, base::ColorMode::Auto));
+      term::console_color_style(term::Stream::Stdout, term::ColorMode::Auto));
   return dispatch(std::move(args_result));
 }
 

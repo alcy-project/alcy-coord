@@ -7,13 +7,13 @@
 #include <string_view>
 
 #include "fpag/arg/converter.h"
-#include "fpag/base/color_mode.h"
+#include "fpag/term/color_mode.h"
 
 template <>
-struct arg::Converter<base::ColorMode> {
-  static base::Result<base::ColorMode, arg::GetError> from_string(
+struct arg::Converter<term::ColorMode> {
+  static base::Result<term::ColorMode, arg::GetError> from_string(
       std::string_view v) {
-    using arg::GetError, base::ColorMode, base::make_err, base::make_ok;
+    using arg::GetError, term::ColorMode, base::make_err, base::make_ok;
     if (v == "auto") {
       return make_ok(ColorMode::Auto);
     } else if (v == "always") {

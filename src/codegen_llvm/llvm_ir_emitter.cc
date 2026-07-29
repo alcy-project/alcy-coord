@@ -7,10 +7,10 @@
 #include <memory>
 #include <utility>
 
-#include "base/debug/dcheck.h"
-#include "base/debug/dlog.h"
-#include "base/debug/fatal.h"
 #include "build/build_config.h"
+#include "debug/dcheck.h"
+#include "debug/dlog.h"
+#include "debug/fatal.h"
 #include "ir/block.h"
 #include "ir/common.h"
 #include "ir/external_function.h"

@@ -4,6 +4,6 @@
 
 #pragma once
 
-#include "fpag/base/debug/fatal.h"
+#include "fpag/debug/fatal.h"
 
 #define UNREACHABLE() FPAG_UNREACHABLE()

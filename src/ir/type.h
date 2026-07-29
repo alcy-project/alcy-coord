@@ -4,7 +4,7 @@
 
 #pragma once
 
-#include "base/debug/fatal.h"
+#include "debug/fatal.h"
 #include "fpag/base/numeric.h"
 #include "ir/common.h"
 

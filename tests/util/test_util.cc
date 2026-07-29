@@ -6,10 +6,10 @@
 
 #include <memory>
 
-#include "fpag/base/console.h"
-#include "fpag/base/debug/logger.h"
+#include "fpag/debug/logger.h"
 #include "fpag/logging/sink/stdout_sink.h"
 #include "fpag/logging/sync/sync_logger.h"
+#include "fpag/term/console.h"
 // #include "fpag/mem/page_allocator.h"
 
 namespace tests {
@@ -18,8 +18,8 @@ TestLogger logger;
 
 void init_logger() {
   logger.init(logging::StdoutSink(
-      nullptr, 0, base::console_color_style(base::Stream::Stdout), false));
-  base::init_debug_logger();
+      nullptr, 0, term::console_color_style(term::Stream::Stdout), false));
+  debug::init_debug_logger();
 }
 
 }  // namespace tests

@@ -8,10 +8,10 @@
 #include <utility>
 #include <vector>
 
-#include "app/converters.h"
+#include "app/converters.h"  // IWYU pragma: keep
 #include "app/driver_config.h"
-#include "base/debug/fatal.h"
 #include "base/logger.h"
+#include "debug/fatal.h"
 #include "fpag/arg/macro.h"
 
 namespace app {
@@ -21,7 +21,7 @@ namespace {
 DriverConfig extract_from_matches(arg::Matches&& matches) {
   DriverConfig c{};
   c.time_trace = matches.get<bool>("time-trace").unwrap_or(c.time_trace);
-  c.color_mode = matches.get<base::ColorMode>("color").unwrap_or(c.color_mode);
+  c.color_mode = matches.get<term::ColorMode>("color").unwrap_or(c.color_mode);
 
   return c;
 }
@@ -48,7 +48,7 @@ arg::Parser build_parser() {
 ParseArgsResult parse_args(arg::Parser&& parser,
                            i32 argc,
                            const char* const* argv,
-                           base::ColorStyle style) {
+                           term::ColorStyle style) {
   const std::string_view name = parser.root_command().name();
   arg::ParseResult<arg::Matches> result = parser.try_parse(argc, argv);
 

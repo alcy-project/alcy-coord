@@ -3,18 +3,18 @@
 // Exceptions which can be found in the LICENSE file.
 
 #include "catch2/catch_session.hpp"
-#include "fpag/base/console.h"
-#include "fpag/base/debug/signal_handler.h"
-#include "fpag/base/debug/terminate_handler.h"
 #include "fpag/base/numeric.h"
+#include "fpag/debug/signal_handler.h"
+#include "fpag/debug/terminate_handler.h"
+#include "fpag/term/console.h"
 #include "util/test_util.h"
 
 #define CATCH_CONFIG_RUNNER
 
 void init() {
-  base::register_console();
-  base::register_terminate_handler();
-  base::register_signal_handlers();
+  term::register_console();
+  debug::register_terminate_handler();
+  debug::register_signal_handlers();
   tests::init_logger();
 }
 
