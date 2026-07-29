@@ -108,7 +108,7 @@ set_description("link stl as static library")
 option_end()
 
 option("stdlib")
-set_default("libstdc++")
+set_default("libc++")
 set_showmenu(true)
 set_description("specify stl to use")
 option_end()
@@ -495,9 +495,10 @@ on_load(function(target)
   end
 
   if has_config("static-stdlib") and (is_gcc() or is_clang()) then
-    target:add("cxxflags", "-static-libstdc++")
-    if is_clang and get_config("stdlib") == "libc++" then
+    -- target:add("cxxflags", "-static-libstdc++")
+    if is_clang() and get_config("stdlib") == "libc++" then
       target:add("ldflags", {
+        "-static-libstdc++",
         "-Wl,-Bstatic",
         "-lc++",
         "-lc++abi",
