@@ -8,8 +8,8 @@
 #include <string>
 #include <utility>
 
-#include "base/idx.h"
 #include "catch2/catch_test_macros.hpp"
+#include "fpag/base/idx.h"
 #include "fpag/str/string_interner.h"
 #include "ir/common.h"
 #include "ir/external_function.h"

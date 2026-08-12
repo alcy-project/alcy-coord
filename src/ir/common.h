@@ -4,8 +4,8 @@
 
 #pragma once
 
-#include "base/idx.h"
-#include "base/idx_range.h"
+#include "fpag/base/idx.h"
+#include "fpag/base/idx_range.h"
 #include "fpag/base/numeric.h"
 
 namespace ir {

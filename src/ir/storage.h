@@ -9,8 +9,8 @@
 #include <utility>
 #include <vector>
 
-#include "base/vec.h"
 #include "fpag/base/numeric.h"
+#include "fpag/base/vec.h"
 #include "ir/block.h"
 #include "ir/block_param.h"
 #include "ir/common.h"

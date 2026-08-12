@@ -4,7 +4,7 @@
 
 #pragma once
 
-#include "base/idx.h"
+#include "fpag/base/idx.h"
 #include "fpag/base/tagged_union.h"
 #include "ir/common.h"
 #include "ir/type.h"

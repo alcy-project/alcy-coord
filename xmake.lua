@@ -205,7 +205,7 @@ if has_config("component_kind") then
 end
 
 -- Dependencies
-add_requires("fpag 83170848a2638c0a0f1495ed08e0f8b495775869", {
+add_requires("fpag 8c8773181b2c0b2aa03c8130c02af9c9a081ae7d", {
   system = false,
   private = true,
   debug = package_debug,
