@@ -14,4 +14,11 @@ struct DriverConfig {
   term::ColorMode color_mode;
 };
 
+enum class ValidationStatus : u8 {
+  Success,
+  InvalidColorMode,
+};
+
+ValidationStatus validate_config(const DriverConfig& config);
+
 }  // namespace app
