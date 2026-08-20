@@ -34,7 +34,7 @@ config("compiler") {
 
     cflags_c += [ "-std=${standard_prefix}${c_version}" ]
     cflags_cc += [ "-std=${standard_prefix}++${cxx_version}" ]
-  } else if (is_win) {
+  } else if (is_msvc) {
     cflags_c += [ "/std:c${c_version}" ]
     cflags_cc += [ "/std:c++${cxx_version}" ]
     defines += [ "NOMINMAX" ]

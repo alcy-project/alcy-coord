@@ -35,6 +35,7 @@ is_apple = is_ios || is_mac || is_watchos
 is_posix = !is_win && !is_fuchsia
 
 is_clang = true
+is_msvc = is_win && !is_clang
 
 declare_args() {
   is_debug = true
