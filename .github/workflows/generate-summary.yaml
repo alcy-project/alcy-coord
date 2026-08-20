@@ -7,7 +7,7 @@ on:
         description: "Pattern to match checksum artifact names"
         type: string
         required: false
-        default: "checksum-*"
+        default: "*"
 
 jobs:
   summary:

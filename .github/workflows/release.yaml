@@ -39,3 +39,5 @@ jobs:
     needs: publish
     if: always()
     uses: ./.github/workflows/generate-summary.yaml
+    with:
+      artifact_pattern: "*"
