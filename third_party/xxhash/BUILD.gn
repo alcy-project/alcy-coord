@@ -5,8 +5,9 @@ config("xxhash_config") {
 source_set("xxhash") {
   sources = [
     "src/xxh3.h",
-    "src/xxh_x86dispatch.c",
-    "src/xxh_x86dispatch.h",
+
+    # "src/xxh_x86dispatch.c",
+    # "src/xxh_x86dispatch.h",
     "src/xxhash.c",
     "src/xxhash.h",
   ]
