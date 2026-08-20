@@ -80,7 +80,7 @@ config("linker") {
       "-Wl,-rpath,@executable_path",
       "-Wl,-rpath,@executable_path/lib",
     ]
-  } else {
+  } else if (!is_win) {
     ldflags += [
       "-Wl,-rpath=\$ORIGIN",
       "-Wl,-rpath=\$ORIGIN/lib",
