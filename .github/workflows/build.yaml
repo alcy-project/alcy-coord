@@ -81,9 +81,9 @@ jobs:
             echo "LIBCXX_LIB_DIR=${{ env.LLVM_PATH }}/lib" >> $GITHUB_ENV
           fi
 
-      - name: Fetch tags
+      - name: Fetch LLVM tag
         shell: bash
-        run: git submodule foreach --recursive 'git fetch --tags --depth=1'
+        run: git -C third_party/llvm/src fetch --tags --depth=1
 
       - name: Cache LLVM tag
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9
