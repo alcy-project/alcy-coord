@@ -96,6 +96,7 @@ config("libcxx") {
   lib_dirs = []
 
   inc_dir = getenv("LIBCXX_INCLUDE_DIR")
+  target_inc_dir = getenv("LIBCXX_TARGET_INCLUDE_DIR")
   lib_dir = getenv("LIBCXX_LIB_DIR")
 
   if (inc_dir == "") {
@@ -106,6 +107,13 @@ config("libcxx") {
       "-nostdinc++",
       "-isystem",
       rebase_path(inc_dir, root_build_dir),
+    ]
+  }
+
+  if (target_inc_dir != "") {
+    cflags_cc += [
+      "-isystem",
+      rebase_path(target_inc_dir, root_build_dir),
     ]
   }
 

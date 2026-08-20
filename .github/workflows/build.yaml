@@ -72,6 +72,8 @@ jobs:
           fi
 
           if [[ "${{ matrix.plat }}" == "linux" ]]; then
+            TARGET_INC=$(echo "${{ env.LLVM_PATH }}/include/"*linux*/c++/v1)
+            echo "LIBCXX_TARGET_INCLUDE_DIR=$TARGET_INC" >> $GITHUB_ENV
             LIB_DIR=$(echo "${{ env.LLVM_PATH }}/lib/"*linux*)
             echo "LIBCXX_LIB_DIR=$LIB_DIR" >> $GITHUB_ENV
           else
