@@ -58,7 +58,7 @@ jobs:
 
       - name: Setup build environment (Standard)
         if: "!matrix.nix"
-        uses: pug523/actions/cxx-gn-setup@c23e9f05fc8de1f90cfd94356434724205a75e82
+        uses: pug523/actions/cxx-gn-setup@051f3ec97bed0bf6fefa4fa843041762c7c91362
         with:
           os: ${{ runner.os }}
           llvm_version: ${{ matrix.llvm_version }}
