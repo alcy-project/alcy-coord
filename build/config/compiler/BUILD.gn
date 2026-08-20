@@ -75,10 +75,17 @@ config("linker") {
     #   ldflags += [ "-B" + rebase_path(lld_path, root_build_dir) ]
     # }
   }
-  ldflags += [
-    "-Wl,-rpath=\$ORIGIN",
-    "-Wl,-rpath=\$ORIGIN/lib",
-  ]
+  if (is_mac) {
+    ldflags += [
+      "-Wl,-rpath,@executable_path",
+      "-Wl,-rpath,@executable_path/lib",
+    ]
+  } else {
+    ldflags += [
+      "-Wl,-rpath=\$ORIGIN",
+      "-Wl,-rpath=\$ORIGIN/lib",
+    ]
+  }
 }
 
 config("libcxx") {
@@ -97,8 +104,6 @@ config("libcxx") {
   if (inc_dir != "") {
     cflags_cc += [
       "-nostdinc++",
-
-      # "-stdlib++-isystem",
       "-isystem",
       rebase_path(inc_dir, root_build_dir),
     ]
@@ -108,16 +113,24 @@ config("libcxx") {
     lib_dirs += [ lib_dir ]
   }
 
-  # cflags_cc += [ "-stdlib=libc++" ]
-  ldflags += [
-    "-stdlib=libc++",
-    "-static-libstdc++",
+  ldflags += [ "-stdlib=libc++" ]
 
-    "-Wl,-Bstatic",
-    "-lc++",
-    "-lc++abi",
-    "-Wl,-Bdynamic",
-  ]
+  # Static linking flags and symbol groups are Linux/ELF specific.
+  # macOS/ld64 handles library lookups automatically without -Bstatic/-Bdynamic.
+  if (is_linux || is_chromeos) {
+    ldflags += [
+      "-static-libstdc++",
+      "-Wl,-Bstatic",
+      "-lc++",
+      "-lc++abi",
+      "-Wl,-Bdynamic",
+    ]
+  } else {
+    ldflags += [
+      "-lc++",
+      "-lc++abi",
+    ]
+  }
 }
 
 config("asan") {
@@ -141,5 +154,7 @@ config("release") {
     "-O3",
     "-fomit-frame-pointer",
   ]
-  ldflags = [ "-Wl,--strip-all" ]
+  if (!is_mac) {
+    ldflags = [ "-Wl,--strip-all" ]
+  }
 }

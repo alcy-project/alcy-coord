@@ -157,9 +157,12 @@ template("gcc_clang") {
 
       if (current_os != "aix") {
         soname_flag = "-Wl,-soname=\"$soname\""
+      } else if (current_os == "mac") {
+        soname_flag = "-Wl,-install_name,@rpath/$soname"
       } else {
         soname_flag = ""
       }
+
       main_so_file = sofile_with_symbols
       link_command = "$ld -shared $soname_flag {{ldflags}}${extra_ldflags} -o \"$main_so_file\" @\"$rspfile\" {{rlibs}}"
 
@@ -168,10 +171,9 @@ template("gcc_clang") {
 
       toc_command = "($readelf -g \"$main_so_file\" || $nm -gD \"$main_so_file\") > \"$tocfile\" 2>/dev/null"
 
+      solink_extra_flags = ""
       if (current_os == "aix") {
         solink_extra_flags = "--partitioned-library"
-      } else {
-        solink_extra_flags = ""
       }
 
       if (defined(invoker.strip)) {
@@ -182,7 +184,9 @@ template("gcc_clang") {
         command = "$link_command $solink_extra_flags && $toc_command"
       }
 
-      if (target_cpu == "mipsel" && is_component_build && is_android) {
+      if (current_os == "mac") {
+        rspfile_content = "{{inputs}} {{solibs}} {{libs}}"
+      } else if (target_cpu == "mipsel" && is_component_build && is_android) {
         rspfile_content = "-Wl,--start-group -Wl,--whole-archive {{inputs}} {{solibs}} -Wl,--no-whole-archive {{libs}} -Wl,--end-group"
       } else if (current_os == "aix") {
         rspfile_content = "{{inputs}} {{solibs}} {{libs}}"
@@ -229,12 +233,12 @@ template("gcc_clang") {
       soname_flag = ""
       whole_archive_flag = ""
       no_whole_archive_flag = ""
-      if (current_os != "aix") {
-        # -soname, --whole-archive, --no-whole-archive flags are not available
-        # on aix ld
+      if (current_os != "aix" && current_os != "mac") {
         soname_flag = "-Wl,-soname=\"$soname\""
         whole_archive_flag = "-Wl,--whole-archive"
         no_whole_archive_flag = "-Wl,--no-whole-archive"
+      } else if (current_os == "mac") {
+        soname_flag = "-Wl,-install_name,@rpath/$soname"
       }
 
       main_so_file = sofile_with_symbols
@@ -245,7 +249,12 @@ template("gcc_clang") {
             "${invoker.strip} -o \"$sofile\" \"$sofile_with_symbols\""
         command += " && " + strip_command
       }
-      rspfile_content = "$whole_archive_flag {{inputs}} {{solibs}} $no_whole_archive_flag {{libs}} {{rlibs}}"
+
+      if (current_os == "mac") {
+        rspfile_content = "{{inputs}} {{solibs}} {{libs}} {{rlibs}}"
+      } else {
+        rspfile_content = "$whole_archive_flag {{inputs}} {{solibs}} $no_whole_archive_flag {{libs}} {{rlibs}}"
+      }
 
       description = "SOLINK_MODULE $sofile"
 
@@ -283,16 +292,19 @@ template("gcc_clang") {
 
       start_group_flag = ""
       end_group_flag = ""
-      if (current_os != "aix") {
-        # the "--start-group .. --end-group" feature isn't available on the aix
-        # ld.
+      if (current_os != "aix" && current_os != "mac") {
         start_group_flag = "-Wl,--start-group"
         end_group_flag = "-Wl,--end-group "
       }
 
       main_outfile = outfile_with_symbols
       link_command = "$ld {{ldflags}}${extra_ldflags} -o \"$main_outfile\" "
-      link_command += "$start_group_flag @\"$rspfile\" $end_group_flag {{solibs}} {{libs}} $start_group_flag {{rlibs}} $end_group_flag"
+
+      if (current_os == "mac") {
+        link_command += "@\"$rspfile\" {{solibs}} {{libs}} {{rlibs}}"
+      } else {
+        link_command += "$start_group_flag @\"$rspfile\" $end_group_flag {{solibs}} {{libs}} $start_group_flag {{rlibs}} $end_group_flag"
+      }
 
       command = link_command
 
