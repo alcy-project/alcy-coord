@@ -69,9 +69,6 @@ config("compiler") {
     cflags_c += [ "-std=c${c_version}" ]
     cflags_cc += [ "-std=c++${cxx_version}" ]
   }
-
-  if (is_win) {
-  }
 }
 
 config("default_flags") {
@@ -101,7 +98,7 @@ config("linker") {
   }
   if (is_mac) {
     ldflags += [
-      # "-Wl,-rpath,@executable_path",
+      "-Wl,-rpath,@executable_path",
       "-Wl,-rpath,@executable_path/lib",
     ]
   } else if (!is_win) {
