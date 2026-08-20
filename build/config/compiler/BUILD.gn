@@ -139,6 +139,7 @@ config("libcxx") {
   }
 
   if (lib_dir != "") {
+    cflags_cc += [ "-nostdlib++" ]
     lib_dirs += [ lib_dir ]
   }
 
