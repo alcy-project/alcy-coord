@@ -34,9 +34,9 @@ jobs:
             plat: windows
             arch: x64
             archive: zip
-      exclude:
-        - os: windows-2025-vs2026
-          nix: true
+        exclude:
+          - os: windows-2025-vs2026
+            nix: true
 
     env:
       COLORTERM: 256color
