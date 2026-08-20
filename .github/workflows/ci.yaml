@@ -35,4 +35,5 @@ jobs:
 
   summary:
     needs: [build-debug, build-release]
+    if: always()
     uses: ./.github/workflows/generate-summary.yaml
