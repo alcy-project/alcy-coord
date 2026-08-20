@@ -1,0 +1,9 @@
+import("//build/toolchains/gcc_clang.gni")
+
+clang_toolchain("clang_x64") {
+  toolchain_args = {
+    current_cpu = "x64"
+    current_os = "win"
+    is_clang = true
+  }
+}

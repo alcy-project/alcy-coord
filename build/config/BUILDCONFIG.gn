@@ -57,6 +57,39 @@ if (!is_win && !is_mac && !is_ios) {
 use_mold = defined(use_mold) && use_mold
 
 set_default_toolchain("//build/toolchains/linux:clang_x64")
+if (current_os == "linux") {
+  if (current_cpu == "x64") {
+    set_default_toolchain("//build/toolchains/linux:clang_x64")
+  } else if (current_cpu == "arm64") {
+    set_default_toolchain("//build/toolchains/linux:clang_arm64")
+  } else if (current_cpu == "x86") {
+    set_default_toolchain("//build/toolchains/linux:clang_x86")
+  } else if (current_cpu == "arm") {
+    set_default_toolchain("//build/toolchains/linux:clang_arm")
+  } else if (current_cpu == "riscv64") {
+    set_default_toolchain("//build/toolchains/linux:clang_riscv64")
+  } else {
+    set_default_toolchain("//build/toolchains/linux:clang_x64")
+  }
+} else if (current_os == "mac") {
+  if (current_cpu == "arm64") {
+    set_default_toolchain("//build/toolchains/mac:clang_arm64")
+  } else {
+    set_default_toolchain("//build/toolchains/mac:clang_x64")
+  }
+} else if (is_win) {
+  if (is_msvc) {
+    if (current_cpu == "x86") {
+      set_default_toolchain("//build/toolchains/windows:msvc_x86")
+    } else {
+      set_default_toolchain("//build/toolchains/windows:msvc_x64")
+    }
+  } else {
+    set_default_toolchain("//build/toolchains/windows:clang_x64")
+  }
+} else {
+  set_default_toolchain("//build/toolchains/linux:clang_x64")
+}
 
 default_compiler_configs = [
   "//build/config/compiler:compiler",
