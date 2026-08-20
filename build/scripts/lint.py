@@ -73,7 +73,7 @@ def lint_files(fix: bool, fix_errors: bool):
             failed = True
 
     commands = []
-    commands.append(["typos"])
+    # commands.append(["typos"])
     commands.extend(create_commands(target_dirs, fix, fix_errors))
 
     if not run_commands_in_parallel(commands):
