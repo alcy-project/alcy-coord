@@ -92,13 +92,18 @@ config("libcxx") {
   lib_dir = getenv("LIBCXX_LIB_DIR")
   if (inc_dir != "") {
     cflags_cc += [
-      "-stdlib++-isystem",
+      "-nostdinc++",
+
+      # "-stdlib++-isystem",
+      "-isystem",
       rebase_path(inc_dir, root_build_dir),
     ]
   }
   if (lib_dir != "") {
     lib_dirs += [ lib_dir ]
   }
+
+  # cflags_cc += [ "-stdlib=libc++" ]
   ldflags += [
     "-stdlib=libc++",
     "-static-libstdc++",

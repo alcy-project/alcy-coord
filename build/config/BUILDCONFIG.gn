@@ -62,8 +62,12 @@ default_compiler_configs = [
   "//build/config/compiler:compiler",
   "//build/config/compiler:default_flags",
   "//build/config/compiler:linker",
-  "//build/config/compiler:libcxx",
 ]
+
+if (!is_win) {
+  default_compiler_configs += [ "//build/config/compiler:libcxx" ]
+}
+
 if (is_debug) {
   default_compiler_configs += [
     "//build/config/compiler:debug",
