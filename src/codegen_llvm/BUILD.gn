@@ -10,5 +10,20 @@ source_set("codegen_llvm") {
     "//src/ir",
     "//third_party/llvm",
   ]
+
+  if (is_debug) {
+    defines = [
+      "LLVM_ENABLE_STATS",
+      "LLVM_ENABLE_DUMP",
+      "LLVM_ENABLE_ABI_BREAKING_CHECKS=1",
+      "LLVM_ENABLE_ASSERTIONS=1",
+    ]
+  } else {
+    defines = [
+      "LLVM_ENABLE_ABI_BREAKING_CHECKS=0",
+      "LLVM_ENABLE_ASSERTIONS=0",
+    ]
+  }
+
   configs += [ "//src:alcy_config" ]
 }
