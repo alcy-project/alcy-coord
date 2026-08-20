@@ -90,6 +90,10 @@ config("libcxx") {
 
   inc_dir = getenv("LIBCXX_INCLUDE_DIR")
   lib_dir = getenv("LIBCXX_LIB_DIR")
+
+  if (inc_dir == "") {
+    inc_dir = "/usr/include/c++/v1"
+  }
   if (inc_dir != "") {
     cflags_cc += [
       "-nostdinc++",
@@ -99,6 +103,7 @@ config("libcxx") {
       rebase_path(inc_dir, root_build_dir),
     ]
   }
+
   if (lib_dir != "") {
     lib_dirs += [ lib_dir ]
   }

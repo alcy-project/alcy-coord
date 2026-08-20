@@ -13,7 +13,7 @@ if (is_debug) {
   build_type_lower = "relase"
 }
 
-llvm_root_out_dir = "$root_build_dir/third_party/llvm"
+llvm_root_out_dir = "$root_out_dir/third_party/llvm"
 install_dir = "$llvm_root_out_dir/install/$build_type_lower"
 build_dir = "$llvm_root_out_dir/build/$build_type_lower"
 
