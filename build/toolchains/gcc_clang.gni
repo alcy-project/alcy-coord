@@ -38,7 +38,7 @@ template("gcc_clang") {
     # -fmodule-name is not supported by gcc.
     module_name_flag = ""
     if (is_clang) {
-      module_name_flag = " -fmodule-name=\"{{cc_module_name}}_Private\""
+      module_name_flag = " -fmodule-name=\"{{cc_module_name}}_private\""
     }
 
     # enable_linker_map = defined(invoker.enable_linker_map) &&
