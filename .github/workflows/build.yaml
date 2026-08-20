@@ -80,9 +80,9 @@ jobs:
           elif [[ "${{ matrix.plat }}" == "macosx" ]]; then
             LIB_DIR="${{ env.LLVM_PATH }}/lib"
             LIBCXX_DIR="$LIB_DIR/libc++/v1"
-            mkdir -p "$LIBCXX_DIR"
             shopt -s nullglob
             FILES=("$LIB_DIR"/libc++*)
+            mkdir -p "$LIBCXX_DIR"
             if [ ${#FILES[@]} -gt 0 ]; then
               cp "${FILES[@]}" "$LIBCXX_DIR/"
             fi
