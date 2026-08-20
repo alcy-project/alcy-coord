@@ -68,6 +68,12 @@ jobs:
           path: build/scripts/llvm/.llvm_tag_cache
           key: ${{ runner.os }}-${{ matrix.plat }}-${{ matrix.arch }}-${{ inputs.build_type }}-${{ matrix.nix }}-llvm_tag_cache
 
+      - name: Cache build outputs
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9
+        with:
+          path: out/build
+          key: ${{ runner.os }}-${{ matrix.plat }}-${{ matrix.arch }}-${{ inputs.build_type }}-${{ matrix.nix }}-build_outputs
+
       - name: Build (Nix)
         if: matrix.nix
         shell: bash
