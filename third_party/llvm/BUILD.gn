@@ -5,8 +5,10 @@ action("setup_llvm") {
 
   args = [
     "--type=$llvm_build_type",
-    "--build-dir=" + rebase_path(build_dir, root_build_dir),
-    "--install-dir=" + rebase_path(install_dir, root_build_dir),
+    "--src-dir=" + rebase_path("src/llvm"),
+    "--build-dir=" + rebase_path(build_dir),
+    "--download-dir=" + rebase_path(download_dir),
+    "--install-dir=" + rebase_path(install_dir),
     "--libcxx",
   ]
 
