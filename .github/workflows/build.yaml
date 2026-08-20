@@ -65,6 +65,7 @@ jobs:
 
       - name: Setup environment variables
         if: "!matrix.nix"
+        shell: bash
         run: |
           echo "${{ env.LLVM_PATH }}/bin" >> $GITHUB_PATH
           if [[ "${{ matrix.plat }}" != "windows" ]]; then
