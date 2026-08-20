@@ -167,7 +167,7 @@ config("release") {
     "-O3",
     "-fomit-frame-pointer",
   ]
-  if (!is_mac) {
+  if (!is_mac && !is_win) {
     ldflags = [ "-Wl,--strip-all" ]
   }
 }
