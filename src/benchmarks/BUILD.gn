@@ -1,5 +1,12 @@
 executable("benchmarks") {
   sources = [ "benchmark_main.cc" ]
-  configs += [ "//src:alcy_config" ]
-  deps = [ "//src:libs" ]
+
+  configs += [
+    "//src:alcy_config",
+    "//src:win_sys_libs",
+  ]
+  deps = [
+    "//src:libs",
+    "//third_party/fpag",
+  ]
 }

@@ -7,9 +7,13 @@ executable("tests") {
     "util/test_util.h",
   ]
 
-  configs += [ "//src:alcy_config" ]
+  configs += [
+    "//src:alcy_config",
+    "//src:win_sys_libs",
+  ]
   deps = [
     "//src:libs",
     "//third_party/doctest",
+    "//third_party/fpag",
   ]
 }

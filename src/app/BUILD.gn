@@ -12,11 +12,15 @@ executable("alcy") {
     "parse_args.h",
     "result_code.h",
   ]
-  configs += [ "//src:alcy_config" ]
   defines = [
     "ALCY_PROJECT_NAME=\"$project_name\"",
     "ALCY_PROJECT_VERSION=\"$project_version\"",
     "ALCY_COMMAND_ABOUT=\"$command_about\"",
+  ]
+
+  configs += [
+    "//src:alcy_config",
+    "//src:win_sys_libs",
   ]
   deps = [
     "//src:libs",

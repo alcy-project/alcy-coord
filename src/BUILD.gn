@@ -38,3 +38,13 @@ group("libs") {
     ":modules",
   ]
 }
+
+config("win_sys_libs") {
+  if (is_win) {
+    libs = [
+      "dbghelp",
+      "onecore",
+      "ntdll",
+    ]
+  }
+}
