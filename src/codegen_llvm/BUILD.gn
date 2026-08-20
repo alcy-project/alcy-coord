@@ -15,9 +15,15 @@ source_set("codegen_llvm") {
     defines = [
       "LLVM_ENABLE_STATS",
       "LLVM_ENABLE_DUMP",
-      "LLVM_ENABLE_ABI_BREAKING_CHECKS=1",
       "LLVM_ENABLE_ASSERTIONS=1",
     ]
+
+    # System installed libc++ (release) will be used on macos
+    if (!is_mac) {
+      defines += [ "LLVM_ENABLE_ABI_BREAKING_CHECKS=1" ]
+    } else {
+      defines += [ "LLVM_ENABLE_ABI_BREAKING_CHECKS=0" ]
+    }
   } else {
     defines = [
       "LLVM_ENABLE_ABI_BREAKING_CHECKS=0",

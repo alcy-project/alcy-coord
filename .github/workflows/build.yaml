@@ -78,15 +78,16 @@ jobs:
             LIB_DIR=$(echo "${{ env.LLVM_PATH }}/lib/"*linux*)
             echo "LIBCXX_LIB_DIR=$LIB_DIR" >> $GITHUB_ENV
           elif [[ "${{ matrix.plat }}" == "macosx" ]]; then
-            LIB_DIR="${{ env.LLVM_PATH }}/lib"
-            LIBCXX_DIR="$LIB_DIR/libc++/v1"
-            shopt -s nullglob
-            FILES=("$LIB_DIR"/libc++*)
-            mkdir -p "$LIBCXX_DIR"
-            if [ ${#FILES[@]} -gt 0 ]; then
-              cp "${FILES[@]}" "$LIBCXX_DIR/"
-            fi
-            echo "LIBCXX_LIB_DIR=$LIBCXX_DIR" >> $GITHUB_ENV
+            # LIB_DIR="${{ env.LLVM_PATH }}/lib"
+            # LIBCXX_DIR="$LIB_DIR/libc++/v1"
+            # shopt -s nullglob
+            # FILES=("$LIB_DIR"/libc++*)
+            # mkdir -p "$LIBCXX_DIR"
+            # if [ ${#FILES[@]} -gt 0 ]; then
+            #   cp "${FILES[@]}" "$LIBCXX_DIR/"
+            # fi
+            # echo "LIBCXX_LIB_DIR=$LIBCXX_DIR" >> $GITHUB_ENV
+            echo "LIBCXX_LIB_DIR=${{ env.LLVM_PATH }}/lib" >> $GITHUB_ENV
           else
             echo "LIBCXX_LIB_DIR=${{ env.LLVM_PATH }}/lib" >> $GITHUB_ENV
           fi
