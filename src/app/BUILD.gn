@@ -1,0 +1,25 @@
+executable("alcy") {
+  sources = [
+    "converters.h",
+    "driver_config.cc",
+    "driver_config.h",
+    "driver_main.cc",
+    "driver_main.h",
+    "init_handler.cc",
+    "init_handler.h",
+    "main.cc",
+    "parse_args.cc",
+    "parse_args.h",
+    "result_code.h",
+  ]
+  configs += [ "//src:alcy_config" ]
+  defines = [
+    "ALCY_PROJECT_NAME=\"$project_name\"",
+    "ALCY_PROJECT_VERSION=\"$project_version\"",
+    "ALCY_COMMAND_ABOUT=\"$command_about\"",
+  ]
+  deps = [
+    "//src:libs",
+    "//third_party/fpag",
+  ]
+}

@@ -1,0 +1,37 @@
+import("llvm.gni")
+
+action("setup_llvm") {
+  script = "//build/scripts/llvm/setup_llvm.py"
+
+  args = [
+    "--type=$llvm_build_type",
+    "--build-dir=" + rebase_path(build_dir, root_build_dir),
+    "--install-dir=" + rebase_path(install_dir, root_build_dir),
+    "--libcxx",
+  ]
+
+  if (!download_llvm) {
+    args += [ "--disable-download-llvm" ]
+  }
+  if (!cache_llvm) {
+    args += [ "--disable-cache-llvm" ]
+  }
+  if (!build_llvm) {
+    args += [ "--disable-build-llvm" ]
+  }
+
+  inputs = [ script ]
+
+  outputs = [ "$install_dir/" ]
+}
+
+config("llvm_config") {
+  include_dirs = [ "$install_dir/include" ]
+  lib_dirs = [ "$install_dir/lib" ]
+}
+
+source_set("llvm") {
+  public_configs = [ ":llvm_config" ]
+  libs = llvm_components
+  deps = [ ":setup_llvm" ]
+}

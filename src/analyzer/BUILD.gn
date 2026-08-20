@@ -1,0 +1,4 @@
+source_set("analyzer") {
+  sources = [ "lib.cc" ]
+  configs += [ "//src:alcy_config" ]
+}

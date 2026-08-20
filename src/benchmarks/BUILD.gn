@@ -1,0 +1,5 @@
+executable("benchmarks") {
+  sources = [ "benchmark_main.cc" ]
+  configs += [ "//src:alcy_config" ]
+  deps = [ "//src:libs" ]
+}

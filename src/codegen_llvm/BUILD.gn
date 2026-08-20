@@ -1,0 +1,14 @@
+source_set("codegen_llvm") {
+  sources = [
+    "common.h",
+    "declaration.h",
+    "llvm_ir_emitter.cc",
+    "llvm_ir_emitter.h",
+  ]
+  deps = [ "//src:base_modules" ]
+  public_deps = [
+    "//src/ir",
+    "//third_party/llvm",
+  ]
+  configs += [ "//src:alcy_config" ]
+}

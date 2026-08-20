@@ -6,7 +6,8 @@
 
 #include <memory>
 
-#include "codegen_llvm/common.h"
+#include "codegen_llvm/declaration.h"
+#include "fpag/base/numeric.h"
 #include "fpag/base/vec.h"
 #include "fpag/str/string_interner.h"
 #include "ir/common.h"

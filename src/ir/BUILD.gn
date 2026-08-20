@@ -1,0 +1,24 @@
+source_set("ir") {
+  sources = [
+    "block.h",
+    "block_param.h",
+    "common.h",
+    "external_function.h",
+    "formatter.h",
+    "function.h",
+    "immutable.h",
+    "instruction.h",
+    "instruction_flags.h",
+    "opcode.h",
+    "operand.h",
+    "register.h",
+    "storage.cc",
+    "storage.h",
+    "storage_builder.cc",
+    "storage_builder.h",
+    "type.h",
+    "type_util.h",
+  ]
+  deps = [ "//src:base_modules" ]
+  configs += [ "//src:alcy_config" ]
+}

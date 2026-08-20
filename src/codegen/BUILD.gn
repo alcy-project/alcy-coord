@@ -1,0 +1,5 @@
+source_set("codegen") {
+  sources = [ "x86_emitter.cc" ]
+  deps = [ "//src:base_modules" ]
+  configs += [ "//src:alcy_config" ]
+}

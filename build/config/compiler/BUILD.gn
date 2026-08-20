@@ -1,0 +1,135 @@
+config("compiler") {
+  asmflags = []
+  cflags = []
+  cflags_c = []
+  cflags_cc = []
+  cflags_objc = []
+  cflags_objcc = []
+  rustenv = []
+  rustflags = []
+  ldflags = []
+  defines = []
+
+  c_version = "11"
+  cxx_version = "20"
+
+  cflags += [ "-fdiagnostics-color=always" ]
+
+  if (is_linux || is_chromeos || is_android || current_os == "aix") {
+    if (is_clang) {
+      standard_prefix = "c"
+
+      # Since we build with -std=c* and not -std=gnu*, _GNU_SOURCE will not be
+      # defined by the compiler.  However, lots of code relies on the
+      # non-standard features that _GNU_SOURCE enables, so define it manually.
+      defines += [ "_GNU_SOURCE" ]
+    } else {
+      # Gcc does not support ##__VA_ARGS__ when in standards-conforming mode,
+      # but we use this feature in several places in Chromium.
+      # TODO(thomasanderson): Replace usages of ##__VA_ARGS__ with the
+      # standard-compliant __VA_OPT__ added by C++20, and switch the gcc build
+      # to -std=c*.
+      standard_prefix = "gnu"
+    }
+
+    cflags_c += [ "-std=${standard_prefix}${c_version}" ]
+    cflags_cc += [ "-std=${standard_prefix}++${cxx_version}" ]
+  } else if (is_win) {
+    cflags_c += [ "/std:c${c_version}" ]
+    cflags_cc += [ "/std:c++${cxx_version}" ]
+    defines += [ "NOMINMAX" ]
+    if (!is_clang) {
+      # Required for the __cplusplus macro definition to match the C++ version
+      # on MSVC. clang-cl defines it by default and doesn't need this flag.
+      # See: https://learn.microsoft.com/en-us/cpp/build/reference/zc-cplusplus
+      cflags_cc += [ "/Zc:__cplusplus" ]
+    }
+  } else {
+    cflags_c += [ "-std=c${c_version}" ]
+    cflags_cc += [ "-std=c++${cxx_version}" ]
+  }
+}
+
+config("default_flags") {
+  cflags = [ "-fno-exceptions" ]
+}
+
+config("default_warnings") {
+  cflags = [
+    "-Wall",
+    "-Wextra",
+    "-Wpedantic",
+  ]
+}
+
+config("linker") {
+  ldflags = []
+
+  # if (linker_path != "") {
+  #   inputs = [ linker_path ]
+  #   ldflags += [ "--ld-path=" + rebase_path(linker_path, root_build_dir) ]
+  # } else if (use_lld) {
+  if (use_lld) {
+    ldflags += [ "-fuse-ld=lld" ]
+    # if (lld_path != "") {
+    #   ldflags += [ "-B" + rebase_path(lld_path, root_build_dir) ]
+    # }
+  }
+  ldflags += [
+    "-Wl,-rpath=\$ORIGIN",
+    "-Wl,-rpath=\$ORIGIN/lib",
+  ]
+}
+
+config("libcxx") {
+  cflags = []
+  cflags_cc = []
+  ldflags = []
+  include_dirs = []
+  lib_dirs = []
+
+  inc_dir = getenv("LIBCXX_INCLUDE_DIR")
+  lib_dir = getenv("LIBCXX_LIB_DIR")
+  if (inc_dir != "") {
+    cflags_cc += [
+      "-stdlib++-isystem",
+      rebase_path(inc_dir, root_build_dir),
+    ]
+  }
+  if (lib_dir != "") {
+    lib_dirs += [ lib_dir ]
+  }
+  ldflags += [
+    "-stdlib=libc++",
+    "-static-libstdc++",
+
+    "-Wl,-Bstatic",
+    "-lc++",
+    "-lc++abi",
+    "-Wl,-Bdynamic",
+  ]
+}
+
+config("asan") {
+  cflags = [ "-fsanitize=address" ]
+  ldflags = [ "-fsanitize=address" ]
+}
+
+config("debug") {
+  defines = [ "_DEBUG" ]
+  cflags = [
+    "-g3",
+    "-Og",
+    "-fno-omit-frame-pointer",
+  ]
+}
+
+config("release") {
+  defines = [ "NDEBUG" ]
+  cflags = [
+    "-g0",
+    "-O3",
+    "-fomit-frame-pointer",
+  ]
+  ldflags = [ "-Wl,--strip-all" ]
+}

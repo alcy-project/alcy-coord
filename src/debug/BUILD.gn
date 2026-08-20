@@ -1,0 +1,9 @@
+source_set("debug") {
+  sources = [
+    "check.h",
+    "dcheck.h",
+    "dlog.h",
+    "fatal.h",
+  ]
+  configs += [ "//src:alcy_config" ]
+}

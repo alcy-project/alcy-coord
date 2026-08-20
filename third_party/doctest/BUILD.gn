@@ -1,0 +1,11 @@
+config("doctest_config") {
+  include_dirs = [ "src" ]
+}
+
+source_set("doctest") {
+  configs = []
+  configs = default_third_party_configs
+  sources = [ "src/doctest/doctest.h" ]
+  include_dirs = [ "src" ]
+  public_configs = [ ":doctest_config" ]
+}

@@ -5,12 +5,16 @@
 #include "codegen_llvm/llvm_ir_emitter.h"
 
 #include <memory>
+#include <string_view>
 #include <utility>
 
 #include "build/build_config.h"
+#include "codegen_llvm/common.h"
 #include "debug/dcheck.h"
 #include "debug/dlog.h"
 #include "debug/fatal.h"
+#include "fpag/base/numeric.h"
+#include "fpag/str/string_interner.h"
 #include "ir/block.h"
 #include "ir/common.h"
 #include "ir/external_function.h"
@@ -21,17 +25,9 @@
 #include "ir/storage.h"
 #include "ir/type.h"
 #include "ir/type_util.h"
-#include "llvm/IR/ConstantFolder.h"
-#include "llvm/IR/Function.h"
-#include "llvm/IR/IRBuilder.h"
-#include "llvm/IR/IRBuilderFolder.h"
-#include "llvm/IR/LLVMContext.h"
-#include "llvm/IR/Module.h"
 
 #if BUILD_FLAG(IS_DEBUG)
 #include "ir/formatter.h"  // IWYU pragma: keep
-#include "llvm/IR/Verifier.h"
-#include "llvm/Support/raw_ostream.h"
 #endif
 
 namespace codegen_llvm {

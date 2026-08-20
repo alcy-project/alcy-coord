@@ -1,0 +1,4 @@
+source_set("build") {
+  sources = [ "build_config.h" ]
+  configs += [ "//src:alcy_config" ]
+}

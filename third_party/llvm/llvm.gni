@@ -1,0 +1,56 @@
+declare_args() {
+  cache_llvm = true
+  download_llvm = true
+  build_llvm = true
+}
+
+if (is_debug) {
+  llvm_build_type = "Debug"
+  build_type_lower = "debug"
+} else {
+  # llvm_build_type = "RelWithDebInfo"
+  llvm_build_type = "Release"
+  build_type_lower = "relase"
+}
+
+llvm_root_out_dir = "$root_build_dir/third_party/llvm"
+install_dir = "$llvm_root_out_dir/install/$build_type_lower"
+build_dir = "$llvm_root_out_dir/build/$build_type_lower"
+
+llvm_components = [
+  "LLVMCodeGen",
+  "LLVMTarget",
+  "LLVMScalarOpts",
+  "LLVMInstCombine",
+  "LLVMAggressiveInstCombine",
+  "LLVMObjCARCOpts",
+  "LLVMTransformUtils",
+  "LLVMCodeGenTypes",
+  "LLVMCGData",
+  "LLVMBitWriter",
+  "LLVMAnalysis",
+  "LLVMProfileData",
+  "LLVMSymbolize",
+  "LLVMDebugInfoBTF",
+  "LLVMDebugInfoPDB",
+  "LLVMDebugInfoMSF",
+  "LLVMDebugInfoCodeView",
+  "LLVMDebugInfoGSYM",
+  "LLVMDebugInfoDWARF",
+  "LLVMObject",
+  "LLVMTextAPI",
+  "LLVMMCParser",
+  "LLVMIRReader",
+  "LLVMAsmParser",
+  "LLVMMC",
+  "LLVMDebugInfoDWARFLowLevel",
+  "LLVMBitReader",
+  "LLVMFrontendHLSL",
+  "LLVMCore",
+  "LLVMRemarks",
+  "LLVMBitstreamReader",
+  "LLVMBinaryFormat",
+  "LLVMTargetParser",
+  "LLVMSupport",
+  "LLVMDemangle",
+]

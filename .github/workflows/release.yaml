@@ -28,27 +28,21 @@ jobs:
             plat: linux
             arch: x86_64
             stdlib: libc++
-            static_stdlib: true
             archive: tar.gz
           - os: macos-26
             plat: macosx
             arch: arm64
             stdlib: libc++
-            static_stdlib: false
             archive: tar.gz
           - os: windows-2025-vs2026
             plat: windows
             arch: x64
             stdlib: msvc
-            static_stdlib: false
             archive: zip
     env:
       CC: ${{ matrix.cc }}
       CXX: ${{ matrix.cxx }}
       COLORTERM: 256color
-      XMAKE_COLORTERM: 256color
-      XMAKE_ROOT: y
-      basename: "alcy"
 
     steps:
       - name: Checkout repository
@@ -58,18 +52,15 @@ jobs:
           fetch-depth: 1
 
       - name: Setup build environment
-        uses: pug523/actions/cxx-setup@eacbdb6dc5006a90076a84f7f3547265c90472c9
+        uses: pug523/actions/cxx-gn-setup@b2b06a62ddd6f1004be7c605ca2086079f3f65bc
         with:
           os: ${{ runner.os }}
-          plat: ${{ matrix.plat }}
-          arch: ${{ matrix.arch }}
-          build_type: release
           llvm_version: ${{ matrix.llvm_version }}
 
       - name: Cache LLVM tag
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9
         with:
-          path: scripts/.llvm_tag_cache
+          path: build/scripts/llvm/.llvm_tag_cache
           key: ${{ runner.os }}-${{ matrix.plat }}-${{ matrix.arch }}-${{ matrix.cc }}-${{ matrix.cxx }}-${{ matrix.build_type }}-llvm_tag_cache
 
       - name: Configure
@@ -145,3 +136,4 @@ jobs:
   summary:
     needs: release
     uses: ./.github/workflows/generate-summary.yaml
+

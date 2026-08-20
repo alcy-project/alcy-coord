@@ -1,6 +1,4 @@
 # Build artifacts
-/build/
-/install/
 /out/
 compile_commands.json
 

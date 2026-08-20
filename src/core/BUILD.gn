@@ -1,0 +1,8 @@
+source_set("core") {
+  sources = [
+    "config/config.h",
+    "lib.cc",
+  ]
+  deps = [ "//src:base_modules" ]
+  configs += [ "//src:alcy_config" ]
+}

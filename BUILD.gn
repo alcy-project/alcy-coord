@@ -1,0 +1,19 @@
+group("default") {
+  deps = [ "//src:alcy" ]
+}
+
+group("tests") {
+  deps = [ "//src/tests" ]
+}
+
+group("benchmarks") {
+  deps = [ "//src/benchmarks" ]
+}
+
+group("all") {
+  deps = [
+    ":benchmarks",
+    ":default",
+    ":tests",
+  ]
+}

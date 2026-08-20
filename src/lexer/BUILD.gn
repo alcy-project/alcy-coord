@@ -1,0 +1,5 @@
+source_set("lexer") {
+  sources = [ "lib.cc" ]
+  deps = [ "//src:base_modules" ]
+  configs += [ "//src:alcy_config" ]
+}

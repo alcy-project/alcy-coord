@@ -1,0 +1,52 @@
+config("fpag_config") {
+  include_dirs = [ "src/include" ]
+}
+
+source_set("fpag") {
+  configs = []
+  configs = default_third_party_configs
+  sources = [
+    "src/src/arg/command.cc",
+    "src/src/arg/error_formatter.cc",
+    "src/src/arg/help_formatter.cc",
+    "src/src/arg/parser.cc",
+    "src/src/arg/version_formatter.cc",
+    "src/src/base/numeric.cc",
+    "src/src/container/spsc_queue.cc",
+    "src/src/debug/check.cc",
+    "src/src/debug/dlog.cc",
+    "src/src/debug/exit_handler.cc",
+    "src/src/debug/fatal.cc",
+    "src/src/debug/logger.cc",
+    "src/src/debug/profiler/profile_section.cc",
+    "src/src/debug/profiler/profiler.cc",
+    "src/src/debug/profiler/time_trace_formatter.cc",
+    "src/src/debug/signal_handler.cc",
+    "src/src/debug/stack_trace/capture_stack_addresses.cc",
+    "src/src/debug/stack_trace/demangle.cc",
+    "src/src/debug/stack_trace/formatter.cc",
+    "src/src/debug/stack_trace/module_map.cc",
+    "src/src/debug/stack_trace/stack_trace.cc",
+    "src/src/debug/stack_trace/symbolicator.cc",
+    "src/src/debug/terminate_handler.cc",
+    "src/src/io/file_handle.cc",
+    "src/src/io/memory_mapped_file.cc",
+    "src/src/io/temp_file.cc",
+    "src/src/mem/arena.cc",
+    "src/src/mem/concurrent_arena.cc",
+    "src/src/mem/page_allocator.cc",
+    "src/src/str/string_interner.cc",
+    "src/src/str/string_pool.cc",
+    "src/src/term/console.cc",
+  ]
+  defines = [ "FPAG_USE_LIBUNWIND=0" ]
+  include_dirs = [
+    "src/include",
+    "src/src",
+  ]
+  public_configs = [ ":fpag_config" ]
+  public_deps = [
+    "../fmt",
+    "../xxhash",
+  ]
+}

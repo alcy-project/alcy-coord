@@ -1,0 +1,40 @@
+group("alcy") {
+  deps = [
+    ":libs",
+    "app:alcy",
+  ]
+}
+
+config("alcy_config") {
+  include_dirs = [ "//src" ]
+}
+
+group("base_modules") {
+  public_deps = [
+    "base",
+    "build",
+    "debug",
+    "//third_party/fpag",
+  ]
+}
+
+group("modules") {
+  public_deps = [
+    ":base_modules",
+    "analyzer",
+    "codegen",
+    "codegen_llvm",
+    "core",
+    "ir",
+    "lexer",
+    "parser",
+    "pipeline",
+  ]
+}
+
+group("libs") {
+  public_deps = [
+    ":base_modules",
+    ":modules",
+  ]
+}

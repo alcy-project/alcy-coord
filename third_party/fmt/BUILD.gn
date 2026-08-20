@@ -1,0 +1,19 @@
+config("fmt_config") {
+  include_dirs = [ "src/include" ]
+}
+
+source_set("fmt") {
+  configs = []
+  configs = default_third_party_configs
+  sources = [
+    "src/src/fmt-c.cc",
+
+    # "src/src/fmt.cc",
+    "src/src/format.cc",
+
+    # "src/src/os.cc",
+  ]
+  defines = [ "FMT_OS=0" ]
+  include_dirs = [ "src/include" ]
+  public_configs = [ ":fmt_config" ]
+}

@@ -1,0 +1,42 @@
+template("embed_asset") {
+  assert(defined(invoker.asset_path), "embed_asset() requires 'asset_path'")
+
+  action_target_name = "${target_name}_gen"
+  output_obj = "$target_out_dir/${target_name}.o"
+
+  if (defined(objcopy)) {
+    objcopy_bin = objcopy
+  } else {
+    objcopy_bin = "objcopy"
+  }
+
+  action(action_target_name) {
+    script = "//build/scripts/embed_asset.py"
+
+    asset_file = invoker.asset_path
+
+    inputs = [ asset_file ]
+    outputs = [ output_obj ]
+
+    args = [
+      "--input",
+      rebase_path(asset_file, root_build_dir),
+      "--output",
+      rebase_path(output_obj, root_build_dir),
+      "--target-cpu",
+      current_cpu,
+      "--objcopy",
+      objcopy_bin,
+    ]
+
+    forward_variables_from(invoker, [ "deps" ])
+  }
+
+  source_set(target_name) {
+    deps = [ ":$action_target_name" ]
+
+    libs = [ output_obj ]
+
+    forward_variables_from(invoker, [ "visibility" ])
+  }
+}

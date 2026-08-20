@@ -1,0 +1,13 @@
+# Extension for shared library files (including leading dot).
+if (is_apple) {
+  shlib_extension = ".dylib"
+} else if (is_posix || is_fuchsia) {
+  shlib_extension = ".so"
+} else if (is_win) {
+  shlib_extension = ".dll"
+} else if (is_wasm) {
+  # WebAssembly does not stably support shared libraries. (as of Oct 2019)
+  shlib_extension = ".wasm"
+} else {
+  assert(false, "Platform not supported")
+}

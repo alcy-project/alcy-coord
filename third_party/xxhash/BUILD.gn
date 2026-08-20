@@ -1,0 +1,17 @@
+config("xxhash_config") {
+  include_dirs = [ "src" ]
+}
+
+source_set("xxhash") {
+  sources = [
+    "src/xxh3.h",
+    "src/xxh_x86dispatch.c",
+    "src/xxh_x86dispatch.h",
+    "src/xxhash.c",
+    "src/xxhash.h",
+  ]
+  configs = []
+  configs = default_third_party_configs
+  include_dirs = [ "src" ]
+  public_configs = [ ":xxhash_config" ]
+}
