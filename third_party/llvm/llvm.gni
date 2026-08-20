@@ -10,7 +10,7 @@ if (is_debug) {
 } else {
   # llvm_build_type = "RelWithDebInfo"
   llvm_build_type = "Release"
-  build_type_lower = "relase"
+  build_type_lower = "release"
 }
 
 llvm_root_out_dir = "$root_out_dir/third_party/llvm"

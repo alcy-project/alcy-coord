@@ -1,5 +1,11 @@
 [files]
-extend-exclude = ["third_party/"]
+extend-exclude = [
+  "third_party/doctest/src",
+  "third_party/fmt/src",
+  "third_party/fpag/src",
+  "third_party/llvm/src",
+  "third_party/xxhash/src",
+]
 
 [default.extend-words]
 restat = "restat"
