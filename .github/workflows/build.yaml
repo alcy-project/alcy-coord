@@ -132,15 +132,15 @@ jobs:
           if [ -f LICENSE ]; then cp LICENSE dist/; fi
           if [ -f README.md ]; then cp README.md dist/; fi
 
-          # Copy binaries from build output
+          # Copy binaries from build output, explicitly ignoring third_party
           rsync -av --exclude='third_party' out/build/ dist/ 2>/dev/null || cp -r out/build/* dist/ 2>/dev/null || true
           rm -rf dist/third_party
 
           FILE="${{ env.basename }}-${{ matrix.plat }}-${{ matrix.arch }}-${{ inputs.build_type }}${{ matrix.nix && '-nix' || '' }}.${{ matrix.archive }}"
           if [[ "${{ matrix.plat }}" == "windows" ]]; then
-            cd dist && 7z a "../${FILE}" *
+            cd dist && 7z a "../${FILE}" * && cd ..
           else
-            cd dist && tar -czvf "../${FILE}" *
+            cd dist && tar -czvf "../${FILE}" * && cd ..
           fi
 
           if command -v sha256sum &> /dev/null; then
