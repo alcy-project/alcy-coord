@@ -44,11 +44,19 @@ config("compiler") {
       "NOMINMAX",
     ]
     if (is_clang) {
-      cflags += [
-        "-Xclang",
-        "--dependent-lib=msvcrt",
-      ]
+      cflags += [ "-Xclang" ]
+      if (is_debug) {
+        cflags += [ "--dependent-lib=msvcrtd" ]
+      } else {
+        cflags += [ "--dependent-lib=msvcrt" ]
+      }
     } else {
+      if (is_debug) {
+        cflags += [ "/MDd" ]
+      } else {
+        cflags += [ "/MD" ]
+      }
+
       # Required for the __cplusplus macro definition to match the C++ version
       # on MSVC. clang-cl defines it by default and doesn't need this flag.
       # See: https://learn.microsoft.com/en-us/cpp/build/reference/zc-cplusplus
