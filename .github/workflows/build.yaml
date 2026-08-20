@@ -62,6 +62,17 @@ jobs:
           os: ${{ runner.os }}
           llvm_version: ${{ matrix.llvm_version }}
 
+      - name: Setup environment variables
+        if: runner.os != 'Windows' && !matrix.nix
+        run: |
+          echo "LIBCXX_INCLUDE_DIR=${{ env.LLVM_PATH }}/include/c++/v1" >> $GITHUB_ENV
+          if [[ "${{ matrix.plat }}" == "linux" ]]; then
+            LIB_DIR=$(echo "${{ env.LLVM_PATH }}/lib/"*linux*)
+            echo "LIBCXX_LIB_DIR=$LIB_DIR" >> $GITHUB_ENV
+          else
+            echo "LIBCXX_LIB_DIR=${{ env.LLVM_PATH }}/lib" >> $GITHUB_ENV
+          fi
+
       - name: Cache LLVM tag
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9
         with:
