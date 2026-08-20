@@ -155,10 +155,10 @@ template("gcc_clang") {
       }
       tocfile = sofile + ".TOC"
 
-      if (current_os != "aix") {
-        soname_flag = "-Wl,-soname=\"$soname\""
-      } else if (current_os == "mac") {
+      if (current_os == "mac") {
         soname_flag = "-Wl,-install_name,@rpath/$soname"
+      } else if (current_os != "aix") {
+        soname_flag = "-Wl,-soname=\"$soname\""
       } else {
         soname_flag = ""
       }
@@ -230,13 +230,12 @@ template("gcc_clang") {
         sofile_with_symbols = sofile
       }
 
-      soname_flag = ""
-      if (current_os != "aix" && current_os != "mac") {
-        soname_flag = "-Wl,-soname=\"$soname\""
-        whole_archive_flag = "-Wl,--whole-archive"
-        no_whole_archive_flag = "-Wl,--no-whole-archive"
-      } else if (current_os == "mac") {
+      if (current_os == "mac") {
         soname_flag = "-Wl,-install_name,@rpath/$soname"
+      } else if (current_os != "aix") {
+        soname_flag = "-Wl,-soname=\"$soname\""
+      } else {
+        soname_flag = ""
       }
 
       main_so_file = sofile_with_symbols
@@ -251,6 +250,8 @@ template("gcc_clang") {
       if (current_os == "mac") {
         rspfile_content = "{{inputs}} {{solibs}} {{libs}} {{rlibs}}"
       } else {
+        whole_archive_flag = "-Wl,--whole-archive"
+        no_whole_archive_flag = "-Wl,--no-whole-archive"
         rspfile_content = "$whole_archive_flag {{inputs}} {{solibs}} $no_whole_archive_flag {{libs}} {{rlibs}}"
       }
 
@@ -288,19 +289,14 @@ template("gcc_clang") {
         outfile_with_symbols = outfile
       }
 
-      start_group_flag = ""
-      end_group_flag = ""
-      if (current_os != "aix" && current_os != "mac") {
-        start_group_flag = "-Wl,--start-group"
-        end_group_flag = "-Wl,--end-group "
-      }
-
       main_outfile = outfile_with_symbols
       link_command = "$ld {{ldflags}}${extra_ldflags} -o \"$main_outfile\" "
 
       if (current_os == "mac") {
         link_command += "@\"$rspfile\" {{solibs}} {{libs}} {{rlibs}}"
       } else {
+        start_group_flag = "-Wl,--start-group"
+        end_group_flag = "-Wl,--end-group "
         link_command += "$start_group_flag @\"$rspfile\" $end_group_flag {{solibs}} {{libs}} $start_group_flag {{rlibs}} $end_group_flag"
       }
 
@@ -354,6 +350,11 @@ template("gcc_toolchain") {
 
     readelf = readelf_bin
     nm = nm_bin
+    objcopy = objcopy_bin
+
+    if (!is_debug) {
+      strip = strip_bin
+    }
 
     forward_variables_from(invoker,
                            "*",
@@ -404,6 +405,11 @@ template("clang_toolchain") {
 
     readelf = readelf_bin
     nm = nm_bin
+    objcopy = objcopy_bin
+
+    if (!is_debug) {
+      strip = strip_bin
+    }
 
     forward_variables_from(invoker,
                            "*",
