@@ -24,12 +24,10 @@
             pkgs.gn
             pkgs.ninja
             pkgs.pkg-config
+            llvmPkgs.lld
           ];
 
-          buildInputs = [
-            llvmPkgs.clang
-            llvmPkgs.libcxx
-          ];
+          buildInputs = [];
 
           shellHook = ''
             export LD_LIBRARY_PATH="${pkgs.lib.makeLibraryPath runtimeLibs}:$LD_LIBRARY_PATH"
