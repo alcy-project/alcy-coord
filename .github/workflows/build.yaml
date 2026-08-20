@@ -1,4 +1,4 @@
-name: Reusable Build & Test
+name: Build & Test
 
 on:
   workflow_call:
@@ -13,12 +13,13 @@ on:
 
 jobs:
   build:
-    name: Build (${{ matrix.plat }}-${{ matrix.arch }}-${{ inputs.build_type }})
+    name: Build (${{ matrix.plat }}-${{ matrix.arch }}-${{ inputs.build_type }}${{ matrix.nix && '-nix' || '' }})
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
         llvm_version: [22.1.8]
+        nix: [false, true]
         os: [ubuntu-24.04, macos-26, windows-2025-vs2026]
         include:
           - os: ubuntu-24.04
@@ -33,6 +34,9 @@ jobs:
             plat: windows
             arch: x64
             archive: zip
+      exclude:
+        - os: windows-2025-vs2026
+          nix: true
 
     env:
       COLORTERM: 256color
@@ -44,7 +48,15 @@ jobs:
           submodules: recursive
           fetch-depth: 1
 
-      - name: Setup build environment
+      - name: Setup Nix
+        if: matrix.nix
+        uses: cachix/install-nix-action@13d8dd58da0234aa297dedd986986ccb8e7f3e24
+        with:
+          extra_conf: |
+            experimental-features = nix-command flakes
+
+      - name: Setup build environment (Standard)
+        if: "!matrix.nix"
         uses: pug523/actions/cxx-gn-setup@c23e9f05fc8de1f90cfd94356434724205a75e82
         with:
           os: ${{ runner.os }}
@@ -54,18 +66,32 @@ jobs:
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9
         with:
           path: build/scripts/llvm/.llvm_tag_cache
-          key: ${{ runner.os }}-${{ matrix.plat }}-${{ matrix.arch }}-${{ inputs.build_type }}-llvm_tag_cache
+          key: ${{ runner.os }}-${{ matrix.plat }}-${{ matrix.arch }}-${{ inputs.build_type }}-${{ matrix.nix }}-llvm_tag_cache
 
-      - name: Build
+      - name: Build (Nix)
+        if: matrix.nix
+        shell: bash
+        run: |
+          nix develop .#default --command bash -c "./build/scripts/build.sh default ${{ inputs.build_type }} build"
+
+      - name: Build (Standard)
+        if: "!matrix.nix"
         shell: bash
         run: ./build/scripts/build.sh default ${{ inputs.build_type }} build
 
-      - name: Build tests and run
+      - name: Build tests and run (Nix)
+        if: matrix.nix
+        shell: bash
+        run: |
+          nix develop .#default --command bash -c "./build/scripts/run.sh tests ${{ inputs.build_type }} build"
+
+      - name: Build tests and run (Standard)
+        if: "!matrix.nix"
         shell: bash
         run: ./build/scripts/run.sh tests ${{ inputs.build_type }} build
 
       - name: Lint
-        if: runner.os == 'Linux' && inputs.build_type == 'debug'
+        if: runner.os == 'Linux' && inputs.build_type == 'debug' && !matrix.nix
         shell: bash
         run: uv run ./build/scripts/lint.py
 
@@ -79,7 +105,7 @@ jobs:
           # Copy binaries from build output
           cp -r out/build/* dist/ 2>/dev/null || true
 
-          FILE="${{ env.basename }}-${{ matrix.plat }}-${{ matrix.arch }}-${{ inputs.build_type }}.${{ matrix.archive }}"
+          FILE="${{ env.basename }}-${{ matrix.plat }}-${{ matrix.arch }}-${{ inputs.build_type }}${{ matrix.nix && '-nix' || '' }}.${{ matrix.archive }}"
           if [[ "${{ matrix.plat }}" == "windows" ]]; then
             cd dist && 7z a "../${FILE}" *
           else
@@ -95,8 +121,7 @@ jobs:
       - name: Upload build artifacts
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
         with:
-          name: artifact-${{ matrix.plat }}-${{ matrix.arch }}-${{ inputs.build_type }}
+          name: artifact-${{ matrix.plat }}-${{ matrix.arch }}-${{ inputs.build_type }}${{ matrix.nix && '-nix' || '' }}
           path: |
             *.${{ matrix.archive }}
             *.sha256
-
