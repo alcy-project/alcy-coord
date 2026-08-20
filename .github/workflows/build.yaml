@@ -1,0 +1,102 @@
+name: Reusable Build & Test
+
+on:
+  workflow_call:
+    inputs:
+      build_type:
+        required: true
+        type: string
+      is_release:
+        required: false
+        type: boolean
+        default: false
+
+jobs:
+  build:
+    name: Build (${{ matrix.plat }}-${{ matrix.arch }}-${{ inputs.build_type }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        llvm_version: [22.1.8]
+        os: [ubuntu-24.04, macos-26, windows-2025-vs2026]
+        include:
+          - os: ubuntu-24.04
+            plat: linux
+            arch: x86_64
+            archive: tar.gz
+          - os: macos-26
+            plat: macosx
+            arch: arm64
+            archive: tar.gz
+          - os: windows-2025-vs2026
+            plat: windows
+            arch: x64
+            archive: zip
+
+    env:
+      COLORTERM: 256color
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          submodules: recursive
+          fetch-depth: 1
+
+      - name: Setup build environment
+        uses: pug523/actions/cxx-gn-setup@c23e9f05fc8de1f90cfd94356434724205a75e82
+        with:
+          os: ${{ runner.os }}
+          llvm_version: ${{ matrix.llvm_version }}
+
+      - name: Cache LLVM tag
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9
+        with:
+          path: build/scripts/llvm/.llvm_tag_cache
+          key: ${{ runner.os }}-${{ matrix.plat }}-${{ matrix.arch }}-${{ inputs.build_type }}-llvm_tag_cache
+
+      - name: Build
+        shell: bash
+        run: ./build/scripts/build.sh default ${{ inputs.build_type }} build
+
+      - name: Build tests and run
+        shell: bash
+        run: ./build/scripts/run.sh tests ${{ inputs.build_type }} build
+
+      - name: Lint
+        if: runner.os == 'Linux' && inputs.build_type == 'debug'
+        shell: bash
+        run: uv run ./build/scripts/lint.py
+
+      - name: Package & Generate Checksum
+        shell: bash
+        run: |
+          mkdir -p dist
+          if [ -f LICENSE ]; then cp LICENSE dist/; fi
+          if [ -f README.md ]; then cp README.md dist/; fi
+
+          # Copy binaries from build output
+          cp -r out/build/* dist/ 2>/dev/null || true
+
+          FILE="${{ env.basename }}-${{ matrix.plat }}-${{ matrix.arch }}-${{ inputs.build_type }}.${{ matrix.archive }}"
+          if [[ "${{ matrix.plat }}" == "windows" ]]; then
+            cd dist && 7z a "../${FILE}" *
+          else
+            cd dist && tar -czvf "../${FILE}" *
+          fi
+
+          if command -v sha256sum &> /dev/null; then
+            sha256sum "$FILE" > "${FILE}.sha256"
+          else
+            shasum -a 256 "$FILE" > "${FILE}.sha256"
+          fi
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: artifact-${{ matrix.plat }}-${{ matrix.arch }}-${{ inputs.build_type }}
+          path: |
+            *.${{ matrix.archive }}
+            *.sha256
+

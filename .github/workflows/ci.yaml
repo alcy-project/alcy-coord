@@ -9,7 +9,7 @@ on:
       - benchmarks/**
       - third_party/**
       - scripts/**
-      - .github/workflows/ci.yaml
+      - .github/workflows/**
       - .clang-tidy
       - CPPLINT.cfg
       - uv.lock
@@ -23,97 +23,16 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  build:
-    name: Build and test (${{ matrix.plat }}-${{ matrix.arch }}-${{ matrix.build_type }})
-    runs-on: ${{ matrix.os }}
-    strategy:
-      fail-fast: false
-      matrix:
-        build_type: [debug, release]
-        cc: [clang]
-        cxx: [clang++]
-        llvm_version: [22.1.8]
-        os:
-          - ubuntu-24.04
-          - macos-26
-          - windows-2025-vs2026
-        include:
-          - os: ubuntu-24.04
-            plat: linux
-            arch: x86_64
-            stdlib: libc++
-          - os: macos-26
-            plat: macosx
-            arch: arm64
-            stdlib: libc++
-          - os: windows-2025-vs2026
-            plat: windows
-            arch: x64
-            stdlib: msvc
-    env:
-      CC: ${{ matrix.cc }}
-      CXX: ${{ matrix.cxx }}
-      COLORTERM: 256color
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
-        with:
-          submodules: recursive
-          fetch-depth: 1
+  build-debug:
+    uses: ./.github/workflows/build.yaml
+    with:
+      build_type: debug
 
-      - name: Setup build environment
-        uses: pug523/actions/cxx-gn-setup@c23e9f05fc8de1f90cfd94356434724205a75e82
-        with:
-          os: ${{ runner.os }}
-          llvm_version: ${{ matrix.llvm_version }}
-
-      - name: Cache LLVM tag
-        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9
-        with:
-          path: build/scripts/llvm/.llvm_tag_cache
-          key: ${{ runner.os }}-${{ matrix.plat }}-${{ matrix.arch }}-${{ matrix.cc }}-${{ matrix.cxx }}-${{ matrix.build_type }}-llvm_tag_cache
-
-      - name: Build
-        shell: bash
-        run: |
-          ./build/scripts/build.sh debug build
-
-      - name: Build tests and run
-        shell: bash
-        run: |
-          ./build/scripts/run.sh tests debug build
-
-      - name: Upload build artifacts
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
-        with:
-          name: ${{ matrix.plat }}-${{ matrix.arch }}
-          path: out/build/**
-
-      - name: Lint
-        if: runner.os == 'Linux' && matrix.build_type == 'debug'
-        shell: bash
-        run: |
-          uv run ./build/scripts/lint.py
-
-      - name: Package & Generate Checksum
-        shell: bash
-        run: |
-          FILE="${{ env.basename }}-${{ matrix.plat }}-${{ matrix.arch }}-${{ matrix.build_type }}.tar.gz"
-
-          tar -czvf "$FILE" -C out/build .
-
-          if command -v sha256sum &> /dev/null; then
-            sha256sum "$FILE" > "${FILE}.sha256"
-          else
-            shasum -a 256 "$FILE" > "${FILE}.sha256"
-          fi
-
-      - name: Upload checksum artifact
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
-        with:
-          name: checksum-${{ matrix.plat }}-${{ matrix.arch }}-${{ matrix.build_type }}
-          path: "*.sha256"
+  build-release:
+    uses: ./.github/workflows/build.yaml
+    with:
+      build_type: release
 
   summary:
-    needs: build
+    needs: [build-debug, build-release]
     uses: ./.github/workflows/generate-summary.yaml

@@ -10,130 +10,31 @@ on:
   workflow_dispatch:
 
 jobs:
-  release:
-    name: Release (${{ matrix.plat }}-${{ matrix.arch }})
-    runs-on: ${{ matrix.os }}
-    strategy:
-      fail-fast: false
-      matrix:
-        cc: [clang]
-        cxx: [clang++]
-        llvm_version: [22.1.8]
-        os:
-          - ubuntu-24.04
-          - macos-26
-          - windows-2025-vs2026
-        include:
-          - os: ubuntu-24.04
-            plat: linux
-            arch: x86_64
-            stdlib: libc++
-            archive: tar.gz
-          - os: macos-26
-            plat: macosx
-            arch: arm64
-            stdlib: libc++
-            archive: tar.gz
-          - os: windows-2025-vs2026
-            plat: windows
-            arch: x64
-            stdlib: msvc
-            archive: zip
-    env:
-      CC: ${{ matrix.cc }}
-      CXX: ${{ matrix.cxx }}
-      COLORTERM: 256color
+  build-release:
+    uses: ./.github/workflows/build.yaml
+    with:
+      build_type: release
+      is_release: true
 
+  publish:
+    needs: build-release
+    runs-on: ubuntu-24.04
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
-        with:
-          submodules: recursive
-          fetch-depth: 1
-
-      - name: Setup build environment
-        uses: pug523/actions/cxx-gn-setup@c23e9f05fc8de1f90cfd94356434724205a75e82
-        with:
-          os: ${{ runner.os }}
-          llvm_version: ${{ matrix.llvm_version }}
-
-      - name: Cache LLVM tag
-        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9
-        with:
-          path: build/scripts/llvm/.llvm_tag_cache
-          key: ${{ runner.os }}-${{ matrix.plat }}-${{ matrix.arch }}-${{ matrix.cc }}-${{ matrix.cxx }}-${{ matrix.build_type }}-llvm_tag_cache
-
-      - name: Configure
-        shell: bash
-        run: |
-          xmake config -c -y \
-            -m release \
-            --toolchain=clang \
-            --unitybuild=y \
-            --llvm=y \
-            --cache-llvm=y \
-            --download-llvm=y \
-            --build-llvm=n \
-            --lto=y \
-            --stdlib="${{ matrix.stdlib }}" \
-            --static-stdlib="${{ matrix.static_stdlib }}" \
-            --component_kind="static" \
-            -p "${{ matrix.plat }}" \
-            -a "${{ matrix.arch }}"
-
-      - name: Build
-        shell: bash
-        run: |
-          xmake build -w
-
-      - name: Upload build artifacts
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
-        with:
-          name: ${{ matrix.plat }}-${{ matrix.arch }}
-          path: build/${{ matrix.plat }}/${{ matrix.arch }}/**
-
-      - name: Package artifacts
-        shell: bash
-        run: |
-          mkdir -p dist
-          cp LICENSE README.md dist/
-          cp build/${{ matrix.plat }}/${{ matrix.arch }}/**/${{ env.basename }}* dist/
-
-          FILE="${{ env.basename }}-${{ matrix.plat }}-${{ matrix.arch }}.${{ matrix.archive }}"
-          if [[ "${{ matrix.plat }}" == "windows" ]]; then
-            cd dist && 7z a "../${FILE}" *
-          else
-            cd dist && tar -czvf "../${FILE}" *
-          fi
-
-      - name: Generate Checksum
-        shell: bash
-        run: |
-          FILE="${{ env.basename }}-${{ matrix.plat }}-${{ matrix.arch }}.${{ matrix.archive }}"
-          if command -v sha256sum &> /dev/null; then
-            sha256sum "$FILE" > "${FILE}.sha256"
-          else
-            shasum -a 256 "$FILE" > "${FILE}.sha256"
-          fi
-
-      - name: Upload checksum artifact
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
-        with:
-          name: checksum-${{ matrix.plat }}-${{ matrix.arch }}
-          path: "*.sha256"
+      - name: Download all workflow artifacts
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c
 
       - name: Upload artifacts to release
         uses: softprops/action-gh-release@3d0d9888cb7fd7b750713d6e236d1fcb99157228
         with:
           files: |
-            ${{ env.basename }}-${{ matrix.plat }}-${{ matrix.arch }}.${{ matrix.archive }}
-            ${{ env.basename }}-${{ matrix.plat }}-${{ matrix.arch }}.${{ matrix.archive }}.sha256
+            */*.tar.gz
+            */*.zip
+            */*.sha256
           draft: true
           generate_release_notes: false
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   summary:
-    needs: release
+    needs: publish
     uses: ./.github/workflows/generate-summary.yaml
-
