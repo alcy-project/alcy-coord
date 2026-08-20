@@ -63,9 +63,13 @@ jobs:
           llvm_version: ${{ matrix.llvm_version }}
 
       - name: Setup environment variables
-        if: runner.os != 'Windows' && !matrix.nix
+        if: "!matrix.nix"
         run: |
-          echo "LIBCXX_INCLUDE_DIR=${{ env.LLVM_PATH }}/include/c++/v1" >> $GITHUB_ENV
+          echo "${{ env.LLVM_PATH }}/bin" >> $GITHUB_PATH
+          if [[ "${{ matrix.plat }}" != "windows" ]]; then
+            echo "LIBCXX_INCLUDE_DIR=${{ env.LLVM_PATH }}/include/c++/v1" >> $GITHUB_ENV
+          fi
+
           if [[ "${{ matrix.plat }}" == "linux" ]]; then
             LIB_DIR=$(echo "${{ env.LLVM_PATH }}/lib/"*linux*)
             echo "LIBCXX_LIB_DIR=$LIB_DIR" >> $GITHUB_ENV
