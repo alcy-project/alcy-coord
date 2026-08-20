@@ -231,8 +231,6 @@ template("gcc_clang") {
       }
 
       soname_flag = ""
-      whole_archive_flag = ""
-      no_whole_archive_flag = ""
       if (current_os != "aix" && current_os != "mac") {
         soname_flag = "-Wl,-soname=\"$soname\""
         whole_archive_flag = "-Wl,--whole-archive"
