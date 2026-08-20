@@ -184,12 +184,10 @@ template("gcc_clang") {
         command = "$link_command $solink_extra_flags && $toc_command"
       }
 
-      if (current_os == "mac") {
+      if (current_os == "mac" || current_os == "win" || current_os == "aix") {
         rspfile_content = "{{inputs}} {{solibs}} {{libs}}"
       } else if (target_cpu == "mipsel" && is_component_build && is_android) {
         rspfile_content = "-Wl,--start-group -Wl,--whole-archive {{inputs}} {{solibs}} -Wl,--no-whole-archive {{libs}} -Wl,--end-group"
-      } else if (current_os == "aix") {
-        rspfile_content = "{{inputs}} {{solibs}} {{libs}}"
       } else {
         rspfile_content = "-Wl,--whole-archive {{inputs}} {{solibs}} -Wl,--no-whole-archive {{libs}}"
       }
@@ -232,7 +230,7 @@ template("gcc_clang") {
 
       if (current_os == "mac") {
         soname_flag = "-Wl,-install_name,@rpath/$soname"
-      } else if (current_os != "aix") {
+      } else if (current_os != "aix" && current_os != "win") {
         soname_flag = "-Wl,-soname=\"$soname\""
       } else {
         soname_flag = ""
@@ -247,7 +245,7 @@ template("gcc_clang") {
         command += " && " + strip_command
       }
 
-      if (current_os == "mac") {
+      if (current_os == "mac" || current_os == "win") {
         rspfile_content = "{{inputs}} {{solibs}} {{libs}} {{rlibs}}"
       } else {
         whole_archive_flag = "-Wl,--whole-archive"

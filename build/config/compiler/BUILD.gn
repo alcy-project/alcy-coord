@@ -34,11 +34,21 @@ config("compiler") {
 
     cflags_c += [ "-std=${standard_prefix}${c_version}" ]
     cflags_cc += [ "-std=${standard_prefix}++${cxx_version}" ]
-  } else if (is_msvc) {
+  } else if (is_win) {
     cflags_c += [ "/std:c${c_version}" ]
     cflags_cc += [ "/std:c++${cxx_version}" ]
-    defines += [ "NOMINMAX" ]
-    if (!is_clang) {
+
+    defines += [
+      "_MT",
+      "_DLL",
+      "NOMINMAX",
+    ]
+    if (is_clang) {
+      cflags += [
+        "-Xclang",
+        "--dependent-lib=msvcrt",
+      ]
+    } else {
       # Required for the __cplusplus macro definition to match the C++ version
       # on MSVC. clang-cl defines it by default and doesn't need this flag.
       # See: https://learn.microsoft.com/en-us/cpp/build/reference/zc-cplusplus
@@ -47,6 +57,9 @@ config("compiler") {
   } else {
     cflags_c += [ "-std=c${c_version}" ]
     cflags_cc += [ "-std=c++${cxx_version}" ]
+  }
+
+  if (is_win) {
   }
 }
 
@@ -77,7 +90,7 @@ config("linker") {
   }
   if (is_mac) {
     ldflags += [
-      "-Wl,-rpath,@executable_path",
+      # "-Wl,-rpath,@executable_path",
       "-Wl,-rpath,@executable_path/lib",
     ]
   } else if (!is_win) {
