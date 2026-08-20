@@ -150,9 +150,14 @@ config("debug") {
   defines = [ "_DEBUG" ]
   cflags = [
     "-g3",
-    "-Og",
     "-fno-omit-frame-pointer",
   ]
+
+  if (is_win) {
+    cflags += [ "-O0" ]
+  } else {
+    cflags += [ "-Og" ]
+  }
 }
 
 config("release") {
