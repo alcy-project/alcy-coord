@@ -102,10 +102,11 @@ if (!is_win) {
 }
 
 if (is_debug) {
-  default_compiler_configs += [
-    "//build/config/compiler:debug",
-    "//build/config/compiler:asan",
-  ]
+  default_compiler_configs += [ "//build/config/compiler:debug" ]
+
+  if (!is_win) {
+    default_compiler_configs += [ "//build/config/compiler:asan" ]
+  }
 } else {
   default_compiler_configs += [ "//build/config/compiler:release" ]
 }
