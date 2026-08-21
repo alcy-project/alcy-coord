@@ -24,6 +24,7 @@
             pkgs.gn
             pkgs.ninja
             pkgs.pkg-config
+            pkgs.uv
             llvmPkgs.lld
           ];
 
