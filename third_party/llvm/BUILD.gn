@@ -22,7 +22,10 @@ action("setup_llvm") {
     args += [ "--disable-build-llvm" ]
   }
 
-  inputs = [ script ]
+  inputs = [
+    script,
+    "src/.alcy/configure.sh",
+  ]
 
   outputs = [ "$install_dir/" ]
 }
