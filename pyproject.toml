@@ -3,7 +3,7 @@ name = "alcy"
 version = "0.1.0"
 description = ""
 authors = [{ name = "pugur", email = "pugurmc@gmail.com" }]
-requires-python = ">=3.13"
+requires-python = ">=3.14"
 dependencies = ["cpplint>=2.0.2,<2.1.0"]
 
 [tool.uv]
