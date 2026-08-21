@@ -37,27 +37,30 @@ config("compiler") {
   } else if (is_win) {
     defines += [
       "_MT",
-      "_DLL",
+
+      # "_DLL",
       "NOMINMAX",
     ]
+
     if (is_clang) {
       cflags_c += [ "-std=c${c_version}" ]
       cflags_cc += [ "-std=c++${cxx_version}" ]
 
-      cflags += [ "-Xclang" ]
       if (is_debug) {
-        cflags += [ "--dependent-lib=msvcrtd" ]
+        cflags += [ "-fms-runtime-lib=static_debug" ]
+        ldflags += [ "-fms-runtime-lib=static_debug" ]
       } else {
-        cflags += [ "--dependent-lib=msvcrt" ]
+        cflags += [ "-fms-runtime-lib=static" ]
+        ldflags += [ "-fms-runtime-lib=static" ]
       }
     } else {
       cflags_c += [ "/std:c${c_version}" ]
       cflags_cc += [ "/std:c++${cxx_version}" ]
 
       if (is_debug) {
-        cflags += [ "/MDd" ]
+        cflags += [ "/MTd" ]
       } else {
-        cflags += [ "/MD" ]
+        cflags += [ "/MT" ]
       }
 
       # Required for the __cplusplus macro definition to match the C++ version
