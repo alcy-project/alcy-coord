@@ -21,7 +21,7 @@ else
   is_debug="false"
 fi
 
-gn gen $build_dir --args="is_debug=$is_debug"
+gn gen $build_dir --args="is_debug=$is_debug use_lld=true"
 gn check $build_dir "//src/*"
 ninja -C $build_dir -t compdb > compile_commands.json
 ninja -C $build_dir $target

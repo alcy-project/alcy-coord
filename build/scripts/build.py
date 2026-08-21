@@ -21,7 +21,7 @@ def build(
     try:
         # gn gen
         subprocess.run(
-            ["gn", "gen", str(build_dir), f"--args=is_debug={is_debug}"],
+            ["gn", "gen", str(build_dir), f"--args=is_debug={is_debug} use_lld=true"],
             check=True,
             cwd=project_root_dir,
         )
