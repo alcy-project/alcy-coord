@@ -1,12 +1,16 @@
-#!/bin/bash
+#!/usr/bin/env bash
+
+# Copyright 2026 pugur
+# This source code is licensed under the Apache License, Version 2.0 with LLVM
+# Exceptions which can be found in the LICENSE file.
 
 set -e
 
-script_dir="$(cd $(dirname $0) && pwd)"
 target=${1:-"default"}
 mode=${2:-"debug"}
 build_subdir=${3:-"build"}
 
+script_dir="$(cd $(dirname $0) && pwd)"
 source "$script_dir/env.sh"
 
 build_dir="$out_dir/$build_subdir"

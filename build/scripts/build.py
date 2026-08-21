@@ -1,0 +1,82 @@
+#!/usr/bin/env python3
+
+# Copyright 2026 pugur
+# This source code is licensed under the Apache License, Version 2.0 with LLVM
+# Exceptions which can be found in the LICENSE file.
+
+import argparse
+import subprocess
+import sys
+from utils.paths import project_root_dir
+
+
+def build(
+    target: str = "default", mode: str = "debug", build_subdir: str = "build"
+) -> int:
+    out_dir = project_root_dir / "out"
+    build_dir = out_dir / build_subdir
+
+    is_debug = "true" if mode == "debug" else "false"
+
+    try:
+        # gn gen
+        subprocess.run(
+            ["gn", "gen", str(build_dir), f"--args=is_debug={is_debug}"],
+            check=True,
+            cwd=project_root_dir,
+        )
+
+        # gn check
+        subprocess.run(
+            ["gn", "check", str(build_dir), "//src/*"],
+            check=True,
+            cwd=project_root_dir,
+        )
+
+        # ninja compdb
+        compdb_result = subprocess.run(
+            ["ninja", "-C", str(build_dir), "-t", "compdb"],
+            capture_output=True,
+            text=True,
+            check=True,
+            cwd=project_root_dir,
+        )
+        (project_root_dir / "compile_commands.json").write_text(compdb_result.stdout)
+
+        # ninja target
+        subprocess.run(
+            ["ninja", "-C", str(build_dir), target],
+            check=True,
+            cwd=project_root_dir,
+        )
+        return 0
+    except subprocess.CalledProcessError as e:
+        print(f"Build failed: {e}", file=sys.stderr)
+        return e.returncode
+
+
+def main():
+    parser = argparse.ArgumentParser(description="Build project targets.")
+    parser.add_argument(
+        "--target",
+        default="default",
+        help="Build target (default: default)",
+    )
+    parser.add_argument(
+        "--mode",
+        default="debug",
+        choices=["debug", "release"],
+        help="Build mode (default: debug)",
+    )
+    parser.add_argument(
+        "--build-subdir",
+        default="build",
+        help="Subdirectory inside out/ (default: build)",
+    )
+    args = parser.parse_args()
+
+    sys.exit(build(args.target, args.mode, args.build_subdir))
+
+
+if __name__ == "__main__":
+    main()
