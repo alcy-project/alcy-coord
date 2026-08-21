@@ -7,3 +7,4 @@
 source_extensions = {".c", ".cc", ".h"}
 compile_unit_extensions = {".c", ".cc"}
 gn_extensions = {".gn", ".gni"}
+script_extensions = {".sh", ".py"}

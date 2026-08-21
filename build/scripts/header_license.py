@@ -12,7 +12,10 @@ from utils.paths import (
     project_source_dirs,
     scripts_dir,
 )
-from utils.source import source_extensions
+from utils.source import (
+    source_extensions,
+    script_extensions,
+)
 
 holder = "pugur"
 license_text_c = f"""// Copyright {datetime.now().year} {holder}
@@ -27,7 +30,6 @@ license_text_py = f"""# Copyright {datetime.now().year} {holder}
 
 license_pattern_c = re.compile(r"//\s*Copyright\s+\d{4}\s+" + re.escape(holder))
 license_pattern_py = re.compile(r"#\s*Copyright\s+\d{4}\s+" + re.escape(holder))
-python_extension = ".py"
 
 
 def apply_license(
@@ -69,7 +71,7 @@ def apply_to_files(dry_run: bool):
 
     for file_path in scripts_dir.rglob("*"):
         if file_path.is_file():
-            if file_path.suffix == python_extension:
+            if file_path.suffix in script_extensions:
                 apply_license(file_path, license_pattern_py, license_text_py, dry_run)
                 applied = True
 
