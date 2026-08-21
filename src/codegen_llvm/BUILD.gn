@@ -1,5 +1,6 @@
 source_set("codegen_llvm") {
   sources = [
+    "common.cc",
     "common.h",
     "declaration.h",
     "llvm_ir_emitter.cc",
