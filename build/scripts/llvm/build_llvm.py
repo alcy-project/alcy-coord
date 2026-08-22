@@ -42,7 +42,7 @@ def build_llvm(
         cxx_compiler or "",
     ]
 
-    # 2. Prepare the Build Command
+    # Prepare the Build Command
     build_cmd = ["cmake", "--build", llvm_build_dir, "--target", "install", "-j"]
 
     try:

@@ -24,6 +24,18 @@ def main():
         help="Build mode (default: debug)",
     )
     parser.add_argument(
+        "--clang",
+        default="true",
+        choices=["true", "false"],
+        help="Use clang as compiler (default: true)",
+    )
+    parser.add_argument(
+        "--lld",
+        default="true",
+        choices=["true", "false"],
+        help="Use lld as linker (default: true)",
+    )
+    parser.add_argument(
         "--build-subdir",
         default="build",
         help="Subdirectory inside out/ (default: build)",
@@ -35,7 +47,7 @@ def main():
     )
     args = parser.parse_args()
 
-    ret = build(args.target, args.mode, args.build_subdir)
+    ret = build(args.target, args.mode, args.clang, args.lld, args.build_subdir)
     if ret != 0:
         sys.exit(ret)
 

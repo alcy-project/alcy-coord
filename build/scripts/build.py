@@ -11,7 +11,11 @@ from utils.paths import project_root_dir
 
 
 def build(
-    target: str = "default", mode: str = "debug", build_subdir: str = "build"
+    target: str = "default",
+    mode: str = "debug",
+    is_clang: str = "true",
+    use_lld: str = "true",
+    build_subdir: str = "build",
 ) -> int:
     out_dir = project_root_dir / "out"
     build_dir = out_dir / build_subdir
@@ -21,7 +25,12 @@ def build(
     try:
         # gn gen
         subprocess.run(
-            ["gn", "gen", str(build_dir), f"--args=is_debug={is_debug} use_lld=true"],
+            [
+                "gn",
+                "gen",
+                str(build_dir),
+                f"--args=is_debug={is_debug} is_clang={is_clang} use_lld={use_lld}",
+            ],
             check=True,
             cwd=project_root_dir,
         )
@@ -69,13 +78,25 @@ def main():
         help="Build mode (default: debug)",
     )
     parser.add_argument(
+        "--clang",
+        default="true",
+        choices=["true", "false"],
+        help="Use clang as compiler (default: true)",
+    )
+    parser.add_argument(
+        "--lld",
+        default="true",
+        choices=["true", "false"],
+        help="Use lld as linker (default: true)",
+    )
+    parser.add_argument(
         "--build-subdir",
         default="build",
         help="Subdirectory inside out/ (default: build)",
     )
     args = parser.parse_args()
 
-    sys.exit(build(args.target, args.mode, args.build_subdir))
+    sys.exit(build(args.target, args.mode, args.clang, args.lld, args.build_subdir))
 
 
 if __name__ == "__main__":

@@ -7,9 +7,11 @@
 set -e
 
 target=${1:-"default"}
-mode=${2:-"debug"}
-build_subdir=${3:-"build"}
-run_args="${@:4}"
+build_subdir=${2:-"build"}
+mode=${3:-"debug"}
+clang=${4:-"true"}
+lld=${5:-"true"}
+run_args="${@:6}"
 
 script_dir="$(cd $(dirname $0) && pwd)"
 source "$script_dir/env.sh"

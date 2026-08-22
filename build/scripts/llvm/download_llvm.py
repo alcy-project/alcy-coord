@@ -9,13 +9,15 @@ import urllib.request
 import urllib.error
 import tarfile
 import zipfile
+import zstandard
 
 
 def archive_ext(triple):
     """Determine the archive extension based on the target triple."""
     if "windows" in triple:
         return "zip"
-    return "tar.gz"
+    return "tar.zst"
+    # return "tar.gz"
 
 
 def archive_file_name(build_type, triple):
@@ -39,6 +41,16 @@ def check_release_exists(url):
                 return True
     except urllib.error.URLError:
         return False
+
+
+def extract_tar_zst(archive_path, install_dir):
+    """Decompress and extract .tar.zst files."""
+    with open(archive_path, "rb") as fh:
+        dctx = zstandard.ZstdDecompressor()
+        with dctx.stream_reader(fh) as reader:
+            with tarfile.open(fileobj=reader, mode="r|*") as tar_ref:
+                tar_ref.extractall(install_dir)
+    return
 
 
 def download_and_extract(tag, triple, build_type, download_dir, install_dir):
@@ -68,6 +80,8 @@ def download_and_extract(tag, triple, build_type, download_dir, install_dir):
         if archive_path.endswith(".zip"):
             with zipfile.ZipFile(archive_path, "r") as zip_ref:
                 zip_ref.extractall(install_dir)
+        elif archive_path.endswith(".tar.zst"):
+            extract_tar_zst(archive_path, install_dir)
         elif archive_path.endswith(".tar.gz"):
             with tarfile.open(archive_path, "r:gz") as tar_ref:
                 tar_ref.extractall(install_dir)
