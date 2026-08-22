@@ -27,6 +27,8 @@ action("setup_llvm") {
   inputs = [
     script,
     "src/.alcy/configure.sh",
+    "src/.github/workflows/alcy-release.yaml",
+    "src/llvm/CMakeLists.txt",
   ]
 
   outputs = [ "$install_dir/" ]
