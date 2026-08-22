@@ -34,7 +34,10 @@ is_win = current_os == "win" || current_os == "winuwp"
 is_apple = is_ios || is_mac || is_watchos
 is_posix = !is_win && !is_fuchsia
 
-is_clang = true
+declare_args() {
+  is_clang = true
+}
+
 is_msvc = is_win && !is_clang
 
 declare_args() {
@@ -56,20 +59,43 @@ if (!is_win && !is_mac && !is_ios) {
 }
 use_mold = defined(use_mold) && use_mold
 
-set_default_toolchain("//build/toolchains/linux:clang_x64")
 if (current_os == "linux") {
   if (current_cpu == "x64") {
-    set_default_toolchain("//build/toolchains/linux:clang_x64")
+    if (is_clang) {
+      set_default_toolchain("//build/toolchains/linux:clang_x64")
+    } else {
+      set_default_toolchain("//build/toolchains/linux:x64")
+    }
   } else if (current_cpu == "arm64") {
-    set_default_toolchain("//build/toolchains/linux:clang_arm64")
+    if (is_clang) {
+      set_default_toolchain("//build/toolchains/linux:clang_arm64")
+    } else {
+      set_default_toolchain("//build/toolchains/linux:arm64")
+    }
   } else if (current_cpu == "x86") {
-    set_default_toolchain("//build/toolchains/linux:clang_x86")
+    if (is_clang) {
+      set_default_toolchain("//build/toolchains/linux:clang_x86")
+    } else {
+      set_default_toolchain("//build/toolchains/linux:x86")
+    }
   } else if (current_cpu == "arm") {
-    set_default_toolchain("//build/toolchains/linux:clang_arm")
+    if (is_clang) {
+      set_default_toolchain("//build/toolchains/linux:clang_arm")
+    } else {
+      set_default_toolchain("//build/toolchains/linux:arm")
+    }
   } else if (current_cpu == "riscv64") {
-    set_default_toolchain("//build/toolchains/linux:clang_riscv64")
+    if (is_clang) {
+      set_default_toolchain("//build/toolchains/linux:clang_riscv64")
+    } else {
+      set_default_toolchain("//build/toolchains/linux:riscv64")
+    }
   } else {
-    set_default_toolchain("//build/toolchains/linux:clang_x64")
+    if (is_clang) {
+      set_default_toolchain("//build/toolchains/linux:clang_x64")
+    } else {
+      set_default_toolchain("//build/toolchains/linux:x64")
+    }
   }
 } else if (current_os == "mac") {
   if (current_cpu == "arm64") {
@@ -78,14 +104,14 @@ if (current_os == "linux") {
     set_default_toolchain("//build/toolchains/mac:clang_x64")
   }
 } else if (is_win) {
-  if (is_msvc) {
+  if (is_clang) {
+    set_default_toolchain("//build/toolchains/windows:clang_x64")
+  } else {
     if (current_cpu == "x86") {
       set_default_toolchain("//build/toolchains/windows:msvc_x86")
     } else {
       set_default_toolchain("//build/toolchains/windows:msvc_x64")
     }
-  } else {
-    set_default_toolchain("//build/toolchains/windows:clang_x64")
   }
 } else {
   set_default_toolchain("//build/toolchains/linux:clang_x64")
