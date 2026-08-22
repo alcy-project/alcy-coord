@@ -2,6 +2,7 @@ import("llvm.gni")
 
 action("setup_llvm") {
   script = "//build/scripts/llvm/setup_llvm.py"
+  tag_cache_file = "$install_dir/.llvm_tag_cache"
 
   args = [
     "--type=$llvm_build_type",
@@ -9,6 +10,7 @@ action("setup_llvm") {
     "--build-dir=" + rebase_path(build_dir),
     "--download-dir=" + rebase_path(download_dir),
     "--install-dir=" + rebase_path(install_dir),
+    "--tag-cache-file=" + rebase_path(tag_cache_file),
     "--libcxx",
   ]
 

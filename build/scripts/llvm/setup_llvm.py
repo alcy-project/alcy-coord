@@ -24,7 +24,7 @@ default_llvm_build_dir = os.path.join(default_llvm_alcy_dir, "build")
 default_llvm_install_dir = os.path.join(default_llvm_alcy_dir, "install")
 default_llvm_download_dir = os.path.join(default_llvm_build_dir, "download")
 
-tag_cache_file = os.path.join(script_dir, ".llvm_tag_cache")
+default_tag_cache_file = os.path.join(script_dir, ".llvm_tag_cache")
 
 default_compiler_launcher = "ccache"
 default_cc = "clang"
@@ -83,9 +83,9 @@ def current_tag(src_dir):
     return result.stdout.decode().strip()
 
 
-def write_tag_cache(tag):
+def write_tag_cache(tag, cache_file):
     try:
-        with open(tag_cache_file, "w") as f:
+        with open(cache_file, "w") as f:
             f.write(tag.strip())
     except Exception as e:
         print(f"Warning: Failed to update tag cache file: {e}")
@@ -109,6 +109,11 @@ def main():
         "--configure-script",
         default=default_llvm_configure_script,
         help="Path to the configure.sh script",
+    )
+    parser.add_argument(
+        "--tag-cache-file",
+        default=default_tag_cache_file,
+        help="Path to the tag cache file",
     )
 
     # Build Options
@@ -213,9 +218,9 @@ def main():
 
     # Check tag cache file
     cached_tag = None
-    if os.path.isfile(tag_cache_file):
+    if os.path.isfile(args.tag_cache_file):
         try:
-            with open(tag_cache_file, "r") as f:
+            with open(args.tag_cache_file, "r") as f:
                 cached_tag = f.read().strip()
         except Exception:
             cached_tag = None
@@ -253,7 +258,7 @@ def main():
             install_dir=args.install_dir,
         )
         if res == 0:
-            write_tag_cache(args.tag)
+            write_tag_cache(args.tag, args.tag_cache_file)
         return res
     elif enable_build_llvm:
         res = build_llvm.build_llvm(
@@ -271,7 +276,7 @@ def main():
             libcxx=("ON" if args.libcxx else "OFF"),
         )
         if res == 0:
-            write_tag_cache(args.tag)
+            write_tag_cache(args.tag, args.tag_cache_file)
         return res
     else:
         print("Failed to setup LLVM")
