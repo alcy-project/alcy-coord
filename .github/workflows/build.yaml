@@ -97,7 +97,7 @@ jobs:
         run: |
           LLVM_COMMIT=$(git -C third_party/llvm/src rev-parse HEAD)
           git -C third_party/llvm/src fetch origin --depth=1 "$LLVM_COMMIT"
-          git -C third_party/llvm/src describe --tags
+          git -C third_party/llvm/src describe --tags --always
 
       - name: Cache LLVM tag
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9
