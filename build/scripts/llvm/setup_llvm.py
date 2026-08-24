@@ -194,16 +194,19 @@ def main():
 
     if args.tag is None or args.tag == "":
         args.tag = current_tag(src_dir=args.src_dir)
+        if args.tag is None or args.tag == "":
+            print("Failed to fetch LLVM tag")
+            return -1
 
     if not os.path.isdir(script_dir):
         print(f"Script directory not found: {script_dir}")
-        return -1
+        return -2
     if not os.path.isdir(args.src_dir):
         print(f"Source directory not found: {args.src_dir}")
-        return -2
+        return -3
     if not os.path.isfile(args.configure_script):
         print(f"Configure script not found: {args.configure_script}")
-        return -3
+        return -4
 
     include_dir = os.path.join(args.install_dir, "include")
     lib_dir = os.path.join(args.install_dir, "lib")
@@ -280,7 +283,7 @@ def main():
         return res
     else:
         print("Failed to setup LLVM")
-        return -4
+        return -5
 
 
 if __name__ == "__main__":

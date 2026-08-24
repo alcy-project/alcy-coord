@@ -29,7 +29,7 @@ def build(
                 "gn",
                 "gen",
                 str(build_dir),
-                f"--args=is_debug={is_debug} is_clang={is_clang} use_lld={use_lld}",
+                f"--args=is_debug={is_debug} is_clang={is_clang} use_lld={use_lld} build_llvm=false",
             ],
             check=True,
             cwd=project_root_dir,
