@@ -73,12 +73,16 @@ def host_triple():
 
 
 def current_tag(src_dir):
+    env_tag = os.getenv("LLVM_TAG")
+    if env_tag:
+        return env_tag.strip()
+
     if not os.path.isdir(src_dir):
         return ""
     import subprocess
 
     result = subprocess.run(
-        ["git", "describe", "--tags"], cwd=src_dir, capture_output=True
+        ["git", "describe", "--tags", "--always"], cwd=src_dir, capture_output=True
     )
     return result.stdout.decode().strip()
 
