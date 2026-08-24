@@ -27,7 +27,7 @@ jobs:
             arch: x86_64
             archive: tar.gz
           - os: macos-26
-            plat: macosx
+            plat: macos
             arch: arm64
             archive: tar.gz
           - os: windows-2025-vs2026
@@ -77,7 +77,7 @@ jobs:
             echo "LIBCXX_TARGET_INCLUDE_DIR=$TARGET_INC" >> $GITHUB_ENV
             LIB_DIR=$(echo "${{ env.LLVM_PATH }}/lib/"*linux*)
             echo "LIBCXX_LIB_DIR=$LIB_DIR" >> $GITHUB_ENV
-          elif [[ "${{ matrix.plat }}" == "macosx" ]]; then
+          elif [[ "${{ matrix.plat }}" == "macos" ]]; then
             LIB_DIR="${{ env.LLVM_PATH }}/lib"
             LIBCXX_DIR="$LIB_DIR/libc++/v1"
             shopt -s nullglob
@@ -94,7 +94,9 @@ jobs:
 
       - name: Fetch LLVM tag
         shell: bash
-        run: git -C third_party/llvm/src fetch --tags
+        run: |
+          LLVM_COMMIT=$(git -C third_party/llvm/src rev-parse HEAD)
+          git -C third_party/llvm/src fetch origin --depth=1 "$LLVM_COMMIT"
 
       - name: Cache LLVM tag
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9
