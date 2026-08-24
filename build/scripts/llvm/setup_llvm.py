@@ -75,22 +75,34 @@ def host_triple():
 def current_tag(src_dir):
     env_tag = os.getenv("LLVM_TAG")
     if env_tag:
+        print(f"Found LLVM_TAG environment variable: '{env_tag.strip()}'")
         return env_tag.strip()
 
     if not os.path.isdir(src_dir):
+        print(f"Directory does not exist: {src_dir}")
         return ""
+
     import subprocess
 
-    result = subprocess.run(
+    res = subprocess.run(
         ["git", "describe", "--tags", "--always"], cwd=src_dir, capture_output=True
     )
-    return result.stdout.decode().strip()
+    if res.returncode == 0:
+        tag = res.stdout.decode().strip()
+        print(f"Identified tag from git repo: '{tag}'")
+        return tag
+    else:
+        print(
+            f"Failed to run git describe (exit code {res.returncode}): {res.stderr.decode().strip()}"
+        )
+        return ""
 
 
 def write_tag_cache(tag, cache_file):
     try:
         with open(cache_file, "w") as f:
             f.write(tag.strip())
+        print(f"Successfully cached tag '{tag}' to {cache_file}")
     except Exception as e:
         print(f"Warning: Failed to update tag cache file: {e}")
 
@@ -196,12 +208,16 @@ def main():
 
     args = parser.parse_args()
 
+    for arg, value in vars(args).items():
+        print(f"  {arg}: {value}")
+
     if args.tag is None or args.tag == "":
         args.tag = current_tag(src_dir=args.src_dir)
         if args.tag is None or args.tag == "":
-            print("Failed to fetch LLVM tag")
+            print("Failed to fetch LLVM tag.")
             return -1
 
+    # Directory validations
     if not os.path.isdir(script_dir):
         print(f"Script directory not found: {script_dir}")
         return -2
@@ -220,54 +236,75 @@ def main():
     enable_build_llvm = not args.disable_build_llvm
     lower_type = args.type.lower()
 
-    for arg, value in vars(args).items():
-        print(f"{arg}: {value}")
-
     # Check tag cache file
     cached_tag = None
     if os.path.isfile(args.tag_cache_file):
         try:
             with open(args.tag_cache_file, "r") as f:
                 cached_tag = f.read().strip()
-        except Exception:
+            print(f"Found tag cache file: '{cached_tag}'")
+        except Exception as e:
+            print(f"Could not read cache file ({e}).")
             cached_tag = None
+    else:
+        print(f"No tag cache file found at '{args.tag_cache_file}'.")
 
-    tag_matches = cached_tag == args.tag if cached_tag is not None else False
+    tag_matches = (cached_tag == args.tag) if cached_tag is not None else False
+    has_include = os.path.isdir(include_dir)
+    has_lib = os.path.isdir(lib_dir)
 
-    # Skip setup only if cached tag matches target tag AND preinstalled files exist
-    if (
-        tag_matches
-        and os.path.isdir(include_dir)
-        and os.path.isdir(lib_dir)
-        and enable_cache_llvm
-    ):
+    print(
+        f"Status - Tag match: {tag_matches}, Include dir exists: {has_include}, Lib dir exists: {has_lib}, Cache enabled: {enable_cache_llvm}"
+    )
+
+    if enable_cache_llvm and tag_matches and has_include and has_lib:
         print(
-            f"Preinstalled LLVM with matching tag found in {args.install_dir}; skipped operation."
+            f"Preinstalled LLVM with matching tag '{args.tag}' found in '{args.install_dir}'. Skipping setup."
         )
         return 0
-
-    if not tag_matches and cached_tag is not None:
+    elif not enable_cache_llvm:
+        print("Cache reuse disabled by user (--disable-cache-llvm).")
+    elif not tag_matches and cached_tag is not None:
         print(
-            f"Tag mismatch detected (cached: '{cached_tag}', requested: '{args.tag}'). Re-setting up LLVM..."
+            f"Tag mismatch (Cached: '{cached_tag}', Target: '{args.tag}'). Re-setting up..."
+        )
+    elif not (has_include and has_lib):
+        print(
+            f"Missing installation binaries in '{args.install_dir}'. Proceeding with setup."
         )
 
     url = download_llvm.release_url(
         tag=args.tag, triple=args.triple, build_type=lower_type
     )
-    exists = download_llvm.check_release_exists(url)
-    if exists and enable_download_llvm:
-        print(f"Found prebuilt binary in {url}")
-        res = download_llvm.download_and_extract(
-            tag=args.tag,
-            triple=args.triple,
-            build_type=lower_type,
-            download_dir=args.download_dir,
-            install_dir=args.install_dir,
+    print(f"Target release URL: {url}")
+
+    if enable_download_llvm:
+        exists = download_llvm.check_release_exists(url)
+        print(f"Remote asset exists: {exists}")
+        if exists:
+            print(f"Downloading and extracting prebuilt binary for tag '{args.tag}'...")
+            res = download_llvm.download_and_extract(
+                tag=args.tag,
+                triple=args.triple,
+                build_type=lower_type,
+                download_dir=args.download_dir,
+                install_dir=args.install_dir,
+            )
+            if res == 0:
+                print(f"Download and extraction completed successfully.")
+                write_tag_cache(args.tag, args.tag_cache_file)
+            else:
+                print(f"Download/extraction failed with return code {res}.")
+            return res
+        else:
+            print(f"No prebuilt binary found at remote URL.")
+    else:
+        print("Prebuilt download disabled by user (--disable-download-llvm).")
+
+    if enable_build_llvm:
+        print(
+            f"Building LLVM from source (Type: {args.type}, Triple: {args.triple})..."
         )
-        if res == 0:
-            write_tag_cache(args.tag, args.tag_cache_file)
-        return res
-    elif enable_build_llvm:
         res = build_llvm.build_llvm(
             build_type=args.type,
             configure_script=args.configure_script,
@@ -279,15 +316,22 @@ def main():
             cxx_compiler=args.cxx,
             generator=args.generator,
             triple=args.triple,
-            assertions=("ON" if args.type == "debug" else "OFF"),
+            assertions=("ON" if args.type.lower() == "debug" else "OFF"),
             libcxx=("ON" if args.libcxx else "OFF"),
         )
         if res == 0:
+            print(f"Source build completed successfully.")
             write_tag_cache(args.tag, args.tag_cache_file)
+        else:
+            print(f"LLVM build failed with exit code {res}.")
         return res
     else:
-        print("Failed to setup LLVM")
-        return -5
+        print("Source build disabled by user (--disable-build-llvm).")
+
+    print(
+        "Failed to setup LLVM: No viable method (Cache, Download, or Build) succeeded or was enabled."
+    )
+    return -5
 
 
 if __name__ == "__main__":
