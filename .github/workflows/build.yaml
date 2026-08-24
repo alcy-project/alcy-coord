@@ -104,6 +104,19 @@ jobs:
           path: build/scripts/llvm/.llvm_tag_cache
           key: ${{ runner.os }}-${{ matrix.plat }}-${{ matrix.arch }}-${{ inputs.build_type }}-${{ matrix.nix }}-llvm_tag_cache
 
+      - name: Install uv
+        if: "!matrix.nix"
+        uses: astral-sh/setup-uv@20cfd1bf945f4377ade1205e4dbc17946fc9a30d
+        with:
+          enable-cache: true
+
+      - name: Set up Python virtual environment
+        if: "!matrix.nix"
+        run: |
+          uv python install
+          uv sync --frozen
+          echo "$GITHUB_WORKSPACE/.venv/bin" >> $GITHUB_PATH
+
       - name: Build (Nix)
         if: matrix.nix
         shell: bash

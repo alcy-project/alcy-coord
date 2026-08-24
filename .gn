@@ -1,2 +1,1 @@
 buildconfig = "//build/config/BUILDCONFIG.gn"
-script_executable = rebase_path("//build/scripts/uv_python.py")
