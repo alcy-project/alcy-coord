@@ -95,8 +95,7 @@ jobs:
       - name: Fetch LLVM tag
         shell: bash
         run: |
-          LLVM_COMMIT=$(git -C third_party/llvm/src rev-parse HEAD)
-          git -C third_party/llvm/src fetch origin --depth=1 "$LLVM_COMMIT"
+          git -C third_party/llvm/src fetch --tags --depth=1
           git -C third_party/llvm/src describe --tags --always
 
       - name: Cache LLVM tag
